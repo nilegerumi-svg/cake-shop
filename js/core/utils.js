@@ -1,105 +1,107 @@
 // js/core/utils.js
-window.Cake = window.Cake || {};
+(() => {
+    'use strict';
 
-(function () {
-    // 核心工具函数
-    function $(id) {
-        return document.getElementById(id);
-    }
+    window.Cake = window.Cake || {};
 
-    function randomPick(arr) {
-        return arr[Math.floor(Math.random() * arr.length)];
-    }
+    const Cake = window.Cake;
 
-    function escapeHtml(str) {
-        return String(str == null ? '' : str)
+    /* ==================== 核心工具函数 ==================== */
+
+    const $ = (id) => document.getElementById(id);
+
+    const randomPick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+
+    const escapeHtml = (str) =>
+        String(str ?? '')
             .replace(/&/g, '&amp;')
             .replace(/</g, '&lt;')
             .replace(/>/g, '&gt;')
             .replace(/"/g, '&quot;')
             .replace(/'/g, '&#39;');
-    }
 
-    function addLog(text, day) {
+    const addLog = (text, day) => {
         // 防护：极早期没拿到 state 时直接返回，避免报错
-        if (!window.Cake.store || !window.Cake.store.state) return;
-        
-        var s = window.Cake.store.state;
-        s.log = s.log || [];
-        s.log.push({ day: day == null ? s.day : day, text: text });
-        if (s.log.length > 60) s.log.shift();
-    }
+        const s = Cake.store?.state;
+        if (!s) return;
 
-    function fail(message) {
+        s.log = s.log || [];
+        s.log.push({ day: day ?? s.day, text });
+        if (s.log.length > 60) s.log.shift();
+    };
+
+    const fail = (message) => {
         addLog(message);
-        if (typeof window.Cake.refreshPage === 'function') {
-            window.Cake.refreshPage();
+        if (typeof Cake.refreshPage === 'function') {
+            Cake.refreshPage();
         }
         return false;
-    }
+    };
 
-    function affLevel(a) {
+    const affLevel = (a) => {
         if (a >= 100) return '💖 挚爱';
-        if (a >= 80) return '💗 心动';
-        if (a >= 60) return '💞 亲密';
-        if (a >= 40) return '🤝 朋友';
-        if (a >= 20) return '👋 相识';
+        if (a >= 80)  return '💗 心动';
+        if (a >= 60)  return '💞 亲密';
+        if (a >= 40)  return '🤝 朋友';
+        if (a >= 20)  return '👋 相识';
         return '😶 陌生';
-    }
+    };
 
-    function hasIngredients(ing) {
-        if (!window.Cake.store || !window.Cake.store.state) return false;
-        var s = window.Cake.store.state;
-        
-        for (var k in ing) {
-            if (!Object.prototype.hasOwnProperty.call(ing, k)) continue;
+    /* ==================== 食材相关 ==================== */
+
+    const hasIngredients = (ing) => {
+        const s = Cake.store?.state;
+        if (!s) return false;
+
+        for (const k of Object.keys(ing)) {
             if ((s.ingredients[k] || 0) < ing[k]) return false;
         }
         return true;
-    }
+    };
 
-    function consumeIngredients(ing) {
-        if (!window.Cake.store || !window.Cake.store.state) return;
-        var s = window.Cake.store.state;
-        
-        for (var k in ing) {
-            if (!Object.prototype.hasOwnProperty.call(ing, k)) continue;
+    const consumeIngredients = (ing) => {
+        const s = Cake.store?.state;
+        if (!s) return;
+
+        for (const k of Object.keys(ing)) {
             s.ingredients[k] = (s.ingredients[k] || 0) - ing[k];
         }
-    }
+    };
 
-    function ingredientTags(ing) {
-        if (!window.Cake.store || !window.Cake.store.state) return '';
-        var s = window.Cake.store.state;
-        var ING = window.Cake.INGREDIENTS || {};
-        var parts = [];
-        
-        for (var k in ing) {
-            if (!Object.prototype.hasOwnProperty.call(ing, k)) continue;
+    const ingredientTags = (ing) => {
+        const s = Cake.store?.state;
+        if (!s) return '';
+
+        const ING = Cake.INGREDIENTS || {};
+        const parts = [];
+
+        for (const k of Object.keys(ing)) {
             if (!ING[k]) continue; // 防止未知食材报错
-            
-            var v = ing[k];
-            var have = s.ingredients[k] || 0;
-            var cls = have >= v ? 'ok' : 'lack';
+
+            const v = ing[k];
+            const have = s.ingredients[k] || 0;
+            const cls = have >= v ? 'ok' : 'lack';
             parts.push(
-                '<span class="' + cls + '">' + ING[k].emoji + ING[k].name +
-                ' ' + have + '/' + v + '</span>'
+                `<span class="${cls}">${ING[k].emoji}${ING[k].name} ${have}/${v}</span>`
             );
         }
         return parts.join('');
-    }
+    };
 
-    // ── 关键：全部挂载到 window.Cake 下 ──
-    window.Cake.$ = $;
-    window.Cake.randomPick = randomPick;
-    window.Cake.escapeHtml = escapeHtml;
-    window.Cake.addLog = addLog;
-    window.Cake.fail = fail;
-    window.Cake.affLevel = affLevel;
-    window.Cake.hasIngredients = hasIngredients;
-    window.Cake.consumeIngredients = consumeIngredients;
-    window.Cake.ingredientTags = ingredientTags;
-    
+    /* ==================== 挂载到 window.Cake 下 ==================== */
+
+    Object.assign(Cake, {
+        $,
+        randomPick,
+        escapeHtml,
+        addLog,
+        fail,
+        affLevel,
+        hasIngredients,
+        consumeIngredients,
+        ingredientTags,
+    });
+
     // 兼容全局 $ 调用
     if (typeof window.$ === 'undefined') {
         window.$ = $;

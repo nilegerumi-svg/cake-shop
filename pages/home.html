@@ -13,11 +13,28 @@
 
 <div id="content"></div>
 
+<script src="../js/core/store.js"></script>
+<script src="../js/data/ingredients.js"></script>
+<script src="../js/data/recipes.js"></script>
+<script src="../js/data/bundles.js"></script>
+<script src="../js/data/characters.js"></script>
+<script src="../js/data/events.js"></script>
+<script src="../js/data/shop-config.js"></script>
+<script src="../js/data/achievements.js"></script>
+<script src="../js/core/utils.js"></script>
+<script src="../js/core/state.js"></script>
+<script src="../js/core/modal.js"></script>
+<script src="../js/core/effects.js"></script>
+<script src="../js/core/render.js"></script>
+<script src="../js/actions/bakery.js"></script>
+<script src="../js/actions/shop.js"></script>
+<script src="../js/actions/social.js"></script>
+<script src="../js/actions/system.js"></script>
+<script src="../js/shared.js"></script>
 <script>
-    window.onload = function() {
-        const Game = window.parent.Game;
-        if (!Game) return;
+    Game.initPage('home', renderHome);
 
+    function renderHome() {
         const s = Game.state;
         const cakes = Object.entries(s.cakes).filter(([n, v]) => v > 0 && Game.RECIPES[n]);
 
@@ -25,7 +42,7 @@
             <div class="card">
                 <h2>🏠 欢迎回来，${Game.escapeHtml(s.playerName)}！</h2>
                 <p class="muted">今天是经营的第 <b>${s.day}</b> 天，你的「${Game.escapeHtml(s.shopName)}」正散发着甜蜜香气～</p>
-                
+
                 <div class="grid-2" style="margin-top:12px;">
                     <div class="item-card">
                         <span class="item-emoji">💰</span>
@@ -51,9 +68,8 @@
 
                 <h3>⚡ 快速行动</h3>
                 <div class="char-actions">
-                    <!-- 注意看这里：如果在游戏里做了操作，可以通过 window.parent.refreshDiary() 刷新下面的日记框 -->
-                    <button type="button" class="small" onclick="window.parent.Game.rest(); window.parent.refreshDiary();">😴 休息</button>
-                    <button type="button" class="small secondary" onclick="window.parent.Game.walk(); window.parent.refreshDiary();">🚶‍♀️ 散步</button>
+                    <button type="button" class="small" onclick="Game.rest()">😴 休息</button>
+                    <button type="button" class="small secondary" onclick="Game.walk()">🚶‍♀️ 散步</button>
                 </div>
 
                 <h3>🧁 库存蛋糕</h3>
@@ -70,7 +86,7 @@
                     </div>`}
             </div>
         `;
-    };
+    }
 </script>
 </body>
 </html>

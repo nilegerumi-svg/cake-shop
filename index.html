@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>甜蜜物语 - 开始</title>
     <style>
-        /* 基础设置与粉嫩背景 */
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
@@ -17,8 +16,6 @@
             padding: 20px;
             color: #4a3b3f;
         }
-
-        /* 主卡片容器 */
         .start-card {
             background: #ffffff;
             width: 100%;
@@ -29,46 +26,39 @@
             text-align: center;
             animation: fadeInUp 0.6s ease-out;
         }
-
-        /* 标题区域 */
         .game-header h1 { color: #ff6b81; font-size: 32px; margin-bottom: 8px; }
         .game-header .subtitle { color: #ff9eaa; font-size: 14px; margin-bottom: 24px; font-weight: bold; }
-
-        /* 简介区域 */
         .game-intro { background: #fff0f5; padding: 16px; border-radius: 16px; margin-bottom: 24px; }
         .game-intro p { color: #666; font-size: 14px; line-height: 1.8; text-align: left; }
         .game-intro strong { color: #ff6b81; }
-
-        /* 新增：头像选择区域 */
+        
+        /* 头像选择区域 */
         .avatar-group {
             display: flex;
-            justify-content: space-around;
+            justify-content: center;
+            gap: 20px;
             margin-bottom: 24px;
         }
         .avatar-option {
-            width: 50px;
-            height: 50px;
+            width: 60px;
+            height: 60px;
             border-radius: 50%;
             background: #fff0f5;
-            border: 2px solid transparent;
+            border: 3px solid transparent;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 24px;
+            font-size: 30px;
             cursor: pointer;
             transition: all 0.2s ease;
         }
-        .avatar-option:hover {
-            transform: scale(1.1);
-        }
-        /* 选中头像的样式 */
         .avatar-option.selected {
             border-color: #ff6b81;
             background: #ffe4e8;
-            box-shadow: 0 0 10px rgba(255, 107, 129, 0.3);
+            box-shadow: 0 0 15px rgba(255, 107, 129, 0.4);
+            transform: scale(1.1);
         }
 
-        /* 输入框区域 */
         .input-group { text-align: left; margin-bottom: 24px; }
         .input-group label { display: block; font-size: 14px; font-weight: bold; color: #d85c74; margin-bottom: 8px; margin-top: 16px; }
         .input-group label:first-child { margin-top: 0; }
@@ -78,7 +68,6 @@
         }
         .input-group input:focus { outline: none; border-color: #ff8fa3; background: #fff; box-shadow: 0 0 0 4px rgba(255, 143, 163, 0.15); }
 
-        /* 按钮区域 */
         .button-group { display: flex; flex-direction: column; gap: 12px; }
         .button-group button {
             width: 100%; padding: 16px; border: none; border-radius: 50px;
@@ -106,9 +95,8 @@
             你的故事，由你亲手书写。</p>
         </div>
 
-        <!-- 恢复头像选择功能 -->
+        <!-- 头像选择区 -->
         <div class="avatar-group" id="avatarGroup">
-            <!-- 这里我用了Emoji代替你原来的图片，你需要把你原来的 <img> 标签换回来 -->
             <div class="avatar-option selected" data-avatar="girl1">👧🏻</div>
             <div class="avatar-option" data-avatar="girl2">👩🏻</div>
             <div class="avatar-option" data-avatar="boy1">👦🏻</div>
@@ -124,42 +112,34 @@
         </div>
 
         <div class="button-group">
-            <!-- 注意：去掉了 onclick，改由下方 JS 统一接管 -->
             <button class="btn-start" id="btnStart">☀️ 开启甜蜜之旅</button>
             <button class="btn-continue">📖 继续游戏</button>
         </div>
     </div>
 
-    <!-- 把这段 JS 放在最下面 -->
     <script>
-        // 1. 处理头像点击选中效果
+        // 头像切换逻辑
         const avatarOptions = document.querySelectorAll('.avatar-option');
-        let selectedAvatar = 'girl1'; // 默认选中第一个
+        let selectedAvatar = 'girl1';
 
         avatarOptions.forEach(option => {
             option.addEventListener('click', () => {
-                // 移除所有人的选中状态
                 avatarOptions.forEach(opt => opt.classList.remove('selected'));
-                // 给自己加上选中状态
                 option.classList.add('selected');
-                // 记录选中的头像数据
                 selectedAvatar = option.getAttribute('data-avatar');
             });
         });
 
-        // 2. 处理“开启甜蜜之旅”按钮点击
+        // 按钮点击逻辑
         document.getElementById('btnStart').addEventListener('click', () => {
-            // 获取玩家输入的名字和店铺名
             const playerName = document.getElementById('playerName').value || '小甜';
             const shopName = document.getElementById('shopName').value || '甜蜜物语';
 
-            // 【关键】将数据保存到浏览器本地（localStorage），这样下一个页面才能读到
             localStorage.setItem('playerName', playerName);
             localStorage.setItem('shopName', shopName);
             localStorage.setItem('playerAvatar', selectedAvatar);
 
-            // 跳转到游戏主页面
-            window.location.href = 'game.html'; 
+            window.location.href = 'game.html';
         });
     </script>
 </body>

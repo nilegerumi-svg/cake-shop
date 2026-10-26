@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🍰 甜蜜物语 · 开始</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="screen">
+        <div class="start-card">
+            <h1>🍰 甜蜜物语</h1>
+            <p class="tagline">✨ 女性向 · 高自由度蛋糕店模拟器 ✨</p>
+            <div class="story">
+                你刚刚接手了街角一间小小的蛋糕店。<br>
+                在这里，你可以<b>自由烘焙</b>每一款蛋糕、<b>随心装饰</b>你的店铺、<b>邂逅</b>温柔的邻居们，<br>
+                甚至——谈一场甜甜的恋爱。💕<br>
+                你的故事，由你亲手书写。
+            </div>
+            <input id="nameInput" placeholder="👩‍🍳 你的名字（默认：小甜）" autocomplete="off">
+            <input id="shopNameInput" placeholder="🏪 蛋糕店的名字（默认：甜蜜物语）" autocomplete="off">
+            <div class="avatar-row" id="avatarRow" role="radiogroup" aria-label="选择头像">
+                <div class="avatar selected" data-avatar="👩‍🍳" role="radio" aria-checked="true"  tabindex="0">👩‍🍳</div>
+                <div class="avatar"          data-avatar="👧"   role="radio" aria-checked="false" tabindex="-1">👧</div>
+                <div class="avatar"          data-avatar="🎀"   role="radio" aria-checked="false" tabindex="-1">🎀</div>
+                <div class="avatar"          data-avatar="🧁"   role="radio" aria-checked="false" tabindex="-1">🧁</div>
+            </div>
+            <button type="button" class="start-btn" id="startBtn" onclick="startNewGame()">🌟 开启甜蜜之旅</button>
+            <button type="button" class="load-btn hidden" id="loadBtn" onclick="continueGame()">💾 继续游戏</button>
+        </div>
+    </div>
+
+    <!-- 注意这里，所有 ../js/ 都改成了 js/ -->
+    <script src="js/core/store.js"></script>
+    <script src="js/data/ingredients.js"></script>
+    <script src="js/data/recipes.js"></script>
+    <script src="js/data/bundles.js"></script>
+    <script src="js/data/characters.js"></script>
+    <script src="js/data/events.js"></script>
+    <script src="js/data/shop-config.js"></script>
+    <script src="js/data/achievements.js"></script>
+    <script src="js/core/utils.js"></script>
+    <script src="js/core/state.js"></script>
+    <script src="js/core/modal.js"></script>
+    <script src="js/core/effects.js"></script>
+    <script src="js/core/render.js"></script>
+    <script src="js/actions/bakery.js"></script>
+    <script src="js/actions/shop.js"></script>
+    <script src="js/actions/social.js"></script>
+    <script src="js/actions/system.js"></script>
+    <script src="js/shared.js"></script>
+
+    <script>
+    (function () {
+        'use strict';
+
+        var DEFAULT_NAME = '小甜';
+        var DEFAULT_SHOP = '甜蜜物语';
+
+        var nameInput = document.getElementById('nameInput');
+        var shopInput = document.getElementById('shopNameInput');
+        var startBtn  = document.getElementById('startBtn');
+        var loadBtn   = document.getElementById('loadBtn');
+
+        var selectedAvatar = '👩‍🍳';
+        var navigating = false;
+
+        function selectAvatar(el) {
+            document.querySelectorAll('#avatarRow .avatar').forEach(function (a) {
+                var isSel = a === el;
+                a.classList.toggle('selected', isSel);
+                a.setAttribute('aria-checked', isSel ? 'true' : 'false');
+                a.setAttribute('tabindex', isSel ? '0' : '-1');
+            });
+            selectedAvatar = el.dataset.avatar;
+        }
+
+        var avatars = Array.from(document.querySelectorAll('#avatarRow .avatar'));
+
+        avatars.forEach(function (el, index) {
+            el.addEventListener('click', function () { selectAvatar(el); });
+            el.addEventListener('keydown', function (e) {
+                var next = null;
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    selectAvatar(el);
+                    return;
+                } else if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+                    next = avatars[index + 1];
+                } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+                    next = avatars[index - 1];
+                } else if (e.key === 'Home') {
+                    next = avatars[0];
+                } else if (e.key === 'End') {
+                    next = avatars[avatars.length - 1];
+                } else {
+                    return;
+                }
+                e.preventDefault();
+                if (next) {
+                    selectAvatar(next);
+                    next.focus();
+                }
+            });
+        });
+
+        function hasSave() {
+            try {
+                return !!(window.Game && typeof Game.hasSave === 'function' && Game.hasSave());
+            } catch (e) {
+                return false;
+            }
+        }
+
+        function syncLoadBtn() {
+            if (hasSave()) {
+                loadBtn.classList.remove('hidden');
+            } else {
+                loadBtn.classList.add('hidden');
+            }
+        }
+        syncLoadBtn();
+
+        window.addEventListener('focus', syncLoadBtn);
+        document.addEventListener('visibilitychange', function () {
+            if (document.visibilityState === 'visible') syncLoadBtn();
+        });
+
+        window.addEventListener('pageshow', function (e) {
+            if (e.persisted) {
+                navigating = false;
+                startBtn.disabled = false;
+                loadBtn.disabled = false;
+            }
+            syncLoadBtn();
+        });
+
+        function clean(value, max) {
+            return Array.from(String(value || '').trim()).slice(0, max).join('');
+        }
+
+        function goGame() {
+            if (navigating) return;
+            navigating = true;
+            startBtn.disabled = true;
+            loadBtn.disabled = true;
+
+            var leftPage = false;
+            var timer = null;
+
+            function onLeave() {
+                leftPage = true;
+                if (timer) clearTimeout(timer);
+            }
+            window.addEventListener('pagehide', onLeave, { once: true });
+            window.addEventListener('beforeunload', onLeave, { once: true });
+
+            timer = setTimeout(function () {
+                if (leftPage) return;
+                navigating = false;
+                startBtn.disabled = false;
+                loadBtn.disabled = false;
+                alert('页面跳转失败，请确认 game.html 位于同一目录。');
+            }, 3000);
+
+            location.href = 'game.html';
+        }
+
+        window.startNewGame = function () {
+            try {
+                if (!window.Game || typeof Game.defaultState !== 'function') {
+                    alert('游戏核心脚本未加载成功，请检查 js 文件夹是否和 index.html 在同一目录。');
+                    return;
+                }
+                if (hasSave() && !confirm('检测到已有存档，开始新游戏会覆盖它，确定继续吗？')) {
+                    return;
+                }
+                var s = Game.defaultState();
+                s.playerName = clean(nameInput.value, 8) || DEFAULT_NAME;
+                s.shopName   = clean(shopInput.value, 12) || DEFAULT_SHOP;
+                s.avatar     = selectedAvatar;
+
+                Game.state = s;
+                if (typeof Game.saveState === 'function') Game.saveState();
+                goGame();
+            } catch (e) {
+                console.error(e);
+                alert('开始游戏失败：' + e.message);
+            }
+        };
+
+        window.continueGame = function () {
+            if (!hasSave()) {
+                alert('没有找到存档，请先开始新游戏。');
+                loadBtn.classList.add('hidden');
+                return;
+            }
+            goGame();
+        };
+
+        [nameInput, shopInput].forEach(function (input) {
+            input.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    window.startNewGame();
+                }
+            });
+        });
+    })();
+    </script>
+</body>
+</html>

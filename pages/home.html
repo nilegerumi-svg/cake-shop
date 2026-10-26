@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>主页</title>
     <link rel="stylesheet" href="../css/styles.css">
-    <style> 
-        body { background: transparent; padding: 16px; margin: 0; } 
+    <style>
+        body { background: transparent; padding: 16px; margin: 0; }
         #walkModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; justify-content: center; align-items: center; }
         .modal-box { background: white; padding: 20px; border-radius: 15px; width: 80%; max-width: 300px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
         .modal-box h3 { color: #ff6b81; margin-top: 0; margin-bottom: 5px; }
@@ -22,11 +22,11 @@
     <div class="modal-box">
         <h3>去哪里散步？</h3>
         <p style="font-size: 13px; color: #666; margin-bottom: 15px;">每次消耗 8 点体力</p>
-        <button class="loc-btn" onclick="executeWalk('home')" style="background: #ffb7b2;">🏡 家园周围</button>
-        <button class="loc-btn" onclick="executeWalk('park')" style="background: #a8e6cf;">🌳 街心公园</button>
-        <button class="loc-btn" onclick="executeWalk('street')" style="background: #ffd3b6;">🛍️ 商业街</button>
-        <button class="loc-btn" onclick="executeWalk('river')" style="background: #a1c4fd;">🌊 河边</button>
-        <button class="loc-btn cancel-btn" onclick="closeWalkModal()">取消</button>
+        <button type="button" class="loc-btn" data-location="home" style="background: #ffb7b2;">🏡 家园周围</button>
+        <button type="button" class="loc-btn" data-location="park" style="background: #a8e6cf;">🌳 街心公园</button>
+        <button type="button" class="loc-btn" data-location="street" style="background: #ffd3b6;">🛍️ 商业街</button>
+        <button type="button" class="loc-btn" data-location="river" style="background: #a1c4fd;">🌊 河边</button>
+        <button type="button" class="loc-btn cancel-btn" id="btnCancelWalk">取消</button>
     </div>
 </div>
 
@@ -51,12 +51,60 @@
 <script src="../js/shared.js"></script>
 
 <script>
-    Game.initPage('home', renderHome);
-    
-    function renderHome() {
+(() => {
+    'use strict';
+
+    const contentEl  = document.getElementById('content');
+    const walkModal  = document.getElementById('walkModal');
+    const btnCancel  = document.getElementById('btnCancelWalk');
+
+    /* ==================== 散步弹窗控制 ==================== */
+
+    const openWalkModal = () => {
+        if (Game.state.energy < 8) {
+            alert('体力不足 8 点，无法出门散步啦！');
+            return;
+        }
+        walkModal.style.display = 'flex';
+    };
+
+    const closeWalkModal = () => {
+        walkModal.style.display = 'none';
+    };
+
+    const executeWalk = (location) => {
+        closeWalkModal();
+        Game.walk(location);
+    };
+
+    /* ==================== 库存蛋糕渲染 ==================== */
+
+    const renderCakes = (cakes, priceRate) => {
+        if (cakes.length === 0) {
+            return '<p class="muted">还没有蛋糕库存，快去「烘焙」页面做几个吧！</p>';
+        }
+
+        const items = cakes.map(([name, count]) => {
+            const recipe = Game.RECIPES[name];
+            const price = Math.round(recipe.price * priceRate);
+            return `<div class="item-card">
+                <span class="item-emoji">${recipe.emoji}</span>
+                <span class="item-name">${name} <span class="muted">×${count}</span></span>
+                <span class="item-meta">售价 <span class="price-tag">${price}元</span></span>
+            </div>`;
+        }).join('');
+
+        return `<div class="grid-2">${items}</div>`;
+    };
+
+    /* ==================== 主页渲染 ==================== */
+
+    const renderHome = () => {
         const s = Game.state;
-        const cakes = Object.entries(s.cakes).filter(([n, v]) => v > 0 && Game.RECIPES[n]);
-        document.getElementById('content').innerHTML = `
+        const cakes = Object.entries(s.cakes)
+            .filter(([name, count]) => count > 0 && Game.RECIPES[name]);
+
+        contentEl.innerHTML = `
             <div class="card">
                 <h2>🏠 欢迎回来，${Game.escapeHtml(s.playerName)}！</h2>
                 <p class="muted">今天是经营的第 <b>${s.day}</b> 天，你的「${Game.escapeHtml(s.shopName)}」正散发着甜蜜香气～</p>
@@ -68,36 +116,44 @@
                 </div>
                 <h3>⚡ 快速行动</h3>
                 <div class="char-actions">
-                    <button type="button" class="small" onclick="Game.rest()">😴 休息</button>
-                    <button type="button" class="small secondary" onclick="openWalkModal()">🚶‍♀️ 散步</button>
+                    <button type="button" class="small" data-action="rest">😴 休息</button>
+                    <button type="button" class="small secondary" data-action="walk">🚶‍♀️ 散步</button>
                 </div>
                 <h3>🧁 库存蛋糕</h3>
-                ${cakes.length === 0 ? '<p class="muted">还没有蛋糕库存，快去「烘焙」页面做几个吧！</p>' : 
-                `<div class="grid-2">${cakes.map(([n, v]) => `
-                    <div class="item-card">
-                        <span class="item-emoji">${Game.RECIPES[n].emoji}</span>
-                        <span class="item-name">${n} <span class="muted">×${v}</span></span>
-                        <span class="item-meta">售价 <span class="price-tag">${Math.round(Game.RECIPES[n].price * s.priceRate)}元</span></span>
-                    </div>`).join('')}</div>`}
+                ${renderCakes(cakes, s.priceRate)}
             </div>`;
-    }
+    };
 
-    function openWalkModal() {
-        if (Game.state.energy < 8) {
-            alert("体力不足 8 点，无法出门散步啦！");
+    /* ==================== 事件委托 ==================== */
+
+    contentEl.addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-action]');
+        if (!btn) return;
+        switch (btn.dataset.action) {
+            case 'rest':
+                Game.rest();
+                break;
+            case 'walk':
+                openWalkModal();
+                break;
+        }
+    });
+
+    walkModal.addEventListener('click', (e) => {
+        const locBtn = e.target.closest('[data-location]');
+        if (locBtn) {
+            executeWalk(locBtn.dataset.location);
             return;
         }
-        document.getElementById('walkModal').style.display = 'flex';
-    }
+        if (e.target === walkModal || e.target.closest('#btnCancelWalk')) {
+            closeWalkModal();
+        }
+    });
 
-    function closeWalkModal() {
-        document.getElementById('walkModal').style.display = 'none';
-    }
+    /* ==================== 页面初始化 ==================== */
 
-    function executeWalk(location) {
-        closeWalkModal();
-        Game.walk(location); 
-    }
+    Game.initPage('home', renderHome);
+})();
 </script>
 </body>
 </html>

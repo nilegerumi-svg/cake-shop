@@ -74,7 +74,8 @@ window.Cake = window.Cake || {};
     }
 
     function refreshPage() {
-        window.Cake.saveState();
+        // 收到其它窗口的同步事件时不回写，避免事件循环
+        if (!window.Cake.__syncing) window.Cake.saveState();
         renderHeader();
         renderNav(currentActiveTab);
         renderFooter();
@@ -89,6 +90,24 @@ window.Cake = window.Cake || {};
         if (logWrap) logWrap.style.display = showLog ? 'block' : 'none';
         refreshPage();
     }
+
+    // ✨ 跨 iframe 状态同步：任一窗口保存后，其它窗口重新加载并重绘
+    window.addEventListener('storage', function (e) {
+        if (e.key && e.key !== window.Cake.SAVE_KEY) return;
+        if (e.storageArea && e.storageArea !== window.localStorage) return;
+        try {
+            window.Cake.store.state = window.Cake.loadStateFromStorage();
+        } catch (err) { return; }
+        window.Cake.__syncing = true;
+        try {
+            renderHeader();
+            renderNav(currentActiveTab);
+            renderFooter();
+            renderLog();
+            if (currentRender) currentRender();
+        } catch (err) {}
+        window.Cake.__syncing = false;
+    });
 
     window.Cake.renderHeader = renderHeader;
     window.Cake.renderNav = renderNav;

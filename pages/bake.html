@@ -29,54 +29,112 @@
     <script src="../js/actions/system.js"></script>
     <script src="../js/shared.js"></script>
     <script>
-        Game.initPage('bake', renderBake);
-        function renderBake() {
-            const s = Game.state || {};
-            const recipes = s.recipes || {};
-            const cakes = s.cakes || {};
-            const ingredients = s.ingredients || {};
-            const unlocked = Object.keys(recipes).filter(n => Game.RECIPES && Game.RECIPES[n]);
+    (() => {
+        'use strict';
 
-            let html = `<div class="card"><h2>🎂 烘焙蛋糕</h2><p class="muted">每次烘焙消耗 <b>20</b> 精力。点击烘焙制作 1 个蛋糕用于售卖或送礼。</p><div class="grid-2" style="margin-top:12px;">`;
+        const contentEl = document.getElementById('content');
 
-            if (unlocked.length === 0) {
-                html += '<p class="muted">还没有解锁任何配方，先去「配方」页研发吧！</p>';
+        const ENERGY_PER_BAKE = 20;
+        const MAX_BATCH = 5;
+
+        /* ==================== 单个配方卡片 ==================== */
+
+        const renderRecipeCard = (name, recipe, state) => {
+            const { ingredients = {}, cakes = {}, energy = 0 } = state;
+            const ing = recipe.ing || {};
+            const ingKeys = Object.keys(ing);
+
+            const lackIng = !ingKeys.every((k) => (ingredients[k] || 0) >= ing[k]);
+            const lackEnergy = energy < ENERGY_PER_BAKE;
+            const canBake = !lackIng && !lackEnergy;
+
+            // 批量计算：最多 5 个，受精力与食材库存双重限制
+            const maxByEnergy = Math.floor(energy / ENERGY_PER_BAKE);
+            const maxByIng = ingKeys.length > 0
+                ? Math.min(...ingKeys.map((k) => Math.floor((ingredients[k] || 0) / ing[k])))
+                : Infinity;
+            const batchCount = Math.min(MAX_BATCH, maxByEnergy, maxByIng);
+            const canBatch = batchCount >= 2;
+
+            const label = canBake
+                ? '🔥 烘焙'
+                : (lackEnergy && lackIng
+                    ? '⚡🌾 精力与食材不足'
+                    : (lackEnergy ? '⚡ 精力不足' : '🌾 食材不足'));
+
+            const stock = cakes[name] || 0;
+
+            const batchBtn = canBatch
+                ? `<button type="button" class="small secondary"
+                       data-bake="${name}" data-count="${batchCount}">🔥 批量×${batchCount}</button>`
+                : '';
+
+            return `<div class="item-card">
+                <span class="item-emoji">${recipe.emoji}</span>
+                <span class="item-name">${name} <span class="muted">（库存 ${stock}）</span></span>
+                <span class="item-desc">${recipe.desc}</span>
+                <div class="ing-row">${Game.ingredientTags(ing)}</div>
+                <span class="item-meta">基础价 ${recipe.price}元 · 声望+${recipe.rep}</span>
+                <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                    <button type="button" class="small"
+                        ${canBake ? '' : 'disabled'}
+                        data-bake="${name}">${label}</button>
+                    ${batchBtn}
+                </div>
+            </div>`;
+        };
+
+        /* ==================== 食材库存 ==================== */
+
+        const renderIngredientStock = (ingredients) =>
+            Object.entries(Game.INGREDIENTS || {}).map(([key, item]) => {
+                const count = ingredients[key] || 0;
+                return `<span class="ing-tag ${count > 0 ? 'ok' : 'lack'}">${item.emoji}${item.name} ×${count}</span>`;
+            }).join('');
+
+        /* ==================== 烘焙页渲染 ==================== */
+
+        const renderBake = () => {
+            const state = Game.state || {};
+            const recipes = state.recipes || {};
+            const ingredients = state.ingredients || {};
+
+            const unlocked = Object.keys(recipes)
+                .filter((name) => Game.RECIPES && Game.RECIPES[name]);
+
+            const cardsHtml = unlocked.length === 0
+                ? '<p class="muted">还没有解锁任何配方，先去「配方」页研发吧！</p>'
+                : unlocked.map((name) => renderRecipeCard(name, Game.RECIPES[name], state)).join('');
+
+            contentEl.innerHTML = `
+                <div class="card">
+                    <h2>🎂 烘焙蛋糕</h2>
+                    <p class="muted">每次烘焙消耗 <b>${ENERGY_PER_BAKE}</b> 精力。点击烘焙制作 1 个蛋糕用于售卖或送礼。</p>
+                    <div class="grid-2" style="margin-top:12px;">${cardsHtml}</div>
+                    <h3>📦 当前食材</h3>
+                    <div class="ing-row">${renderIngredientStock(ingredients)}</div>
+                </div>`;
+        };
+
+        /* ==================== 事件委托 ==================== */
+
+        contentEl.addEventListener('click', (e) => {
+            const btn = e.target.closest('button[data-bake]');
+            if (!btn || btn.disabled) return;
+
+            const { bake: name, count } = btn.dataset;
+            // 有 count 就是批量，没有就是单个
+            if (count !== undefined) {
+                Game.bakeCake(name, Number(count));
             } else {
-                html += unlocked.map(name => {
-                    const r = Game.RECIPES[name];
-                    if (!r) return '';
-                    const ing = r.ing || {};
-                    const lackIng = !Object.keys(ing).every(k => (ingredients[k] || 0) >= ing[k]);
-                    const lackEnergy = (s.energy || 0) < 20;
-                    const canBake = !lackIng && !lackEnergy;
-                    const maxByEnergy = Math.floor((s.energy || 0) / 20);
-                    let maxByIng = Infinity;
-                    if (Object.keys(ing).length > 0) {
-                        maxByIng = Math.min(...Object.keys(ing).map(k => Math.floor((ingredients[k] || 0) / ing[k])));
-                    }
-                    const batchCount = Math.min(5, maxByEnergy, maxByIng);
-                    const canBatch = batchCount >= 2;
-                    let label = canBake ? '🔥 烘焙' : (lackEnergy && lackIng ? '⚡🌾 精力与食材不足' : (lackEnergy ? '⚡ 精力不足' : '🌾 食材不足'));
-                    const stock = cakes[name] || 0;
-                    return `<div class="item-card">
-                        <span class="item-emoji">${r.emoji}</span>
-                        <span class="item-name">${name} <span class="muted">（库存 ${stock}）</span></span>
-                        <span class="item-desc">${r.desc}</span>
-                        <div class="ing-row">${Game.ingredientTags(ing)}</div>
-                        <span class="item-meta">基础价 ${r.price}元 · 声望+${r.rep}</span>
-                        <div style="display:flex;gap:6px;flex-wrap:wrap;">
-                            <button type="button" class="small" ${canBake ? '' : 'disabled'} onclick="Game.bakeCake('${name}')">${label}</button>
-                            ${canBatch ? `<button type="button" class="small secondary" onclick="Game.bakeCake('${name}', ${batchCount})">🔥 批量×${batchCount}</button>` : ''}
-                        </div></div>`;
-                }).join('');
+                Game.bakeCake(name);
             }
-            html += `</div><h3>📦 当前食材</h3><div class="ing-row">
-                ${Object.entries(Game.INGREDIENTS || {}).map(([k, v]) => {
-                    const cnt = ingredients[k] || 0;
-                    return `<span class="ing-tag ${cnt > 0 ? 'ok' : 'lack'}">${v.emoji}${v.name} ×${cnt}</span>`;
-                }).join('')}</div></div>`;
-            document.getElementById('content').innerHTML = html;
-        }
+        });
+
+        /* ==================== 页面初始化 ==================== */
+
+        Game.initPage('bake', renderBake);
+    })();
     </script>
 </body>
 </html>

@@ -208,5 +208,36 @@
         });
     })();
     </script>
+
+    <script>
+// 等待网页加载完毕
+window.addEventListener('DOMContentLoaded', (event) => {
+    
+    // 监听整个网页的点击动作
+    document.body.addEventListener('click', function(e) {
+        
+        // 找出被点击的按钮
+        let btn = e.target.closest('button') || e.target.closest('.btn') || e.target;
+        
+        // 检查点击的是不是“开店营业”
+        if (btn && btn.innerText && btn.innerText.includes('开店营业')) {
+            
+            // 1. 先把按钮变成“营业中”，防止你狂点
+            btn.innerText = '☕ 营业中...';
+            btn.style.backgroundColor = '#ffb6c1'; // 变成粉色
+            
+            // 2. 尝试触发游戏原本的开店逻辑（自动寻找各种可能的名字）
+            if (typeof startBusiness === 'function') { startBusiness(); }
+            else if (typeof openShop === 'function') { openShop(); }
+            else if (typeof openStore === 'function') { openStore(); }
+            else if (typeof open === 'function') { open(); }
+            else {
+                // 如果游戏核心代码没写开店逻辑，这里会弹窗提醒你
+                alert("按钮成功点到了！但你的游戏代码里还没写开店的具体逻辑。");
+            }
+        }
+    });
+});
+    </script>
 </body>
 </html>

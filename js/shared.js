@@ -1,11 +1,8 @@
 window.Cake = window.Cake || {};
 
-// ============ 初始化 state ============
 (function initState() {
     var Cake = window.Cake;
-
     if (!Cake.hasSave()) {
-        // 首次进入：用 index.html 保存的初始设置，避免玩家名字被 defaultState 覆盖
         var s = Cake.defaultState();
         try {
             var pn = localStorage.getItem('playerName');
@@ -17,7 +14,7 @@ window.Cake = window.Cake || {};
             if (av && AVATAR_MAP[av]) s.avatar = AVATAR_MAP[av];
         } catch (_) {}
         Cake.store.state = s;
-        Cake.saveState(); // 首次落盘；此时父页面 broadcaster 可能未设置，静默跳过
+        Cake.saveState();
     } else {
         Cake.store.state = Cake.loadStateFromStorage();
     }
@@ -27,7 +24,6 @@ window.Game = {
     get state() { return window.Cake.store.state; },
     set state(v) { window.Cake.store.state = v; },
 
-    // 数据
     INGREDIENTS: window.Cake.INGREDIENTS,
     RECIPES: window.Cake.RECIPES,
     BUNDLES: window.Cake.BUNDLES,
@@ -41,7 +37,6 @@ window.Game = {
     ACHIEVEMENTS: window.Cake.ACHIEVEMENTS,
     SHOP_UPGRADE_COSTS: window.Cake.SHOP_UPGRADE_COSTS,
 
-    // 存档
     SAVE_KEY: window.Cake.SAVE_KEY,
     SAVE_VERSION: window.Cake.SAVE_VERSION,
     defaultState: window.Cake.defaultState,
@@ -49,18 +44,15 @@ window.Game = {
     saveState: window.Cake.saveState,
     loadStateFromStorage: window.Cake.loadStateFromStorage,
 
-    // 工具
     $: window.Cake.$,
     addLog: window.Cake.addLog,
     ingredientTags: window.Cake.ingredientTags,
     affLevel: window.Cake.affLevel,
     escapeHtml: window.Cake.escapeHtml,
 
-    // 模态框
     showModal: window.Cake.showModal,
     closeModal: window.Cake.closeModal,
 
-    // 渲染
     renderHeader: window.Cake.renderHeader,
     renderNav: window.Cake.renderNav,
     renderFooter: window.Cake.renderFooter,
@@ -68,7 +60,6 @@ window.Game = {
     initPage: window.Cake.initPage,
     refreshPage: window.Cake.refreshPage,
 
-    // 业务
     bakeCake: window.Cake.bakeCake,
     buyIngredient: window.Cake.buyIngredient,
     buyBundle: window.Cake.buyBundle,
@@ -88,22 +79,16 @@ window.Game = {
     resetGame: window.Cake.resetGame,
 };
 
-// ============ 子页面：收到父页面的 state-sync 后从磁盘重载并重渲染 ============
+/* ★ 子页面收到 state-sync 后重载并重绘 */
 (function () {
     var Cake = window.Cake;
     if (!Cake.bridge || !Cake.bridge.inIframe) return;
 
-    Cake.bridge.onHostMessage(function (msg) {
-        if (msg.type !== 'state-sync') return;
-
+    Cake.bridge.onStateChanged(function () {
         Cake.store.state = Cake.loadStateFromStorage();
 
-        // 优先调用页面自定义的刷新；没有则重载 iframe 兜底
         if (typeof Cake.refreshPage === 'function') {
-            try { Cake.refreshPage(); return; }
-            catch (err) {
-                if (window.console) console.warn('[bridge] refreshPage failed', err);
-            }
+            try { Cake.refreshPage(); return; } catch (_) {}
         }
         try { window.location.reload(); } catch (_) {}
     });

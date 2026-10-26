@@ -3,201 +3,101 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🍰 主页 · 甜蜜物语</title>
+    <title>🍰 甜蜜物语</title>
     <link rel="stylesheet" href="css/styles.css">
     <style>
-        /* --- 悬浮日记专属样式 --- */
-        /* 1. 隐藏原本的侧边栏布局，改造成悬浮窗 */
-        #logPanelWrap {
-            position: fixed !important;
-            right: -320px; /* 默认隐藏在屏幕右侧外面 */
-            bottom: 160px;
-            width: 300px;
-            max-height: 400px;
-            background: #ffffff;
-            border-radius: 16px;
-            box-shadow: 0 10px 30px rgba(255, 143, 163, 0.3);
-            z-index: 9998;
-            transition: right 0.3s ease;
-            display: flex;
-            flex-direction: column;
-            border: 2px solid #ffd1dc;
-        }
-        #logPanelWrap.show {
-            right: 20px; /* 展开时滑入屏幕 */
-        }
-        #logPanelWrap .card {
-            margin: 0;
-            padding: 0;
-            border: none;
-            box-shadow: none;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-        }
-        #logPanelWrap h2 {
+        /* 1. 重置布局，去掉所有的侧边栏限制 */
+        body, html {
+            margin: 0; padding: 0; height: 100%; overflow: hidden;
             background: #fff0f5;
-            padding: 12px 16px;
-            margin: 0;
-            font-size: 16px;
-            color: #ff6b81;
-            border-bottom: 1px solid #ffd1dc;
-            border-radius: 14px 14px 0 0;
+        }
+        .app-container {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        #logPanelWrap .log-list {
-            padding: 16px;
-            overflow-y: auto;
-            flex: 1;
-            font-size: 14px;
-            color: #666;
-        }
-
-        /* 2. 日记悬浮按钮 */
-        #logFloatBtn {
-            position: fixed;
-            right: 20px;
-            bottom: 100px;
-            width: 56px;
-            height: 56px;
-            background: #ff8fa3;
-            color: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 28px;
-            box-shadow: 0 4px 15px rgba(255, 143, 163, 0.5);
-            cursor: pointer;
-            z-index: 9999;
-            transition: transform 0.2s;
-        }
-        #logFloatBtn:active {
-            transform: scale(0.9);
+            flex-direction: column;
+            height: 100vh;
         }
         
-        /* 3. 给主内容留出底部空间，防止被悬浮按钮挡住 */
-        .game-body {
-            padding-bottom: 100px;
+        /* 2. 顶部和导航栏保持原样 */
+        header, nav {
+            flex: 0 0 auto;
+            z-index: 10;
+        }
+
+        /* 3. 核心：嵌套用的 iframe 画框 */
+        .iframe-container {
+            flex: 1;
+            width: 100%;
+            border: none;
+            background: transparent;
+            /* 防止内容被底部的悬浮按钮挡住，给个底边距 */
+            padding-bottom: 20px; 
+        }
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: block;
         }
     </style>
 </head>
 <body>
+
+<div class="app-container">
+    <!-- 顶部状态栏和导航（由 shared.js 自动渲染） -->
     <header id="header"></header>
     <nav id="navBar"></nav>
 
-    <div class="game-body">
-        <div class="content" id="content"></div>
-        
-        <!-- 日记面板保留，但被 CSS 变成了悬浮窗 -->
-        <aside class="log-panel" id="logPanelWrap">
-            <div class="card">
-                <h2>
-                    <span>📜 小店日记</span>
-                    <span id="closeLogBtn" style="cursor:pointer; font-size:14px; color:#aaa;">✖ 关闭</span>
-                </h2>
-                <div class="log-list" id="logList"></div>
-            </div>
-        </aside>
-    </div>
+    <!-- 内容画框：默认加载 pages/home.html -->
+    <iframe id="mainFrame" src="pages/home.html" class="iframe-container"></iframe>
 
-    <!-- 右下角的悬浮按钮 -->
-    <div id="logFloatBtn">📜</div>
-
+    <!-- 底部操作区 -->
     <div class="action-footer" id="footer"></div>
+</div>
 
-    <script src="js/core/store.js"></script>
-    <script src="js/data/ingredients.js"></script>
-    <script src="js/data/recipes.js"></script>
-    <script src="js/data/bundles.js"></script>
-    <script src="js/data/characters.js"></script>
-    <script src="js/data/events.js"></script>
-    <script src="js/data/shop-config.js"></script>
-    <script src="js/data/achievements.js"></script>
-    <script src="js/core/utils.js"></script>
-    <script src="js/core/state.js"></script>
-    <script src="js/core/modal.js"></script>
-    <script src="js/core/effects.js"></script>
-    <script src="js/core/render.js"></script>
-    <script src="js/actions/bakery.js"></script>
-    <script src="js/actions/shop.js"></script>
-    <script src="js/actions/social.js"></script>
-    <script src="js/actions/system.js"></script>
-    <script src="js/shared.js"></script>
-    
-    <script>
-        // --- 控制悬浮窗的展开和收起 ---
-        const logBtn = document.getElementById('logFloatBtn');
-        const logPanel = document.getElementById('logPanelWrap');
-        const closeBtn = document.getElementById('closeLogBtn');
+<!-- 保留你所有的基础 JS -->
+<script src="js/core/store.js"></script>
+<script src="js/data/ingredients.js"></script>
+<script src="js/data/recipes.js"></script>
+<script src="js/data/bundles.js"></script>
+<script src="js/data/characters.js"></script>
+<script src="js/data/events.js"></script>
+<script src="js/data/shop-config.js"></script>
+<script src="js/data/achievements.js"></script>
+<script src="js/core/utils.js"></script>
+<script src="js/core/state.js"></script>
+<script src="js/core/modal.js"></script>
+<script src="js/core/effects.js"></script>
+<script src="js/core/render.js"></script>
+<script src="js/actions/bakery.js"></script>
+<script src="js/actions/shop.js"></script>
+<script src="js/actions/social.js"></script>
+<script src="js/actions/system.js"></script>
+<script src="js/shared.js"></script>
 
-        logBtn.addEventListener('click', () => {
-            logPanel.classList.add('show');
-        });
+<script>
+    // 初始化主框架
+    Game.initPage('home', () => {}, true); 
 
-        closeBtn.addEventListener('click', () => {
-            logPanel.classList.remove('show');
-        });
-
-        // --- 原有的游戏逻辑（保持不变） ---
-        Game.initPage('home', renderDashboard, true);
-
-        function renderDashboard() {
-            const s = Game.state;
-            const cakes = Object.entries(s.cakes)
-                .filter(([n, v]) => v > 0 && Game.RECIPES[n]);
-
-            document.getElementById('content').innerHTML = `
-                <div class="card">
-                    <h2>🏠 欢迎回来，${Game.escapeHtml(s.playerName)}！</h2>
-                    <p class="muted">今天是经营的第 <b>${s.day}</b> 天，你的「${Game.escapeHtml(s.shopName)}」正散发着甜蜜香气～</p>
-                    <div class="grid-2" style="margin-top:12px;">
-                        <div class="item-card">
-                            <span class="item-emoji">💰</span>
-                            <span class="item-name">${s.money} 元</span>
-                            <span class="item-desc">当前余额</span>
-                        </div>
-                        <div class="item-card">
-                            <span class="item-emoji">⭐</span>
-                            <span class="item-name">${s.reputation} 声望</span>
-                            <span class="item-desc">店铺名气</span>
-                        </div>
-                        <div class="item-card">
-                            <span class="item-emoji">🏪</span>
-                            <span class="item-name">Lv.${s.shopLevel} · 装饰${s.decoration}</span>
-                            <span class="item-desc">店铺等级与装饰度</span>
-                        </div>
-                        <div class="item-card">
-                            <span class="item-emoji">⚡</span>
-                            <span class="item-name">${s.energy}/100</span>
-                            <span class="item-desc">今日剩余精力</span>
-                        </div>
-                    </div>
-
-                    <h3>⚡ 快速行动</h3>
-                    <div class="char-actions">
-                        <button type="button" class="small" onclick="Game.rest()">😴 休息</button>
-                        <button type="button" class="small secondary" onclick="Game.walk()">🚶‍♀️ 散步</button>
-                        <a class="btn-link small secondary" href="bake.html">🎂 去烘焙</a>
-                        <a class="btn-link small secondary" href="shop.html">🏪 店铺经营</a>
-                    </div>
-
-                    <h3>🧁 库存蛋糕</h3>
-                    ${cakes.length === 0
-                        ? '<p class="muted">还没有蛋糕库存，快去「烘焙」页面做几个吧！</p>'
-                        : `<div class="grid-2">
-                            ${cakes.map(([n, v]) => `
-                                <div class="item-card">
-                                    <span class="item-emoji">${Game.RECIPES[n].emoji}</span>
-                                    <span class="item-name">${n} <span class="muted">×${v}</span></span>
-                                    <span class="item-meta">售价 <span class="price-tag">${Math.round(Game.RECIPES[n].price * s.priceRate)}元</span></span>
-                                </div>
-                            `).join('')}
-                        </div>`}
-                </div>`;
+    // 拦截导航栏的点击，让页面在 iframe 里切换，而不是整个网页刷新
+    document.addEventListener('click', function(e) {
+        // 如果点击的是导航里的链接
+        if (e.target.closest('nav a')) {
+            const link = e.target.closest('nav a');
+            const href = link.getAttribute('href');
+            
+            // 如果链接是 # 或者是空的，就不管
+            if (href && href !== '#') {
+                e.preventDefault(); // 阻止整个页面跳转
+                
+                // 修改画框的地址，如果是外部页面，就加上 pages/ 前缀
+                let targetUrl = href;
+                if (!href.includes('pages/')) {
+                    targetUrl = 'pages/' + href;
+                }
+                document.getElementById('mainFrame').src = targetUrl;
+            }
         }
-    </script>
+    });
+</script>
 </body>
 </html>

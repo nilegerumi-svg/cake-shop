@@ -1,3 +1,4 @@
+<!-- log.html -->
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -21,6 +22,9 @@
         const SAVE_KEY = 'cakeShopSave_v1';
         const logList = document.getElementById('logList');
 
+        // ⭐ 提到最外层，确保 renderLogs 和 renderLogList 都能访问到
+        const getCake = () => window.parent.Cake || null;
+
         /* ==================== 渲染日志 ==================== */
 
         const renderEmpty = () => {
@@ -28,15 +32,18 @@
         };
 
         const renderLogs = (logs) => {
+            const Cake = getCake();
+            const escapeHtml = Cake?.escapeHtml ?? ((s) => String(s ?? ''));
+
             logList.innerHTML = logs
                 .slice()
                 .reverse()
-                .map((l) => `<div style="margin-bottom:8px; line-height:1.5;">📝 第${l.day}天：${Cake.escapeHtml(l.text)}</div>`)
+                .map((l) => `<div style="margin-bottom:8px; line-height:1.5;">📝 第${l.day}天：${escapeHtml(l.text)}</div>`)
                 .join('');
         };
 
         const renderLogList = () => {
-            const Cake = window.parent.Cake;
+            const Cake = getCake();
             if (!Cake) return;
 
             const logs = Cake.store?.state?.log ?? [];
@@ -47,12 +54,9 @@
 
         window.addEventListener('load', renderLogList);
 
-        // ✨ 跨 iframe 同步：其它窗口保存存档后，本窗口也刷新日志
         window.addEventListener('storage', (e) => {
             if (e.key && e.key !== SAVE_KEY) return;
             if (e.storageArea && e.storageArea !== window.localStorage) return;
-            // 先让 parent 同步（game.html 里 render.js 的 storage 监听会更新 parent state），
-            // 用 requestAnimationFrame 等下一次渲染再读取
             requestAnimationFrame(renderLogList);
         });
     })();

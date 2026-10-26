@@ -5,41 +5,62 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>🍰 主页 · 甜蜜物语</title>
     <link rel="stylesheet" href="css/styles.css">
+    <style>
+        /* 为了让日记跑到上面后更美观，并且不被底部按钮挡住 */
+        .game-body {
+            display: flex;
+            flex-direction: column;
+            padding-bottom: 120px; /* 给底部的悬浮按钮留出空间 */
+        }
+        .log-panel {
+            width: 100% !important; /* 让日记卡片占满宽度 */
+            margin-bottom: 16px;
+        }
+        /* 让日记列表不要太高，不然会顶走主内容 */
+        .log-list {
+            max-height: 150px;
+            overflow-y: auto;
+        }
+    </style>
 </head>
 <body>
     <header id="header"></header>
     <nav id="navBar"></nav>
 
     <div class="game-body">
-        <div class="content" id="content"></div>
+        <!-- 👇【改动位置】：把日记面板放到了最前面 👇 -->
         <aside class="log-panel" id="logPanelWrap">
             <div class="card">
                 <h2>📜 小店日记</h2>
                 <div class="log-list" id="logList"></div>
             </div>
         </aside>
+
+        <!-- 👇 主内容区 👇 -->
+        <div class="content" id="content"></div>
     </div>
 
     <div class="action-footer" id="footer"></div>
 
     <script src="js/core/store.js"></script>
-<script src="js/data/ingredients.js"></script>
-<script src="js/data/recipes.js"></script>
-<script src="js/data/bundles.js"></script>
-<script src="js/data/characters.js"></script>
-<script src="js/data/events.js"></script>
-<script src="js/data/shop-config.js"></script>
-<script src="js/data/achievements.js"></script>
-<script src="js/core/utils.js"></script>
-<script src="js/core/state.js"></script>
-<script src="js/core/modal.js"></script>
-<script src="js/core/effects.js"></script>
-<script src="js/core/render.js"></script>
-<script src="js/actions/bakery.js"></script>
-<script src="js/actions/shop.js"></script>
-<script src="js/actions/social.js"></script>
-<script src="js/actions/system.js"></script>
-<script src="js/shared.js"></script>
+    <script src="js/data/ingredients.js"></script>
+    <script src="js/data/recipes.js"></script>
+    <script src="js/data/bundles.js"></script>
+    <script src="js/data/characters.js"></script>
+    <script src="js/data/events.js"></script>
+    <script src="js/data/shop-config.js"></script>
+    <script src="js/data/achievements.js"></script>
+    <script src="js/core/utils.js"></script>
+    <script src="js/core/state.js"></script>
+    <script src="js/core/modal.js"></script>
+    <script src="js/core/effects.js"></script>
+    <script src="js/core/render.js"></script>
+    <script src="js/actions/bakery.js"></script>
+    <script src="js/actions/shop.js"></script>
+    <script src="js/actions/social.js"></script>
+    <script src="js/actions/system.js"></script>
+    <script src="js/shared.js"></script>
+    
     <script>
         Game.initPage('home', renderDashboard, true);
 

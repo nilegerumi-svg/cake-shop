@@ -89,7 +89,16 @@
             const href = link.getAttribute('href');
             if (href && href !== '#' && href !== 'javascript:;') {
                 e.preventDefault(); 
-                let targetUrl = href.includes('pages/') ? href : 'pages/' + href;
+                
+                // 👇【核心修改在这里】处理主页和子页面的路径映射 👇
+                let targetUrl = href;
+                if (href === 'game.html' || href === 'index.html') {
+                    targetUrl = 'pages/home.html';
+                } else if (!href.includes('pages/')) {
+                    targetUrl = 'pages/' + href;
+                }
+                // 👆-----------------------------------------👆
+
                 document.getElementById('mainFrame').src = targetUrl;
             }
         }

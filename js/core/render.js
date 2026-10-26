@@ -3,9 +3,18 @@ window.Cake = window.Cake || {};
     var currentRender = null;
     var currentActiveTab = 'home';
 
+    // 判断是否在 iframe 内部（内层页面）
+    var isInIframe = (window.self !== window.top);
+
     function renderHeader() {
         var el = window.Cake.$('header');
         if (!el) return;
+        // ✨ 修复：内层 iframe 不渲染顶栏，直接隐藏，避免和外层重复
+        if (isInIframe) {
+            el.style.display = 'none';
+            return;
+        }
+        
         var state = window.Cake.store.state;
         var pct = Math.max(0, Math.min(100, Math.round(state.energy)));
         var esc = window.Cake.escapeHtml;
@@ -29,6 +38,12 @@ window.Cake = window.Cake || {};
     function renderNav(active) {
         var el = window.Cake.$('navBar');
         if (!el) return;
+        // ✨ 修复：内层 iframe 不渲染导航，直接隐藏
+        if (isInIframe) {
+            el.style.display = 'none';
+            return;
+        }
+
         var items = [
             { key: 'home',    label: '🏠 主页', href: 'game.html' },
             { key: 'shop',    label: '🏪 店铺', href: 'shop.html' },
@@ -50,6 +65,15 @@ window.Cake = window.Cake || {};
     function renderFooter() {
         var el = window.Cake.$('footer');
         if (!el) return;
+        
+        // ✨ 修复：内层 iframe 简化 footer，去掉长提示文字，避免按钮被挤压变形
+        if (isInIframe) {
+            el.innerHTML = '<button class="big-btn gold" onclick="Game.openShop()" style="width: 100%; max-width: 300px;">🧁 开店营业</button>';
+            el.style.padding = '10px';
+            el.style.justifyContent = 'center';
+            return;
+        }
+
         el.innerHTML =
             '<button class="big-btn gold" onclick="Game.openShop()">🧁 开店营业</button>' +
             '<span class="hint">💡 白天先烘焙、采购、社交或装修店铺，准备好就开店迎接顾客吧！</span>';
@@ -74,7 +98,6 @@ window.Cake = window.Cake || {};
     }
 
     function refreshPage() {
-        // 收到其它窗口的同步事件时不回写，避免事件循环
         if (!window.Cake.__syncing) window.Cake.saveState();
         renderHeader();
         renderNav(currentActiveTab);
@@ -91,7 +114,7 @@ window.Cake = window.Cake || {};
         refreshPage();
     }
 
-    // ✨ 跨 iframe 状态同步：任一窗口保存后，其它窗口重新加载并重绘
+    // 跨 iframe 状态同步
     window.addEventListener('storage', function (e) {
         if (e.key && e.key !== window.Cake.SAVE_KEY) return;
         if (e.storageArea && e.storageArea !== window.localStorage) return;

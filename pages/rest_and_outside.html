@@ -3,31 +3,77 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>娱乐</title>
+    <title>🎮 娱乐 · 甜蜜物语</title>
     <link rel="stylesheet" href="../css/styles.css">
-    <style> body { background: transparent; padding: 16px; margin: 0; } </style>
 </head>
 <body>
-<div id="content"></div>
-<script>
-    window.onload = function() {
-        const Cake = window.parent.Cake;
-        if (!Cake) return;
+    <header id="header"></header>
+    <nav id="navBar"></nav>
+    <div class="game-body">
+        <div class="content" id="content"></div>
+    </div>
+    <div class="action-footer" id="footer"></div>
 
-        function render() {
-            const s = Cake.store.state;
+    <script src="../js/core/store.js"></script>
+    <script src="../js/data/ingredients.js"></script>
+    <script src="../js/data/recipes.js"></script>
+    <script src="../js/data/bundles.js"></script>
+    <script src="../js/data/characters.js"></script>
+    <script src="../js/data/events.js"></script>
+    <script src="../js/data/shop-config.js"></script>
+    <script src="../js/data/achievements.js"></script>
+    <script src="../js/core/utils.js"></script>
+    <script src="../js/core/state.js"></script>
+    <script src="../js/core/modal.js"></script>
+    <script src="../js/core/effects.js"></script>
+    <script src="../js/core/render.js"></script>
+    <script src="../js/actions/bakery.js"></script>
+    <script src="../js/actions/shop.js"></script>
+    <script src="../js/actions/social.js"></script>
+    <script src="../js/actions/system.js"></script>
+    <script src="../js/shared.js"></script>
+    <script>
+        Game.initPage('entertainment', renderEntertainment);
+
+        let statusMsg = '放松一下，劳逸结合~';
+
+        function renderEntertainment() {
+            const s = Game.state;
             document.getElementById('content').innerHTML = `
                 <div class="card">
-                    <h2>🎮 娱乐</h2>
-                    <p class="muted">精力 ${s.energy}/100</p>
-                    <div class="char-actions" style="margin-top:16px;">
-                        <button class="small" onclick="parent.Cake.rest(); parent.Cake.refreshPage(); render();">😴 休息 (+精力)</button>
-                        <button class="small secondary" onclick="parent.Cake.walk(); parent.Cake.refreshPage(); render();">🚶‍♀️ 散步 (+精力)</button>
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+                        <a href="../game.html" style="text-decoration:none;color:#888;font-size:14px;">⬅ 返回</a>
+                        <h2 style="margin:0;">🎮 娱乐</h2>
+                        <div style="width:40px;"></div>
                     </div>
+                    <p class="muted">精力 ${s.energy}/100</p>
+                    <div class="char-actions" style="flex-direction:column;">
+                        <button class="small" style="padding:15px;font-size:16px;border-radius:12px;background:#a1c4fd;color:#333;" onclick="doWalk()">🚶 出门散步</button>
+                        <button class="small" style="padding:15px;font-size:16px;border-radius:12px;margin-top:10px;" onclick="doRest()">😴 休息一下</button>
+                    </div>
+                    <p class="muted" id="status-msg" style="text-align:center;margin-top:20px;">${statusMsg}</p>
                 </div>`;
         }
-        render();
-    };
-</script>
+
+        function doWalk() {
+            if (typeof Game.walk === 'function') {
+                Game.walk();
+                statusMsg = '散步完成，体力恢复啦！';
+            } else {
+                alert('找不到散步功能，请检查代码！');
+            }
+            renderEntertainment();
+        }
+
+        function doRest() {
+            if (typeof Game.rest === 'function') {
+                Game.rest();
+                statusMsg = '美美地睡了一觉，体力满满！';
+            } else {
+                alert('找不到休息功能，请检查代码！');
+            }
+            renderEntertainment();
+        }
+    </script>
 </body>
 </html>

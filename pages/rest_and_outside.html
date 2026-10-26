@@ -3,6 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- 强制浏览器每次重新拉取数据，不走缓存 -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>娱乐</title>
     <style>
         body { background: #fff0f5; font-family: sans-serif; padding: 20px; display: flex; justify-content: center; color: #4a3b3f; }
@@ -11,14 +15,14 @@
         p { margin: 10px 0; }
         button { background: #ff8fa3; color: white; border: none; padding: 12px 20px; border-radius: 25px; font-size: 16px; margin-top: 10px; width: 100%; cursor: pointer; font-weight: bold; }
         button:disabled { background: #ccc; }
-        /* 散步按钮换个颜色以示区分 */
         #btnWalk { background: #7ec4cf; } 
         #btnWalk:disabled { background: #ccc; }
     </style>
 </head>
 <body>
     <div class="card" id="mainCard">
-        <h2>🎮 娱乐休息</h2>
+        <!-- 注意这里加了 V2 标识 -->
+        <h2>🎮 娱乐休息 (V2)</h2>
         <p>当前体力：<span id="energy">--</span>/100</p>
         
         <button id="btnRest" onclick="doRest()">休息一下 (+20体力)</button>
@@ -31,8 +35,6 @@
         function updateUI() {
             if (!G || !G.state) return;
             document.getElementById('energy').innerText = G.state.energy;
-            
-            // 体力满了不能休息，体力不足 10 点不能散步
             document.getElementById('btnRest').disabled = (G.state.energy >= 100);
             document.getElementById('btnWalk').disabled = (G.state.energy < 10);
         }
@@ -40,15 +42,9 @@
         function doRest() {
             if (!G || !G.state) return;
             if (G.state.energy >= 100) return;
-            
             G.state.energy = Math.min(100, G.state.energy + 20);
-            
-            if (typeof G.addLog === 'function') {
-                G.addLog("去娱乐室休息了一下，恢复了20点体力。");
-            }
-            if (typeof G.saveState === 'function') {
-                G.saveState();
-            }
+            if (typeof G.addLog === 'function') G.addLog("去娱乐室休息了一下，恢复了20点体力。");
+            if (typeof G.saveState === 'function') G.saveState();
             updateUI();
         }
 
@@ -58,23 +54,9 @@
                 alert("体力不足，无法散步啦！");
                 return;
             }
-            
-            // 散步扣除体力
             G.state.energy -= 10;
-            
-            // 这里可以加散步的奖励，例如增加声望 (假设你的数据里有 reputation)
-            /*
-            if (G.state.reputation !== undefined) {
-                G.state.reputation += 1;
-            }
-            */
-
-            if (typeof G.addLog === 'function') {
-                G.addLog("去附近散了散步，心情变好了。");
-            }
-            if (typeof G.saveState === 'function') {
-                G.saveState();
-            }
+            if (typeof G.addLog === 'function') G.addLog("去附近散了散步，心情变好了。");
+            if (typeof G.saveState === 'function') G.saveState();
             updateUI();
         }
 
@@ -82,7 +64,7 @@
             if (!G || !G.state) {
                 document.getElementById('mainCard').innerHTML = `
                     <h2 style="color:red">⚠️ 数据加载失败</h2>
-                    <p style="font-size:14px; color:#666;">未能连接到游戏主界面。<br>请确保从游戏主页面进入此页。</p>
+                    <p style="font-size:14px; color:#666;">未能连接到游戏主界面。</p>
                 `;
                 return;
             }

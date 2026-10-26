@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>甜蜜物语 - 开始</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -14,6 +14,7 @@
             align-items: center;
             justify-content: center;
             padding: 20px;
+            padding-bottom: calc(20px + env(safe-area-inset-bottom));
             color: #4a3b3f;
         }
         .start-card {
@@ -50,6 +51,12 @@
             font-size: 30px;
             cursor: pointer;
             transition: all 0.2s ease;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .avatar-option:focus-visible {
+            outline: 2px solid #ff8fa3;
+            outline-offset: 2px;
         }
         .avatar-option.selected {
             border-color: #ff6b81;
@@ -59,25 +66,38 @@
         }
 
         .input-group { text-align: left; margin-bottom: 24px; }
-        .input-group label { display: block; font-size: 14px; font-weight: bold; color: #d85c74; margin-bottom: 8px; margin-top: 16px; }
+        .input-group label {
+            display: block; font-size: 14px; font-weight: bold;
+            color: #d85c74; margin-bottom: 8px; margin-top: 16px;
+        }
         .input-group label:first-child { margin-top: 0; }
         .input-group input {
-            width: 100%; padding: 14px 16px; border: 2px solid #ffd1dc;
-            border-radius: 12px; font-size: 16px; background: #fafafa; color: #333; transition: all 0.3s ease;
+            width: 100%; padding: 14px 16px;
+            border: 2px solid #ffd1dc; border-radius: 12px;
+            font-size: 16px; background: #fafafa; color: #333;
+            transition: all 0.3s ease;
         }
-        .input-group input:focus { outline: none; border-color: #ff8fa3; background: #fff; box-shadow: 0 0 0 4px rgba(255, 143, 163, 0.15); }
+        .input-group input:focus {
+            outline: none; border-color: #ff8fa3; background: #fff;
+            box-shadow: 0 0 0 4px rgba(255, 143, 163, 0.15);
+        }
 
         .button-group { display: flex; flex-direction: column; gap: 12px; }
         .button-group button {
             width: 100%; padding: 16px; border: none; border-radius: 50px;
-            font-size: 16px; font-weight: bold; cursor: pointer; transition: all 0.2s ease;
+            font-size: 16px; font-weight: bold; cursor: pointer;
+            transition: all 0.2s ease;
+            -webkit-tap-highlight-color: transparent;
         }
         .btn-start { background: #ff8fa3; color: white; box-shadow: 0 4px 15px rgba(255, 143, 163, 0.4); }
         .btn-start:active { transform: scale(0.98); }
         .btn-continue { background: #ffffff; color: #ff8fa3; border: 2px solid #ff8fa3 !important; }
         .btn-continue:active { background: #fff0f5; transform: scale(0.98); }
 
-        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
     </style>
 </head>
 <body>
@@ -94,19 +114,19 @@
             你的故事，由你亲手书写。</p>
         </div>
 
-        <div class="avatar-group" id="avatarGroup">
-            <div class="avatar-option selected" data-avatar="girl1">👧🏻</div>
-            <div class="avatar-option" data-avatar="girl2">👩🏻</div>
-            <div class="avatar-option" data-avatar="boy1">👦🏻</div>
-            <div class="avatar-option" data-avatar="cake">🧁</div>
+        <div class="avatar-group" id="avatarGroup" role="radiogroup" aria-label="选择头像">
+            <div class="avatar-option selected" role="radio" tabindex="0" aria-checked="true"  data-avatar="girl1">👧🏻</div>
+            <div class="avatar-option"          role="radio" tabindex="-1" aria-checked="false" data-avatar="girl2">👩🏻</div>
+            <div class="avatar-option"          role="radio" tabindex="-1" aria-checked="false" data-avatar="boy1">👦🏻</div>
+            <div class="avatar-option"          role="radio" tabindex="-1" aria-checked="false" data-avatar="cake">🧁</div>
         </div>
 
         <div class="input-group">
-            <label>👩‍🍳 你的名字（默认：小甜）</label>
-            <input type="text" id="playerName" placeholder="请输入你的名字" value="小甜">
+            <label for="playerName">👩‍🍳 你的名字（默认：小甜）</label>
+            <input type="text" id="playerName" maxlength="12" placeholder="请输入你的名字" value="小甜" autocomplete="off">
 
-            <label>🏪 蛋糕店的名字（默认：甜蜜物语）</label>
-            <input type="text" id="shopName" placeholder="请输入店铺名字" value="甜蜜物语">
+            <label for="shopName">🏪 蛋糕店的名字（默认：甜蜜物语）</label>
+            <input type="text" id="shopName" maxlength="12" placeholder="请输入店铺名字" value="甜蜜物语" autocomplete="off">
         </div>
 
         <div class="button-group">
@@ -116,36 +136,98 @@
     </div>
 
     <script>
-        const avatarOptions = document.querySelectorAll('.avatar-option');
-        let selectedAvatar = 'girl1';
+    (function () {
+        'use strict';
 
-        avatarOptions.forEach(option => {
-            option.addEventListener('click', () => {
-                avatarOptions.forEach(opt => opt.classList.remove('selected'));
-                option.classList.add('selected');
-                selectedAvatar = option.getAttribute('data-avatar');
+        var SAVE_KEY = 'cakeShopSave_v1';
+
+        /* ---------- 头像选择 ---------- */
+        var avatarOptions = document.querySelectorAll('.avatar-option');
+        var selectedAvatar = 'girl1';
+
+        function selectAvatar(option) {
+            avatarOptions.forEach(function (o) {
+                o.classList.remove('selected');
+                o.setAttribute('aria-checked', 'false');
+                o.setAttribute('tabindex', '-1');
+            });
+            option.classList.add('selected');
+            option.setAttribute('aria-checked', 'true');
+            option.setAttribute('tabindex', '0');
+            option.focus();
+            selectedAvatar = option.getAttribute('data-avatar');
+        }
+
+        avatarOptions.forEach(function (option) {
+            option.addEventListener('click', function () { selectAvatar(option); });
+            option.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+                    e.preventDefault();
+                    selectAvatar(option);
+                }
             });
         });
 
-        document.getElementById('btnStart').addEventListener('click', () => {
-            const playerName = document.getElementById('playerName').value || '小甜';
-            const shopName = document.getElementById('shopName').value || '甜蜜物语';
+        /* ---------- 开始新游戏：覆盖旧档前先确认 ---------- */
+        document.getElementById('btnStart').addEventListener('click', function () {
+            var rawName = document.getElementById('playerName').value || '';
+            var rawShop = document.getElementById('shopName').value || '';
+            var playerName = rawName.trim().slice(0, 12) || '小甜';
+            var shopName   = rawShop.trim().slice(0, 12) || '甜蜜物语';
 
-            localStorage.setItem('playerName', playerName);
-            localStorage.setItem('shopName', shopName);
-            localStorage.setItem('playerAvatar', selectedAvatar);
+            var hasOld = false;
+            try { hasOld = !!localStorage.getItem(SAVE_KEY); } catch (_) {}
+
+            if (hasOld && !confirm('已存在存档，开始新游戏会覆盖当前进度，确定吗？')) {
+                return;
+            }
+
+            // 清空本游戏相关的所有键，避免残留状态
+            try {
+                Object.keys(localStorage)
+                    .filter(function (k) {
+                        return k.indexOf('cakeShop') === 0 ||
+                               k === 'playerName' ||
+                               k === 'shopName' ||
+                               k === 'playerAvatar';
+                    })
+                    .forEach(function (k) { localStorage.removeItem(k); });
+
+                localStorage.setItem('playerName', playerName);
+                localStorage.setItem('shopName', shopName);
+                localStorage.setItem('playerAvatar', selectedAvatar);
+            } catch (err) {
+                alert('浏览器不允许保存存档，请检查是否开启了隐私模式。');
+                return;
+            }
 
             window.location.href = 'game.html';
         });
 
-        // ✨ 修复：绑定「继续游戏」
-        document.getElementById('btnContinue').addEventListener('click', () => {
-            if (localStorage.getItem('cakeShopSave_v1')) {
-                window.location.href = 'game.html';
-            } else {
+        /* ---------- 继续游戏：校验存档有效性 ---------- */
+        document.getElementById('btnContinue').addEventListener('click', function () {
+            var save = null;
+            try {
+                save = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null');
+            } catch (_) { save = null; }
+
+            if (!save || typeof save !== 'object') {
                 alert('还没有存档哦，先点「开启甜蜜之旅」吧～');
+                return;
             }
+            window.location.href = 'game.html';
         });
+
+        /* ---------- 输入框回车提交 ---------- */
+        ['playerName', 'shopName'].forEach(function (id) {
+            document.getElementById(id).addEventListener('keydown', function (e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    document.getElementById('btnStart').click();
+                }
+            });
+        });
+    })();
     </script>
 </body>
 </html>

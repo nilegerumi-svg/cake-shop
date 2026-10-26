@@ -66,30 +66,16 @@ window.Cake = window.Cake || {};
     };
 
     /* ==================== Footer ==================== */
-
-    // footer 每次重写 innerHTML，事件委托只需绑一次
-    const bindFooterOpenShop = (el) => {
-        if (el.__boundOpenShop) return;
-        el.__boundOpenShop = true;
-
-        el.addEventListener('click', (e) => {
-            const btn = e.target.closest('[data-action="open-shop"]');
-            if (!btn) return;
-
-            const Game = window.Game;
-            if (Game && typeof Game.openShop === 'function') Game.openShop();
-        });
-    };
+    
+    // （已删除了绑定的 bindFooterOpenShop 事件）
 
     const renderFooter = () => {
         const el = Cake.$('footer');
         if (!el || isInIframe) return;
 
+        // 扣掉大按钮，只保留底部的温馨小提示
         el.innerHTML = `
-            <button class="big-btn gold" type="button" data-action="open-shop">🧁 开店营业</button>
-            <span class="hint">💡 白天先烘焙、采购、社交或装修店铺，准备好就开店迎接顾客吧！</span>`;
-
-        bindFooterOpenShop(el);
+            <span class="hint" style="padding-top: 5px; padding-bottom: 5px;">💡 前往【🏪 店铺】页面即可开店营业，迎接顾客！</span>`;
     };
 
     /* ==================== Log ==================== */

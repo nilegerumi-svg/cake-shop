@@ -37,20 +37,26 @@ window.Cake = window.Cake || {};
         const pct = Math.max(0, Math.min(100, Math.round(state.energy)));
         const esc = Cake.escapeHtml;
 
+        // 采用 Flex 布局压缩高度
         el.innerHTML = `
-            <div class="header-left">
-                <span class="shop-emoji">${esc(state.avatar)}</span>
-                <span>${esc(state.shopName)}</span>
-            </div>
-            <div class="header-stats">
-                <div class="stat-chip">📅 第 ${state.day} 天</div>
-                <div class="stat-chip">💰 ${state.money} 元</div>
-                <div class="stat-chip">⭐ 声望 ${state.reputation}</div>
-                <div class="energy-wrap">
-                    <span>⚡</span>
-                    <div class="energy-bar"><div class="energy-bar-fill" style="width:${pct}%"></div></div>
-                    <span class="energy-text">${Math.round(state.energy)}/100</span>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <div class="header-left" style="display: flex; align-items: center; gap: 6px; font-weight: bold; font-size: 15px; color: #d6336c;">
+                    <span class="shop-emoji" style="font-size: 20px;">${esc(state.avatar)}</span>
+                    <span>${esc(state.shopName)}</span>
                 </div>
+                <div class="header-stats" style="display: flex; gap: 8px; font-size: 13px; color: #555; font-weight: bold;">
+                    <span>📅 ${state.day}天</span>
+                    <span>💰 ${state.money}</span>
+                    <span>⭐ ${state.reputation}</span>
+                </div>
+            </div>
+            
+            <div class="energy-wrap" style="display: flex; align-items: center; gap: 8px; font-size: 12px;">
+                <span>⚡</span>
+                <div class="energy-bar" style="flex: 1; height: 6px; background: #ffe4e1; border-radius: 4px; overflow: hidden;">
+                    <div class="energy-bar-fill" style="height: 100%; width: ${pct}%; background: #ff8fa3;"></div>
+                </div>
+                <span style="color: #888; width: 45px; text-align: right;">${Math.round(state.energy)}/100</span>
             </div>`;
     };
 

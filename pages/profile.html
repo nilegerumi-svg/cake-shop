@@ -29,13 +29,30 @@
     <script src="../js/actions/system.js"></script>
     <script src="../js/shared.js"></script>
     <script>
-        Game.initPage('profile', renderProfile);
-        function renderProfile() {
+    (() => {
+        'use strict';
+
+        const contentEl = document.getElementById('content');
+
+        const renderAchievements = (s) => Game.ACHIEVEMENTS.map((a) => {
+            const earned = Boolean(s.achievements[a.id]);
+            return `<div class="achievement ${earned ? 'earned' : ''}">
+                <span class="a-icon">${earned ? '✅' : '🔒'}</span>
+                <div>
+                    <div style="font-weight:700;">${a.icon} ${a.name}</div>
+                    <div class="muted">${a.desc}</div>
+                </div>
+            </div>`;
+        }).join('');
+
+        const renderProfile = () => {
             const s = Game.state;
-            const earnedCount = Game.ACHIEVEMENTS.filter(a => s.achievements[a.id]).length;
+
+            const earnedCount = Game.ACHIEVEMENTS.filter((a) => s.achievements[a.id]).length;
             const total = Game.ACHIEVEMENTS.length;
-            const pct = total > 0 ? Math.round(earnedCount / total * 100) : 0;
-            document.getElementById('content').innerHTML = `
+            const pct = total > 0 ? Math.round((earnedCount / total) * 100) : 0;
+
+            contentEl.innerHTML = `
                 <div class="card">
                     <h2>📊 我的档案</h2>
                     <div class="grid-2">
@@ -52,23 +69,44 @@
                         </div>
                     </div>
                     <h3>🏅 成就（${earnedCount}/${total}，${pct}%）</h3>
-                    <div class="aff-bar" style="height:8px;margin:0 0 10px;" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}"><div class="aff-fill" style="width:${pct}%;"></div></div>
-                    <div class="achievement-list">
-                        ${Game.ACHIEVEMENTS.map(a => `
-                            <div class="achievement ${s.achievements[a.id] ? 'earned' : ''}">
-                                <span class="a-icon">${s.achievements[a.id] ? '✅' : '🔒'}</span>
-                                <div><div style="font-weight:700;">${a.icon} ${a.name}</div><div class="muted">${a.desc}</div></div>
-                            </div>`).join('')}
+                    <div class="aff-bar" style="height:8px;margin:0 0 10px;" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}">
+                        <div class="aff-fill" style="width:${pct}%;"></div>
                     </div>
+                    <div class="achievement-list">${renderAchievements(s)}</div>
                     <h3>💾 存档 & 结局</h3>
                     <div class="char-actions" style="gap:10px;margin-top:8px;">
-                        <button type="button" class="small" onclick="Game.saveGame()">💾 保存游戏</button>
-                        <button type="button" class="small secondary" onclick="if(confirm('读取存档会回到上次保存的进度，当前未保存的改动会丢失，确定吗？')) Game.loadGame()">📂 读取存档</button>
-                        <button type="button" class="small gold" onclick="Game.showEnding()">🌟 查看结局</button>
-                        <button type="button" class="small" onclick="Game.resetGame()">🔄 重新开始</button>
+                        <button type="button" class="small" data-action="save">💾 保存游戏</button>
+                        <button type="button" class="small secondary" data-action="load">📂 读取存档</button>
+                        <button type="button" class="small gold" data-action="ending">🌟 查看结局</button>
+                        <button type="button" class="small" data-action="reset">🔄 重新开始</button>
                     </div>
                 </div>`;
-        }
+        };
+
+        /* ---------------- 事件委托 ---------------- */
+
+        const ACTIONS = {
+            save:   () => Game.saveGame(),
+            load:   () => {
+                if (confirm('读取存档会回到上次保存的进度，当前未保存的改动会丢失，确定吗？')) {
+                    Game.loadGame();
+                }
+            },
+            ending: () => Game.showEnding(),
+            reset:  () => Game.resetGame(),
+        };
+
+        contentEl.addEventListener('click', (e) => {
+            const btn = e.target.closest('[data-action]');
+            if (!btn) return;
+            const handler = ACTIONS[btn.dataset.action];
+            if (typeof handler === 'function') handler();
+        });
+
+        /* ---------------- 页面初始化 ---------------- */
+
+        Game.initPage('profile', renderProfile);
+    })();
     </script>
 </body>
 </html>

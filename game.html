@@ -6,20 +6,81 @@
     <title>🍰 主页 · 甜蜜物语</title>
     <link rel="stylesheet" href="css/styles.css">
     <style>
-        /* 为了让日记跑到上面后更美观，并且不被底部按钮挡住 */
-        .game-body {
+        /* --- 悬浮日记专属样式 --- */
+        /* 1. 隐藏原本的侧边栏布局，改造成悬浮窗 */
+        #logPanelWrap {
+            position: fixed !important;
+            right: -320px; /* 默认隐藏在屏幕右侧外面 */
+            bottom: 160px;
+            width: 300px;
+            max-height: 400px;
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(255, 143, 163, 0.3);
+            z-index: 9998;
+            transition: right 0.3s ease;
             display: flex;
             flex-direction: column;
-            padding-bottom: 120px; /* 给底部的悬浮按钮留出空间 */
+            border: 2px solid #ffd1dc;
         }
-        .log-panel {
-            width: 100% !important; /* 让日记卡片占满宽度 */
-            margin-bottom: 16px;
+        #logPanelWrap.show {
+            right: 20px; /* 展开时滑入屏幕 */
         }
-        /* 让日记列表不要太高，不然会顶走主内容 */
-        .log-list {
-            max-height: 150px;
+        #logPanelWrap .card {
+            margin: 0;
+            padding: 0;
+            border: none;
+            box-shadow: none;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        #logPanelWrap h2 {
+            background: #fff0f5;
+            padding: 12px 16px;
+            margin: 0;
+            font-size: 16px;
+            color: #ff6b81;
+            border-bottom: 1px solid #ffd1dc;
+            border-radius: 14px 14px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        #logPanelWrap .log-list {
+            padding: 16px;
             overflow-y: auto;
+            flex: 1;
+            font-size: 14px;
+            color: #666;
+        }
+
+        /* 2. 日记悬浮按钮 */
+        #logFloatBtn {
+            position: fixed;
+            right: 20px;
+            bottom: 100px;
+            width: 56px;
+            height: 56px;
+            background: #ff8fa3;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            box-shadow: 0 4px 15px rgba(255, 143, 163, 0.5);
+            cursor: pointer;
+            z-index: 9999;
+            transition: transform 0.2s;
+        }
+        #logFloatBtn:active {
+            transform: scale(0.9);
+        }
+        
+        /* 3. 给主内容留出底部空间，防止被悬浮按钮挡住 */
+        .game-body {
+            padding-bottom: 100px;
         }
     </style>
 </head>
@@ -28,17 +89,22 @@
     <nav id="navBar"></nav>
 
     <div class="game-body">
-        <!-- 👇【改动位置】：把日记面板放到了最前面 👇 -->
+        <div class="content" id="content"></div>
+        
+        <!-- 日记面板保留，但被 CSS 变成了悬浮窗 -->
         <aside class="log-panel" id="logPanelWrap">
             <div class="card">
-                <h2>📜 小店日记</h2>
+                <h2>
+                    <span>📜 小店日记</span>
+                    <span id="closeLogBtn" style="cursor:pointer; font-size:14px; color:#aaa;">✖ 关闭</span>
+                </h2>
                 <div class="log-list" id="logList"></div>
             </div>
         </aside>
-
-        <!-- 👇 主内容区 👇 -->
-        <div class="content" id="content"></div>
     </div>
+
+    <!-- 右下角的悬浮按钮 -->
+    <div id="logFloatBtn">📜</div>
 
     <div class="action-footer" id="footer"></div>
 
@@ -62,6 +128,20 @@
     <script src="js/shared.js"></script>
     
     <script>
+        // --- 控制悬浮窗的展开和收起 ---
+        const logBtn = document.getElementById('logFloatBtn');
+        const logPanel = document.getElementById('logPanelWrap');
+        const closeBtn = document.getElementById('closeLogBtn');
+
+        logBtn.addEventListener('click', () => {
+            logPanel.classList.add('show');
+        });
+
+        closeBtn.addEventListener('click', () => {
+            logPanel.classList.remove('show');
+        });
+
+        // --- 原有的游戏逻辑（保持不变） ---
         Game.initPage('home', renderDashboard, true);
 
         function renderDashboard() {

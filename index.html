@@ -138,89 +138,139 @@
     <script src="js/core/state.js"></script>
 
     <script>
-    (function () {
-        var Cake = window.Cake || {};
-        var group = document.getElementById('avatarGroup');
-        var options = Array.prototype.slice.call(group.querySelectorAll('.avatar-option'));
-        var selectedKey = 'girl1';
+    (() => {
+        const Cake = window.Cake || {};
 
-        var AVATAR_EMOJI = { girl1: '👧🏻', girl2: '👩🏻', boy1: '👦🏻', cake: '🧁' };
+        /* ---------------- 常量与 DOM ---------------- */
 
-        function select(opt) {
-            options.forEach(function (o) {
-                var on = o === opt;
+        const AVATAR_EMOJI = Object.freeze({
+            girl1: '👧🏻',
+            girl2: '👩🏻',
+            boy1:  '👦🏻',
+            cake:  '🧁',
+        });
+
+        const AVATAR_KEYS = Object.keys(AVATAR_EMOJI);
+
+        const group        = document.getElementById('avatarGroup');
+        const options      = [...group.querySelectorAll('.avatar-option')];
+        const btnStart     = document.getElementById('btnStart');
+        const btnContinue  = document.getElementById('btnContinue');
+        const nameInput    = document.getElementById('playerName');
+        const shopInput    = document.getElementById('shopName');
+
+        const DEFAULT_PLAYER_NAME = '小甜心';
+        const DEFAULT_SHOP_NAME   = '甜蜜小屋';
+        const NEXT_PAGE           = 'game.html';
+
+        let selectedKey = 'girl1';
+
+        /* ---------------- 头像选择 ---------------- */
+
+        const select = (opt) => {
+            for (const o of options) {
+                const on = o === opt;
                 o.classList.toggle('selected', on);
-                o.setAttribute('aria-checked', on ? 'true' : 'false');
+                o.setAttribute('aria-checked', String(on));
                 o.setAttribute('tabindex', on ? '0' : '-1');
-            });
-            selectedKey = opt.getAttribute('data-avatar');
-        }
+            }
+            const { avatar } = opt.dataset;
+            selectedKey = avatar;
+        };
 
-        options.forEach(function (opt, idx) {
-            opt.addEventListener('click', function () { select(opt); opt.focus(); });
-            opt.addEventListener('keydown', function (e) {
-                var next = null;
-                if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
-                    next = options[(idx + 1) % options.length];
-                } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
-                    next = options[(idx - 1 + options.length) % options.length];
-                } else if (e.key === ' ' || e.key === 'Enter') {
-                    select(opt); e.preventDefault(); return;
+        const moveFocus = (idx, delta) => {
+            const next = options[(idx + delta + options.length) % options.length];
+            select(next);
+            next.focus();
+        };
+
+        options.forEach((opt, idx) => {
+            opt.addEventListener('click', () => {
+                select(opt);
+                opt.focus();
+            });
+
+            opt.addEventListener('keydown', (e) => {
+                switch (e.key) {
+                    case 'ArrowRight':
+                    case 'ArrowDown':
+                        moveFocus(idx, 1);
+                        break;
+                    case 'ArrowLeft':
+                    case 'ArrowUp':
+                        moveFocus(idx, -1);
+                        break;
+                    case ' ':
+                    case 'Enter':
+                        select(opt);
+                        break;
+                    default:
+                        return;
                 }
-                if (next) { select(next); next.focus(); e.preventDefault(); }
+                e.preventDefault();
             });
         });
 
-        var btnStart = document.getElementById('btnStart');
-        var btnContinue = document.getElementById('btnContinue');
+        /* ---------------- 存档检测 ---------------- */
 
-        function hasSave() {
-            try { return typeof Cake.hasSave === 'function' && Cake.hasSave(); }
-            catch (_) { return false; }
-        }
+        const hasSave = () => {
+            try {
+                return typeof Cake.hasSave === 'function' && Cake.hasSave();
+            } catch (err) {
+                console.warn('检查存档失败:', err);
+                return false;
+            }
+        };
 
         if (hasSave()) {
             btnContinue.style.display = '';
             btnStart.textContent = '重新开始';
         }
 
-        // 开始新游戏
-        btnStart.addEventListener('click', function () {
+        /* ---------------- 工具函数 ---------------- */
+
+        const readInput = (input, fallback) =>
+            (input.value || '').trim().slice(0, 12) || fallback;
+
+        const goToGame = () => {
+            location.href = NEXT_PAGE;
+        };
+
+        /* ---------------- 开始新游戏 ---------------- */
+
+        btnStart.addEventListener('click', () => {
             if (hasSave() && !confirm('已有存档，重新开始会覆盖当前进度，确定吗？')) return;
 
-            var playerName = (document.getElementById('playerName').value || '').trim().slice(0, 12) || '小甜心';
-            var shopName   = (document.getElementById('shopName').value   || '').trim().slice(0, 12) || '甜蜜小屋';
-            var emoji      = AVATAR_EMOJI[selectedKey] || '👧🏻';
+            const playerName = readInput(nameInput, DEFAULT_PLAYER_NAME);
+            const shopName   = readInput(shopInput, DEFAULT_SHOP_NAME);
+            const avatar     = AVATAR_EMOJI[selectedKey] || AVATAR_EMOJI.girl1;
 
             try {
                 if (typeof Cake.defaultState === 'function' && typeof Cake.saveState === 'function') {
-                    var s = Cake.defaultState();
-                    s.playerName = playerName;
-                    s.shopName = shopName;
-                    s.avatar = emoji;
-                    Cake.store.state = s;
+                    const state = Cake.defaultState();
+                    Object.assign(state, { playerName, shopName, avatar });
+
+                    Cake.store.state = state;
                     Cake.saveState();
                 } else {
                     localStorage.setItem('playerName', playerName);
                     localStorage.setItem('shopName', shopName);
                     localStorage.setItem('playerAvatar', selectedKey);
+
                     if (typeof Cake.SAVE_KEY === 'string') {
                         localStorage.removeItem(Cake.SAVE_KEY);
                     }
                 }
             } catch (err) {
-                console.error("保存初始状态失败:", err);
+                console.error('保存初始状态失败:', err);
             }
 
-            // 👇 关键修改：跳转到 game.html
-            location.href = 'game.html'; 
+            goToGame();
         });
 
-        // 继续游戏
-        btnContinue.addEventListener('click', function () {
-            // 👇 关键修改：跳转到 game.html
-            location.href = 'game.html';
-        });
+        /* ---------------- 继续游戏 ---------------- */
+
+        btnContinue.addEventListener('click', goToGame);
     })();
     </script>
 </body>

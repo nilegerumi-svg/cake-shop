@@ -7,13 +7,9 @@
     <link rel="stylesheet" href="../css/styles.css">
 </head>
 <body>
-    <header id="header"></header>
-    <nav id="navBar"></nav>
-    <div class="game-body">
+    <div class="game-body" style="padding-top: 10px;">
         <div class="content" id="content"></div>
     </div>
-    <div class="action-footer" id="footer"></div>
-
     <script src="../js/core/store.js"></script>
     <script src="../js/data/ingredients.js"></script>
     <script src="../js/data/recipes.js"></script>
@@ -34,10 +30,8 @@
     <script src="../js/shared.js"></script>
     <script>
         Game.initPage('recipe', renderRecipe);
-
         function renderRecipe() {
             const s = Game.state;
-
             document.getElementById('content').innerHTML = `
                 <div class="card">
                     <h2>📖 配方图鉴</h2>
@@ -46,34 +40,22 @@
                         ${Object.entries(Game.RECIPES).map(([name, r]) => {
                             const unlocked = !!s.recipes[name];
                             const need = r.unlock || { money: 0, rep: 0, shop: 1 };
-
-                            const lackMoney  = !unlocked && s.money < need.money;
-                            const lackRep    = !unlocked && s.reputation < need.rep;
-                            const lackShop   = !unlocked && s.shopLevel < (need.shop || 1);
-                            const lackEnergy = !unlocked && s.energy < 15;
-                            const canResearch = !unlocked && !lackMoney && !lackRep && !lackShop && !lackEnergy;
-
-                            return `
-                            <div class="item-card" style="${unlocked ? 'border-color:#ffd54f;background:#fffde7;' : ''}">
+                            const canResearch = !unlocked && s.money >= need.money && s.reputation >= need.rep && s.shopLevel >= (need.shop || 1) && s.energy >= 15;
+                            return `<div class="item-card" style="${unlocked ? 'border-color:#ffd54f;background:#fffde7;' : ''}">
                                 <span class="item-emoji">${r.emoji}</span>
                                 <span class="item-name">${name} ${unlocked ? '✅ 已解锁' : '🔒 未解锁'}</span>
                                 <span class="item-desc">${r.desc}</span>
                                 <div class="ing-row">${Game.ingredientTags(r.ing)}</div>
                                 <span class="item-meta">售价 ${r.price}元 · 声望+${r.rep}</span>
-
-                                ${unlocked
-                                    ? '<span class="item-meta" style="color:#388e3c;">已掌握配方</span>'
-                                    : `
-                                        <div class="ing-row" style="margin-top:2px;">
-                                            <span class="ing-tag ${s.money >= need.money ? 'ok' : 'lack'}">💰 ${need.money}元</span>
-                                            <span class="ing-tag ${s.reputation >= need.rep ? 'ok' : 'lack'}">⭐ 声望${need.rep}</span>
-                                            <span class="ing-tag ${s.shopLevel >= (need.shop || 1) ? 'ok' : 'lack'}">🏪 Lv.${need.shop || 1}</span>
-                                            <span class="ing-tag ${s.energy >= 15 ? 'ok' : 'lack'}">⚡ 15精力</span>
-                                        </div>
-                                        <button type="button" class="small" ${canResearch ? '' : 'disabled'} onclick="Game.researchRecipe('${name}')">
-                                            ${canResearch ? '🔬 研发配方' : '❌ 条件不足'}
-                                        </button>
-                                    `}
+                                ${unlocked ? '<span class="item-meta" style="color:#388e3c;">已掌握配方</span>' : `
+                                    <div class="ing-row" style="margin-top:2px;">
+                                        <span class="ing-tag ${s.money >= need.money ? 'ok' : 'lack'}">💰 ${need.money}元</span>
+                                        <span class="ing-tag ${s.reputation >= need.rep ? 'ok' : 'lack'}">⭐ 声望${need.rep}</span>
+                                        <span class="ing-tag ${s.shopLevel >= (need.shop || 1) ? 'ok' : 'lack'}">🏪 Lv.${need.shop || 1}</span>
+                                        <span class="ing-tag ${s.energy >= 15 ? 'ok' : 'lack'}">⚡ 15精力</span>
+                                    </div>
+                                    <button type="button" class="small" ${canResearch ? '' : 'disabled'} onclick="Game.researchRecipe('${name}')">${canResearch ? '🔬 研发配方' : '❌ 条件不足'}</button>
+                                `}
                             </div>`;
                         }).join('')}
                     </div>

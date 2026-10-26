@@ -1,8 +1,11 @@
 // js/core/store.js
-window.Cake = window.Cake || {};
+(() => {
+    'use strict';
 
-(function () {
-    var DEFAULT_STATE = {
+    window.Cake = window.Cake || {};
+
+    // 默认状态模板：只读，ensureState 通过 JSON 深拷贝生成新对象
+    const DEFAULT_STATE = Object.freeze({
         day: 1,
         money: 500,
         energy: 100,
@@ -16,17 +19,17 @@ window.Cake = window.Cake || {};
         cakes: {},
         ingredients: {},
         characters: {},
-        log: []
-    };
+        log: [],
+    });
 
-    var _state = null;
+    let _state = null;
 
-    function ensureState() {
+    const ensureState = () => {
         if (!_state) {
             _state = JSON.parse(JSON.stringify(DEFAULT_STATE));
         }
         return _state;
-    }
+    };
 
     window.Cake.store = {
         get state() {
@@ -35,6 +38,6 @@ window.Cake = window.Cake || {};
         set state(val) {
             _state = val;
         },
-        DEFAULT_STATE: DEFAULT_STATE
+        DEFAULT_STATE, // ES6 属性简写，等价于 DEFAULT_STATE: DEFAULT_STATE
     };
 })();

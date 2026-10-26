@@ -204,3 +204,109 @@ button.secondary, .btn-link.secondary {
     transform: translateY(2px);
     box-shadow: 0 2px 0 #e6c200;
 }
+
+/* =========================================
+   开始界面专属样式 (index.html)
+   ========================================= */
+
+/* 1. 让整个页面变成粉嫩背景，并垂直水平居中 */
+.start-container {
+  max-width: 600px;         /* 限制最大宽度，看起来像一张卡片 */
+  margin: 40px auto;        /* 上下留白，左右居中 */
+  background: #ffffff;      /* 纯白卡片背景 */
+  padding: 40px 30px;       /* 卡片内边距 */
+  border-radius: 24px;      /* 大圆角，更可爱 */
+  box-shadow: 0 10px 30px rgba(255, 182, 193, 0.3); /* 柔和的粉色阴影 */
+  text-align: center;       /* 文字居中 */
+}
+
+/* 2. 标题样式 */
+.game-header h1 {
+  color: #ff6b81;
+  font-size: 32px;
+  margin-bottom: 8px;
+}
+.game-header .subtitle {
+  color: #ff9eaa;
+  font-size: 14px;
+  margin-bottom: 24px;
+}
+
+/* 3. 简介文字样式 */
+.game-intro p {
+  color: #666;
+  font-size: 15px;
+  line-height: 1.8;
+  margin-bottom: 30px;
+  background: #fff0f5;
+  padding: 15px;
+  border-radius: 12px;
+}
+.game-intro strong {
+  color: #ff6b81;
+}
+
+/* 4. 输入框区域美化 */
+.input-group {
+  text-align: left;         /* 输入框的文字靠左对齐 */
+  margin-bottom: 30px;
+}
+.input-group label {
+  display: block;
+  font-size: 14px;
+  font-weight: bold;
+  color: #d85c74;
+  margin-bottom: 8px;
+}
+.input-group input {
+  width: 100%;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  border: 2px solid #ffd1dc;
+  border-radius: 12px;
+  font-size: 16px;
+  background: #fafafa;
+  color: #333;
+  box-sizing: border-box;   /* 防止输入框撑破卡片 */
+  transition: all 0.3s ease;
+}
+.input-group input:focus {
+  outline: none;
+  border-color: #ff8fa3;
+  background: #fff;
+  box-shadow: 0 0 0 4px rgba(255, 143, 163, 0.15);
+}
+
+/* 5. 按钮区域美化 */
+.button-group {
+  display: flex;
+  flex-direction: column;   /* 按钮上下排列 */
+  gap: 12px;                /* 按钮之间的间距 */
+}
+.button-group button {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 50px;      /* 胶囊按钮 */
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.btn-start {
+  background: #ff8fa3;
+  color: white;
+  box-shadow: 0 4px 15px rgba(255, 143, 163, 0.4);
+}
+.btn-start:hover {
+  background: #ff6b81;
+  transform: translateY(-2px); /* 悬浮时往上浮 */
+}
+.btn-continue {
+  background: #fff;
+  color: #ff8fa3;
+  border: 2px solid #ff8fa3 !important;
+}
+.btn-continue:hover {
+  background: #fff0f5;
+}

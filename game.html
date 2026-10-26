@@ -30,7 +30,6 @@
             display: flex; flex-direction: column; align-items: center;
             gap: 6px; z-index: 100;
         }
-        /* 报错浮层样式 */
         #error-overlay {
             position: fixed; top: 0; left: 0; width: 100%; z-index: 999999;
             background: rgba(220, 38, 38, 0.95); color: white;
@@ -42,7 +41,6 @@
 </head>
 <body>
 
-<!-- 报错显示区 -->
 <div id="error-overlay"></div>
 
 <div class="app-wrapper">
@@ -55,6 +53,7 @@
     <div class="action-footer" id="footer"></div>
 </div>
 
+<!-- 加载顺序：store → bridge → data → core → actions → shared（最后） -->
 <script src="js/core/store.js"></script>
 <script src="js/core/bridge.js"></script>
 <script src="js/data/ingredients.js"></script>
@@ -73,7 +72,6 @@
 <script src="js/actions/shop.js"></script>
 <script src="js/actions/social.js"></script>
 <script src="js/actions/system.js"></script>
-<!-- 👇 新引入的娱乐模块（必须要在 shared.js 之前） -->
 <script src="js/actions/entertainment.js"></script>
 <script src="js/shared.js"></script>
 
@@ -81,30 +79,49 @@
 (function () {
     'use strict';
 
-    /* ====== 报错捕获系统 ====== */
+    /* ====== 报错捕获（带上限，避免刷屏） ====== */
     var errorOverlay = document.getElementById('error-overlay');
-    function showError(msg) {
-        errorOverlay.style.display = 'block';
-        errorOverlay.innerHTML += '<div>🚨 ' + msg + '</div>';
-    }
-    
-    window.addEventListener('error', function(e) {
-        showError('主页面: ' + e.message + ' (' + (e.filename || '').split('/').pop() + ':' + e.lineno + ')');
-    });
+    var errorCount = 0;
+    var MAX_ERRORS = 20;
 
-    function bindErrorCatcher(iframe, name) {
-        iframe.addEventListener('load', function () {
-            try {
-                iframe.contentWindow.addEventListener('error', function(e) {
-                    showError(name + ': ' + e.message + ' (' + (e.filename || '').split('/').pop() + ':' + e.lineno + ')');
-                });
-            } catch (err) {}
-        });
+    function showError(msg) {
+        if (errorCount >= MAX_ERRORS) return;
+        errorCount++;
+        errorOverlay.style.display = 'block';
+        var line = document.createElement('div');
+        line.textContent = '🚨 ' + msg;
+        errorOverlay.appendChild(line);
+        if (errorCount === MAX_ERRORS) {
+            var more = document.createElement('div');
+            more.textContent = '（错误过多，已停止显示）';
+            errorOverlay.appendChild(more);
+        }
     }
+
+    window.addEventListener('error', function (e) {
+        showError('主页面: ' + e.message + ' (' +
+            (e.filename || '').split('/').pop() + ':' + e.lineno + ')');
+    });
 
     var mainFrame = document.getElementById('mainFrame');
     var logFrame  = document.getElementById('logFrame');
     var footer    = document.getElementById('footer');
+
+    function bindErrorCatcher(iframe, name) {
+        function attach() {
+            try {
+                var win = iframe.contentWindow;
+                if (!win || win.__errorBound) return;
+                win.__errorBound = true;
+                win.addEventListener('error', function (e) {
+                    showError(name + ': ' + e.message + ' (' +
+                        (e.filename || '').split('/').pop() + ':' + e.lineno + ')');
+                });
+            } catch (_) { /* 跨域时忽略 */ }
+        }
+        iframe.addEventListener('load', attach);
+        attach();
+    }
 
     bindErrorCatcher(mainFrame, '主页');
     bindErrorCatcher(logFrame, '日志');
@@ -145,35 +162,65 @@
 
     /* ====== 跨 iframe 广播 ====== */
     function handleStateChanged(sourceId) {
-        try { window.Cake.store.state = window.Cake.loadStateFromStorage(); } catch (_) { return; }
+        var Cake = window.Cake;
+        if (!Cake || !Cake.store) return;
+
+        // 只有拿到有效状态才覆盖，避免把 state 写成 undefined
         try {
-            Game.renderHeader();
-            Game.renderNav();
-            Game.renderFooter();
-        } catch (err) { console.warn('[host] render failed', err); }
+            if (typeof Cake.loadStateFromStorage === 'function') {
+                var loaded = Cake.loadStateFromStorage();
+                if (loaded) Cake.store.state = loaded;
+            }
+        } catch (err) {
+            console.warn('[host] load state failed', err);
+        }
+
+        // 直接用 Cake.xxx，不依赖全局 Game 别名是否就绪
+        try {
+            if (typeof Cake.renderHeader === 'function') Cake.renderHeader();
+            if (typeof Cake.renderNav === 'function') Cake.renderNav();
+            if (typeof Cake.renderFooter === 'function') Cake.renderFooter();
+        } catch (err) {
+            console.warn('[host] render failed', err);
+        }
 
         var msg = { type: 'state-sync', sourceId: sourceId };
         [mainFrame, logFrame].forEach(function (f) {
             try { f.contentWindow.postMessage(msg, '*'); } catch (_) {}
         });
     }
-    if (window.Cake && window.Cake.bridge && window.Cake.bridge.setHostBroadcaster) {
+
+    if (window.Cake && window.Cake.bridge &&
+        typeof window.Cake.bridge.setHostBroadcaster === 'function') {
         window.Cake.bridge.setHostBroadcaster(handleStateChanged);
+    } else {
+        // bridge.js 未就绪时，等 DOM 就绪再绑定一次
+        document.addEventListener('DOMContentLoaded', function () {
+            if (window.Cake && window.Cake.bridge &&
+                typeof window.Cake.bridge.setHostBroadcaster === 'function') {
+                window.Cake.bridge.setHostBroadcaster(handleStateChanged);
+            }
+        });
     }
 
     /* ====== Footer 高度自适应 ====== */
     if (footer && window.ResizeObserver) {
         var ro = new ResizeObserver(function () {
-            document.documentElement.style.setProperty('--footer-h', footer.offsetHeight + 'px');
+            document.documentElement.style.setProperty(
+                '--footer-h', footer.offsetHeight + 'px');
         });
         ro.observe(footer);
     }
 
     /* ====== 首屏渲染 ====== */
     try {
-        // 🔥 关键修复：将 Game 挂载到全局，供所有 iframe 子页面调用
-        window.Game = Game; 
-        Game.initPage('home', function () {}, true);
+        // 注意：第三个参数原为 true，若 render.js 的 initPage 签名是
+        // (page, cb, isInIframe)，主页面必须传 false，否则 header/nav/footer
+        // 会被 render.js 里的 "if (isInIframe) return" 跳过。
+        // 请核对 render.js 后决定：false 或不传。
+        if (window.Game && typeof window.Game.initPage === 'function') {
+            window.Game.initPage('home', function () {}, false);
+        }
     } catch (err) {
         showError('首屏渲染失败: ' + err.message);
     }

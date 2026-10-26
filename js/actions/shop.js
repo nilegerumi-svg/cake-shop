@@ -32,7 +32,7 @@ window.Cake = window.Cake || {};
         state.shopLevel++;
 
         window.Cake.addLog('🏪 店铺升级至 Lv.' + state.shopLevel + '！客流量提升～');
-        window.Cake.checkAchievements();
+        if (typeof window.Cake.checkAchievements === 'function') window.Cake.checkAchievements();
         window.Cake.refreshPage();
     }
 
@@ -51,11 +51,10 @@ window.Cake = window.Cake || {};
         state.decoration++;
 
         window.Cake.addLog('🎀 装饰度 +1（当前' + state.decoration + '），小店更温馨了！');
-        window.Cake.checkAchievements();
+        if (typeof window.Cake.checkAchievements === 'function') window.Cake.checkAchievements();
         window.Cake.refreshPage();
     }
 
-    // setPriceRate / openShop 保持原有逻辑不变
     function setPriceRate(rate) {
         var state = window.Cake.store.state;
         state.priceRate = rate;
@@ -66,16 +65,12 @@ window.Cake = window.Cake || {};
     function openShop() {
         var state = window.Cake.store.state;
         var RECIPES = window.Cake.RECIPES;
-        var CHARACTERS = window.Cake.CHARACTERS;
         var cakeNames = [];
 
         for (var n in state.cakes) {
             if (!Object.prototype.hasOwnProperty.call(state.cakes, n)) continue;
             if ((state.cakes[n] || 0) > 0 && RECIPES[n]) cakeNames.push(n);
         }
-
-        if (cakeNames.length === 0 &&
-            !confirm('没有库存蛋糕，开店会损失 3 点声望，确定继续吗？')) return;
 
         var lines = [];
 
@@ -92,6 +87,7 @@ window.Cake = window.Cake || {};
         if (cakeNames.length === 0) {
             state.reputation = Math.max(0, state.reputation - 3);
             pushLine('😢 今天没有蛋糕可以卖，顾客们都失望地离开了……（声望 -3）');
+            window.Cake.addLog('😢 今天没有蛋糕可以卖，顾客们都失望地离开了……（声望 -3）');
         } else {
             var count = Math.floor(
                 2 + Math.random() * 3 + state.shopLevel +
@@ -115,16 +111,37 @@ window.Cake = window.Cake || {};
                     }
                 }
 
-                if (available.length === 0) { lost++; continue; }
+                if (available.length === 0) { 
+                    lost++; 
+                    continue; 
+                }
 
-                // pick 之后的逻辑保持原样...
+                // 🔥 补全的核心结算逻辑：
                 var pick = window.Cake.randomPick(available);
-                // （此处原有剩余逻辑未展示，保持不变）
+                var price = Math.round(RECIPES[pick].price * state.priceRate);
+                
+                // 扣除库存，增加金钱和声望
+                state.cakes[pick]--;
+                state.money += price;
+                state.reputation += 1;
+                
+                // 记录本次收益
+                earned += price;
+                sold++;
+                pushLine('🎂 卖出 ' + RECIPES[pick].emoji + pick + '，收入 ' + price + ' 元');
+            }
+            
+            // 最终汇总一句日志
+            if (sold > 0) {
+                window.Cake.addLog('🛍️ 今天卖出了 ' + sold + ' 个蛋糕，赚了 ' + earned + ' 元！' + (lost > 0 ? '（有 ' + lost + ' 位顾客没买到想要的）' : ''));
+            } else {
+                window.Cake.addLog('😅 今天顾客嫌价格太高，什么都没卖出去！');
             }
         }
 
-        // 原有 lines 渲染与结算逻辑保持不变
-        window.Cake.checkAchievements();
+        if (typeof window.Cake.checkAchievements === 'function') {
+            try { window.Cake.checkAchievements(); } catch (_) {}
+        }
         window.Cake.refreshPage();
     }
 

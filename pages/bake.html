@@ -3,47 +3,108 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>烘焙</title>
+    <title>🎂 烘焙 · 甜蜜物语</title>
     <link rel="stylesheet" href="../css/styles.css">
-    <style>
-        body { background: transparent; padding: 16px; margin: 0; }
-        .recipe-card { cursor: pointer; }
-        .recipe-card.locked { opacity: 0.5; cursor: not-allowed; }
-    </style>
 </head>
 <body>
-<div id="content"></div>
-<script>
-    window.onload = function() {
-        const Cake = window.parent.Cake;
-        if (!Cake) return;
+    <header id="header"></header>
+    <nav id="navBar"></nav>
+    <div class="game-body">
+        <div class="content" id="content"></div>
+    </div>
+    <div class="action-footer" id="footer"></div>
 
-        function render() {
-            const s = Cake.store.state;
-            const recipes = Cake.RECIPES;
-            let html = `<div class="card"><h2>🎂 烘焙工坊</h2><p class="muted">精力 ${s.energy}/100 · 点击卡片制作</p><div class="grid-2" style="margin-top:12px;">`;
-            
-            for (const name in recipes) {
-                const r = recipes[name];
-                const unlocked = s.recipes[name];
-                const haveIng = Cake.hasIngredients(r.ing);
-                const canBake = unlocked && s.energy >= 20 && haveIng;
-                
-                html += `
-                    <div class="item-card ${unlocked ? '' : 'locked'}" 
-                         onclick="${canBake ? `parent.Cake.bakeCake('${name}', 1); parent.Cake.refreshPage(); render();` : ''}">
+    <script src="../js/core/store.js"></script>
+    <script src="../js/data/ingredients.js"></script>
+    <script src="../js/data/recipes.js"></script>
+    <script src="../js/data/bundles.js"></script>
+    <script src="../js/data/characters.js"></script>
+    <script src="../js/data/events.js"></script>
+    <script src="../js/data/shop-config.js"></script>
+    <script src="../js/data/achievements.js"></script>
+    <script src="../js/core/utils.js"></script>
+    <script src="../js/core/state.js"></script>
+    <script src="../js/core/modal.js"></script>
+    <script src="../js/core/effects.js"></script>
+    <script src="../js/core/render.js"></script>
+    <script src="../js/actions/bakery.js"></script>
+    <script src="../js/actions/shop.js"></script>
+    <script src="../js/actions/social.js"></script>
+    <script src="../js/actions/system.js"></script>
+    <script src="../js/shared.js"></script>
+    <script>
+        Game.initPage('bake', renderBake);
+
+        function renderBake() {
+            const s = Game.state || {};
+            const recipes = s.recipes || {};
+            const cakes = s.cakes || {};
+            const ingredients = s.ingredients || {};
+
+            // 判空保护，防止数据未初始化时白屏
+            const unlocked = Object.keys(recipes).filter(n => Game.RECIPES && Game.RECIPES[n]);
+
+            let html = `
+                <div class="card">
+                    <h2>🎂 烘焙蛋糕</h2>
+                    <p class="muted">每次烘焙消耗 <b>20</b> 精力。点击烘焙制作 1 个蛋糕用于售卖或送礼。</p>
+                    <div class="grid-2" style="margin-top:12px;">`;
+
+            if (unlocked.length === 0) {
+                html += '<p class="muted">还没有解锁任何配方，先去「配方」页研发吧！</p>';
+            } else {
+                html += unlocked.map(name => {
+                    const r = Game.RECIPES[name];
+                    if (!r) return '';
+
+                    const ing = r.ing || {};
+                    const lackIng = !Object.keys(ing).every(k => (ingredients[k] || 0) >= ing[k]);
+                    const lackEnergy = (s.energy || 0) < 20;
+                    const canBake = !lackIng && !lackEnergy;
+
+                    const maxByEnergy = Math.floor((s.energy || 0) / 20);
+                    let maxByIng = Infinity;
+                    if (Object.keys(ing).length > 0) {
+                        maxByIng = Math.min(...Object.keys(ing).map(k => Math.floor((ingredients[k] || 0) / ing[k])));
+                    }
+
+                    const batchCount = Math.min(5, maxByEnergy, maxByIng);
+                    const canBatch = batchCount >= 2;
+
+                    let label;
+                    if (canBake) label = '🔥 烘焙';
+                    else if (lackEnergy && lackIng) label = '⚡🌾 精力与食材不足';
+                    else if (lackEnergy) label = '⚡ 精力不足';
+                    else label = '🌾 食材不足';
+
+                    const stock = cakes[name] || 0;
+                    return `
+                    <div class="item-card">
                         <span class="item-emoji">${r.emoji}</span>
-                        <span class="item-name">${name}</span>
+                        <span class="item-name">${name} <span class="muted">（库存 ${stock}）</span></span>
                         <span class="item-desc">${r.desc}</span>
-                        <span class="item-meta">${unlocked ? `售价 ${r.price}元` : '🔒 未解锁'}</span>
-                        <span class="item-meta">${Object.entries(r.ing).map(([k,v]) => `${Cake.INGREDIENTS[k].emoji}${Cake.INGREDIENTS[k].name}×${v}`).join(' ')}</span>
+                        <div class="ing-row">${Game.ingredientTags(ing)}</div>
+                        <span class="item-meta">基础价 ${r.price}元 · 声望+${r.rep}</span>
+                        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                            <button type="button" class="small" ${canBake ? '' : 'disabled'} onclick="Game.bakeCake('${name}')">${label}</button>
+                            ${canBatch ? `<button type="button" class="small secondary" onclick="Game.bakeCake('${name}', ${batchCount})">🔥 批量×${batchCount}</button>` : ''}
+                        </div>
                     </div>`;
+                }).join('');
             }
-            html += `</div></div>`;
+
+            html += `</div>
+                    <h3>📦 当前食材</h3>
+                    <div class="ing-row">
+                        ${Object.entries(Game.INGREDIENTS || {}).map(([k, v]) => {
+                            const cnt = ingredients[k] || 0;
+                            return `<span class="ing-tag ${cnt > 0 ? 'ok' : 'lack'}">${v.emoji}${v.name} ×${cnt}</span>`;
+                        }).join('')}
+                    </div>
+                </div>`;
+
             document.getElementById('content').innerHTML = html;
         }
-        render();
-    };
-</script>
+    </script>
 </body>
 </html>

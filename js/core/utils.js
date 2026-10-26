@@ -12,9 +12,12 @@ window.Cake = window.Cake || {};
     }
 
     function escapeHtml(str) {
-        return String(str == null ? '' : str).replace(/[&<>"']/g, function (c) {
-            return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
-        });
+        return String(str == null ? '' : str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
     }
 
     function addLog(text, day) {
@@ -85,4 +88,9 @@ window.Cake = window.Cake || {};
     window.Cake.hasIngredients = hasIngredients;
     window.Cake.consumeIngredients = consumeIngredients;
     window.Cake.ingredientTags = ingredientTags;
+    
+    // 兼容全局 $ 调用
+    if (typeof window.$ === 'undefined') {
+        window.$ = $;
+    }
 })();

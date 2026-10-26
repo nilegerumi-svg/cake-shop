@@ -6,14 +6,14 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <title>娱乐与外出</title>
     <style>
-        body { background: #fff0f5; font-family: sans-serif; padding: 20px; display: flex; justify-content: center; color: #4a3b3f; }
+        body { background: transparent; font-family: sans-serif; padding: 20px; display: flex; justify-content: center; color: #4a3b3f; }
         .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(255,182,193,0.3); text-align: center; width: 100%; max-width: 320px; }
         h2 { color: #ff6b81; margin-top: 20px; margin-bottom: 10px; font-size: 18px; }
         .energy-box { background: #fff9fa; padding: 10px; border-radius: 10px; margin-bottom: 15px; border: 1px solid #ffd1dc; font-weight: bold; }
-        button { background: #ff8fa3; color: white; border: none; padding: 12px 20px; border-radius: 25px; font-size: 16px; margin-top: 10px; width: 100%; cursor: pointer; font-weight: bold; }
-        button:disabled { background: #ccc; }
+        button { background: #ff8fa3; color: white; border: none; padding: 12px 20px; border-radius: 25px; font-size: 16px; margin-top: 10px; width: 100%; cursor: pointer; font-weight: bold; transition: transform 0.1s; }
+        button:active { transform: scale(0.95); }
+        button:disabled { background: #ccc; cursor: not-allowed; }
         #btnWalk { background: #7ec4cf; } 
-        #btnWalk:disabled { background: #ccc; }
         
         /* 弹窗样式 */
         #walkModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999; justify-content: center; align-items: center; }
@@ -25,22 +25,25 @@
 <body>
     <div class="card" id="mainCard">
         
-        <!-- 统一的体力显示 -->
         <div class="energy-box">
             ⚡ 当前体力：<span id="energy">--</span>/100
         </div>
 
         <h2>🎮 休息区</h2>
-        <button id="btnRest" onclick="doRest()">休息一下 (+20体力)</button>
+        <!-- 按钮文案根据原版逻辑改为 +40 -->
+        <button id="btnRest" onclick="doRest()">休息一下 (+40体力)</button>
 
         <h2>🛴 外出区</h2>
-        <button id="btnWalk" onclick="openWalkModal()">出门散步 (-10体力)</button>
+        <!-- 按钮文案根据原版逻辑改为 -8 -->
+        <button id="btnWalk" onclick="openWalkModal()">出门散步 (-8体力)</button>
     </div>
 
     <!-- 散步地点选择弹窗 -->
     <div id="walkModal">
         <div class="modal-content">
             <h3 style="color: #ff6b81; margin-top: 0;">去哪里散步？</h3>
+            <!-- 这里传入了参数，引擎会处理 -->
+            <button onclick="doWalk('home')">🏡 家园周围</button>
             <button onclick="doWalk('park')">🌳 街心公园</button>
             <button onclick="doWalk('street')">🛍️ 商业街</button>
             <button onclick="doWalk('river')">🌊 河边</button>
@@ -51,28 +54,25 @@
     <script>
         var G = window.parent.Game || window.Game;
 
+        // 纯 UI 刷新
         function updateUI() {
             if (!G || !G.state) return;
-            // 现在只有一个 id="energy" 了，更新绝对准确
             document.getElementById('energy').innerText = G.state.energy;
             document.getElementById('btnRest').disabled = (G.state.energy >= 100);
-            document.getElementById('btnWalk').disabled = (G.state.energy < 10);
+            document.getElementById('btnWalk').disabled = (G.state.energy < 8); // 散步门槛是 8
         }
 
-        // === 休息逻辑 ===
+        // 调用引擎：休息
         function doRest() {
-            if (!G || !G.state || G.state.energy >= 100) return;
-            G.state.energy = Math.min(100, G.state.energy + 20);
-            if (typeof G.addLog === 'function') G.addLog("去娱乐室休息了一下，恢复了20点体力。");
-            if (typeof G.saveState === 'function') G.saveState();
-            updateUI();
+            if (!G || !G.state) return;
+            G.rest(); 
+            setTimeout(updateUI, 50); // 延迟一点刷新 UI，等引擎处理完
         }
 
-        // === 散步逻辑 ===
         function openWalkModal() {
             if (!G || !G.state) return;
-            if (G.state.energy < 10) {
-                alert("体力不足，无法散步啦！");
+            if (G.state.energy < 8) {
+                alert("体力不足 8 点，无法散步啦！");
                 return;
             }
             document.getElementById('walkModal').style.display = 'flex';
@@ -82,35 +82,15 @@
             document.getElementById('walkModal').style.display = 'none';
         }
 
+        // 调用引擎：散步
         function doWalk(location) {
-            if (!G || !G.state || G.state.energy < 10) return;
-            
-            G.state.energy -= 10; // 扣除体力
-            let logMsg = "";
-            let bonusMsg = "";
-
-            // 根据地点给出不同反馈
-            switch(location) {
-                case 'park':
-                    logMsg = "去街心公园散了散步。";
-                    bonusMsg = "呼吸了新鲜空气，感觉心情变好了！";
-                    break;
-                case 'street':
-                    logMsg = "去商业街逛了逛。";
-                    if (G.state.fame !== undefined) G.state.fame += 1;
-                    bonusMsg = "看了很多新奇的店铺，声望 +1。";
-                    break;
-                case 'river':
-                    logMsg = "沿着河边散了散步。";
-                    bonusMsg = "吹了吹晚风，非常惬意。";
-                    break;
-            }
-
-            if (typeof G.addLog === 'function') G.addLog(logMsg + " " + bonusMsg);
-            if (typeof G.saveState === 'function') G.saveState();
-            
+            if (!G || !G.state) return;
             closeWalkModal();
-            updateUI();
+            
+            // 直接把地点参数传给原版核心逻辑
+            G.walk(location); 
+            
+            setTimeout(updateUI, 50);
         }
 
         window.onload = function() {

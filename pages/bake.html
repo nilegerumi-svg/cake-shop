@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>烘焙</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <style>
+        body { background: transparent; padding: 16px; margin: 0; }
+        .recipe-card { cursor: pointer; }
+        .recipe-card.locked { opacity: 0.5; cursor: not-allowed; }
+    </style>
+</head>
+<body>
+<div id="content"></div>
+<script>
+    window.onload = function() {
+        const Cake = window.parent.Cake;
+        if (!Cake) return;
+
+        function render() {
+            const s = Cake.store.state;
+            const recipes = Cake.RECIPES;
+            let html = `<div class="card"><h2>🎂 烘焙工坊</h2><p class="muted">精力 ${s.energy}/100 · 点击卡片制作</p><div class="grid-2" style="margin-top:12px;">`;
+            
+            for (const name in recipes) {
+                const r = recipes[name];
+                const unlocked = s.recipes[name];
+                const haveIng = Cake.hasIngredients(r.ing);
+                const canBake = unlocked && s.energy >= 20 && haveIng;
+                
+                html += `
+                    <div class="item-card ${unlocked ? '' : 'locked'}" 
+                         onclick="${canBake ? `parent.Cake.bakeCake('${name}', 1); parent.Cake.refreshPage(); render();` : ''}">
+                        <span class="item-emoji">${r.emoji}</span>
+                        <span class="item-name">${name}</span>
+                        <span class="item-desc">${r.desc}</span>
+                        <span class="item-meta">${unlocked ? `售价 ${r.price}元` : '🔒 未解锁'}</span>
+                        <span class="item-meta">${Object.entries(r.ing).map(([k,v]) => `${Cake.INGREDIENTS[k].emoji}${Cake.INGREDIENTS[k].name}×${v}`).join(' ')}</span>
+                    </div>`;
+            }
+            html += `</div></div>`;
+            document.getElementById('content').innerHTML = html;
+        }
+        render();
+    };
+</script>
+</body>
+</html>

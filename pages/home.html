@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>主页</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <style>
+        body { background: transparent; padding: 16px; margin: 0; }
+    </style>
+</head>
+<body>
+
+<div id="content"></div>
+
+<script>
+    window.onload = function() {
+        const Game = window.parent.Game;
+        if (!Game) return;
+
+        const s = Game.state;
+        const cakes = Object.entries(s.cakes).filter(([n, v]) => v > 0 && Game.RECIPES[n]);
+
+        document.getElementById('content').innerHTML = `
+            <div class="card">
+                <h2>🏠 欢迎回来，${Game.escapeHtml(s.playerName)}！</h2>
+                <p class="muted">今天是经营的第 <b>${s.day}</b> 天，你的「${Game.escapeHtml(s.shopName)}」正散发着甜蜜香气～</p>
+                
+                <div class="grid-2" style="margin-top:12px;">
+                    <div class="item-card">
+                        <span class="item-emoji">💰</span>
+                        <span class="item-name">${s.money} 元</span>
+                        <span class="item-desc">当前余额</span>
+                    </div>
+                    <div class="item-card">
+                        <span class="item-emoji">⭐</span>
+                        <span class="item-name">${s.reputation} 声望</span>
+                        <span class="item-desc">店铺名气</span>
+                    </div>
+                    <div class="item-card">
+                        <span class="item-emoji">🏪</span>
+                        <span class="item-name">Lv.${s.shopLevel} · 装饰${s.decoration}</span>
+                        <span class="item-desc">店铺等级与装饰度</span>
+                    </div>
+                    <div class="item-card">
+                        <span class="item-emoji">⚡</span>
+                        <span class="item-name">${s.energy}/100</span>
+                        <span class="item-desc">今日剩余精力</span>
+                    </div>
+                </div>
+
+                <h3>⚡ 快速行动</h3>
+                <div class="char-actions">
+                    <!-- 注意看这里：如果在游戏里做了操作，可以通过 window.parent.refreshDiary() 刷新下面的日记框 -->
+                    <button type="button" class="small" onclick="window.parent.Game.rest(); window.parent.refreshDiary();">😴 休息</button>
+                    <button type="button" class="small secondary" onclick="window.parent.Game.walk(); window.parent.refreshDiary();">🚶‍♀️ 散步</button>
+                </div>
+
+                <h3>🧁 库存蛋糕</h3>
+                ${cakes.length === 0
+                    ? '<p class="muted">还没有蛋糕库存，快去「烘焙」页面做几个吧！</p>'
+                    : `<div class="grid-2">
+                        ${cakes.map(([n, v]) => `
+                            <div class="item-card">
+                                <span class="item-emoji">${Game.RECIPES[n].emoji}</span>
+                                <span class="item-name">${n} <span class="muted">×${v}</span></span>
+                                <span class="item-meta">售价 <span class="price-tag">${Math.round(Game.RECIPES[n].price * s.priceRate)}元</span></span>
+                            </div>
+                        `).join('')}
+                    </div>`}
+            </div>
+        `;
+    };
+</script>
+</body>
+</html>

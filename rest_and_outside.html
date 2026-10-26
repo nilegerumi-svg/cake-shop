@@ -4,127 +4,47 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>娱乐 - 甜蜜物语</title>
-    <style>
-        body {
-            background-color: #ffe4e1; /* 粉色背景 */
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 20px;
-            margin: 0;
-        }
-        .container {
-            background: white;
-            border-radius: 20px;
-            padding: 20px;
-            width: 90%;
-            max-width: 400px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            text-align: center;
-        }
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-        .header h2 {
-            margin: 0;
-            color: #d6336c;
-        }
-        .btn-back {
-            background: none;
-            border: none;
-            font-size: 16px;
-            color: #d6336c;
-            cursor: pointer;
-            font-weight: bold;
-        }
-        .action-btn {
-            display: block;
-            width: 100%;
-            padding: 15px;
-            margin: 15px 0;
-            border: none;
-            border-radius: 15px;
-            font-size: 18px;
-            font-weight: bold;
-            color: white;
-            cursor: pointer;
-            transition: transform 0.2s;
-        }
-        .action-btn:active {
-            transform: scale(0.95);
-        }
-        .btn-walk { background-color: #faa2c1; }
-        .btn-rest { background-color: #94d82d; }
-        .status-text {
-            margin-top: 20px;
-            color: #666;
-            font-size: 14px;
-        }
-    </style>
+    <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-
     <div class="container">
-        <div class="header">
-            <!-- 点击返回游戏主页 -->
-            <button class="btn-back" onclick="window.location.href='game.html'">⬅ 返回主页</button>
-            <h2>🎮 娱乐</h2>
-            <div style="width: 60px;"></div> <!-- 占位符，让标题居中 -->
-        </div>
+        <!-- 头部卡片 -->
+        <div class="card">
+            <div class="fun-header">
+                <button class="btn-back" onclick="window.location.href='game.html'">⬅ 返回</button>
+                <div class="fun-title">🎮 娱乐</div>
+                <div style="width: 40px;"></div> <!-- 占位保持居中 -->
+            </div>
 
-        <!-- 两个功能按钮 -->
-        <button class="action-btn btn-walk" onclick="doWalk()">🚶 出门散步</button>
-        <button class="action-btn btn-rest" onclick="doRest()">😴 休息一下</button>
+            <!-- 按钮区 -->
+            <button class="fun-action-btn btn-walk" onclick="doWalk()">🚶 出门散步</button>
+            <button class="fun-action-btn btn-rest" onclick="doRest()">😴 休息一下</button>
 
-        <div class="status-text" id="status-msg">
-            <!-- 这里可以显示提示信息 -->
-            放松一下，劳逸结合~
+            <!-- 提示信息 -->
+            <div class="status-msg" id="status-msg">放松一下，劳逸结合~</div>
         </div>
     </div>
 
-    <!-- 加载你原本的脚本文件，请根据你实际的文件路径检查 -->
+    <!-- 你的脚本 -->
     <script src="js/state.js"></script>
     <script src="js/actions/system.js"></script>
-    
     <script>
-        // 封装一下你原有的函数，防止找不到函数报错
         function doWalk() {
-            try {
-                // 尝试调用你 system.js 里的散步函数
-                if (typeof Cake !== 'undefined' && Cake.actions && Cake.actions.walk) {
-                    Cake.actions.walk();
-                    document.getElementById('status-msg').innerText = "散步完成，体力恢复啦！";
-                } else if (typeof walk === 'function') {
-                    walk();
-                    document.getElementById('status-msg').innerText = "散步完成，体力恢复啦！";
-                } else {
-                    alert("找不到散步函数，请检查 system.js");
-                }
-            } catch (e) {
-                console.error(e);
-                alert("散步出错了，看看控制台");
+            if (typeof Cake !== 'undefined' && Cake.actions && Cake.actions.walk) {
+                Cake.actions.walk();
+                document.getElementById('status-msg').innerText = "散步完成，体力恢复啦！";
+            } else if (typeof walk === 'function') {
+                walk();
+                document.getElementById('status-msg').innerText = "散步完成，体力恢复啦！";
             }
         }
-
         function doRest() {
-            try {
-                // 尝试调用你 system.js 里的休息函数
-                if (typeof Cake !== 'undefined' && Cake.actions && Cake.actions.rest) {
-                    Cake.actions.rest();
-                    document.getElementById('status-msg').innerText = "美美地睡了一觉，体力满满！";
-                } else if (typeof rest === 'function') {
-                    rest();
-                    document.getElementById('status-msg').innerText = "美美地睡了一觉，体力满满！";
-                } else {
-                    alert("找不到休息函数，请检查 system.js");
-                }
-            } catch (e) {
-                console.error(e);
-                alert("休息出错了，看看控制台");
+            if (typeof Cake !== 'undefined' && Cake.actions && Cake.actions.rest) {
+                Cake.actions.rest();
+                document.getElementById('status-msg').innerText = "美美地睡了一觉，体力满满！";
+            } else if (typeof rest === 'function') {
+                rest();
+                document.getElementById('status-msg').innerText = "美美地睡了一觉，体力满满！";
             }
         }
     </script>

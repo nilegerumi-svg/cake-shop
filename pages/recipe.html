@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>配方</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <style> body { background: transparent; padding: 16px; margin: 0; } </style>
+</head>
+<body>
+<div id="content"></div>
+<script>
+    window.onload = function() {
+        const Cake = window.parent.Cake;
+        if (!Cake) return;
+
+        function render() {
+            const s = Cake.store.state;
+            let html = `<div class="card"><h2>📖 配方图鉴</h2><p class="muted">已解锁 ${Object.keys(s.recipes).filter(k => s.recipes[k]).length} / ${Object.keys(Cake.RECIPES).length}</p><div class="grid-2" style="margin-top:12px;">`;
+            
+            for (const name in Cake.RECIPES) {
+                const r = Cake.RECIPES[name];
+                const unlocked = s.recipes[name];
+                html += `
+                    <div class="item-card ${unlocked ? '' : 'locked'}">
+                        <span class="item-emoji">${r.emoji}</span>
+                        <span class="item-name">${name}</span>
+                        <span class="item-desc">${r.desc}</span>
+                        <span class="item-meta">${unlocked ? '✅ 已解锁' : '🔒 未解锁'}</span>
+                        ${!unlocked && r.unlock ? `<button class="small" onclick="parent.Cake.researchRecipe('${name}'); parent.Cake.refreshPage(); render();">研发</button>` : ''}
+                    </div>`;
+            }
+            html += `</div></div>`;
+            document.getElementById('content').innerHTML = html;
+        }
+        render();
+    };
+</script>
+</body>
+</html>

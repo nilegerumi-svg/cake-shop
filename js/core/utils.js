@@ -2,6 +2,7 @@
 window.Cake = window.Cake || {};
 
 (function () {
+    // 核心工具函数
     function $(id) {
         return document.getElementById(id);
     }
@@ -12,23 +13,22 @@ window.Cake = window.Cake || {};
 
     function escapeHtml(str) {
         return String(str == null ? '' : str).replace(/[&<>"']/g, function (c) {
-            return { '&': '&', '<': '<', '>': '>', '"': '"', "'": ''' }[c];
+            return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
         });
     }
 
     function addLog(text, day) {
         var s = window.Cake.store.state;
+        s.log = s.log || [];
         s.log.push({ day: day == null ? s.day : day, text: text });
         if (s.log.length > 60) s.log.shift();
     }
 
-    /**
-     * 统一失败处理：记录日志 + 刷新页面 + 返回 false
-     * 调用方只需 `if (!window.Cake.fail('精力不足')) return;`
-     */
     function fail(message) {
         addLog(message);
-        window.Cake.refreshPage();
+        if (typeof window.Cake.refreshPage === 'function') {
+            window.Cake.refreshPage();
+        }
         return false;
     }
 
@@ -75,6 +75,7 @@ window.Cake = window.Cake || {};
         return parts.join('');
     }
 
+    // ── 关键：全部挂载到 window.Cake 下 ──
     window.Cake.$ = $;
     window.Cake.randomPick = randomPick;
     window.Cake.escapeHtml = escapeHtml;

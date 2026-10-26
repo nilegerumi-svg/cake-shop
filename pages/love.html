@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>缘分</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <style> body { background: transparent; padding: 16px; margin: 0; } </style>
+</head>
+<body>
+<div id="content"></div>
+<script>
+    window.onload = function() {
+        const Cake = window.parent.Cake;
+        if (!Cake) return;
+
+        function render() {
+            const s = Cake.store.state;
+            let html = `<div class="card"><h2>💕 缘分</h2><div class="grid-2" style="margin-top:12px;">`;
+            
+            for (const cid in Cake.CHARACTERS) {
+                const c = Cake.CHARACTERS[cid];
+                const cs = s.characters[cid];
+                html += `
+                    <div class="item-card">
+                        <span class="item-emoji">${c.emoji}</span>
+                        <span class="item-name">${c.name}</span>
+                        <span class="item-desc">好感 ${cs.affection}/100</span>
+                        <span class="item-meta">${cs.met ? '已相识' : '未相遇'}</span>
+                        ${cs.met ? `
+                            <button class="small" onclick="parent.Cake.social('${cid}', 'chat'); parent.Cake.refreshPage(); render();">💬 聊天 (精力8)</button>
+                            <button class="small secondary" onclick="parent.Cake.social('${cid}', 'date'); parent.Cake.refreshPage(); render();">☕ 约会 (精力12·50元)</button>
+                            <button class="small secondary" onclick="parent.Cake.toggleGiftPanel('${cid}'); parent.Cake.refreshPage(); render();">🎁 送礼</button>
+                        ` : ''}
+                    </div>`;
+            }
+            html += `</div></div>`;
+            document.getElementById('content').innerHTML = html;
+        }
+        render();
+    };
+</script>
+</body>
+</html>

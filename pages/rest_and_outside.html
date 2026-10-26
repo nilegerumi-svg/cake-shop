@@ -7,50 +7,87 @@
     <style>
         body { background: #fff0f5; font-family: sans-serif; padding: 20px; display: flex; justify-content: center; color: #4a3b3f; }
         .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(255,182,193,0.3); text-align: center; width: 100%; max-width: 300px; }
-        h2 { color: #ff6b81; }
-        button { background: #ff8fa3; color: white; border: none; padding: 12px 20px; border-radius: 25px; font-size: 16px; margin-top: 15px; width: 100%; cursor: pointer; font-weight: bold; }
+        h2 { color: #ff6b81; margin-bottom: 10px; }
+        p { margin: 10px 0; }
+        button { background: #ff8fa3; color: white; border: none; padding: 12px 20px; border-radius: 25px; font-size: 16px; margin-top: 10px; width: 100%; cursor: pointer; font-weight: bold; }
         button:disabled { background: #ccc; }
+        /* 散步按钮换个颜色以示区分 */
+        #btnWalk { background: #7ec4cf; } 
+        #btnWalk:disabled { background: #ccc; }
     </style>
 </head>
 <body>
-    <div class="card">
+    <div class="card" id="mainCard">
         <h2>🎮 娱乐休息</h2>
         <p>当前体力：<span id="energy">--</span>/100</p>
+        
         <button id="btnRest" onclick="doRest()">休息一下 (+20体力)</button>
+        <button id="btnWalk" onclick="doWalk()">出门散步 (-10体力)</button>
     </div>
 
     <script>
-        // 因为页面在 iframe 里，必须从父页面拿 Game 对象
         var G = window.parent.Game || window.Game;
 
         function updateUI() {
             if (!G || !G.state) return;
             document.getElementById('energy').innerText = G.state.energy;
+            
+            // 体力满了不能休息，体力不足 10 点不能散步
             document.getElementById('btnRest').disabled = (G.state.energy >= 100);
+            document.getElementById('btnWalk').disabled = (G.state.energy < 10);
         }
 
         function doRest() {
             if (!G || !G.state) return;
             if (G.state.energy >= 100) return;
             
-            // 加体力
             G.state.energy = Math.min(100, G.state.energy + 20);
             
-            // 加日志
             if (typeof G.addLog === 'function') {
-                G.addLog("去娱乐室休息了一下，恢复了体力。");
+                G.addLog("去娱乐室休息了一下，恢复了20点体力。");
             }
-            
-            // 存盘（这会自动触发你之前弄好的跨页面同步）
             if (typeof G.saveState === 'function') {
                 G.saveState();
             }
-            
             updateUI();
         }
 
-        // 页面加载时刷新数据
-        window.onload = updateUI;
+        function doWalk() {
+            if (!G || !G.state) return;
+            if (G.state.energy < 10) {
+                alert("体力不足，无法散步啦！");
+                return;
+            }
+            
+            // 散步扣除体力
+            G.state.energy -= 10;
+            
+            // 这里可以加散步的奖励，例如增加声望 (假设你的数据里有 reputation)
+            /*
+            if (G.state.reputation !== undefined) {
+                G.state.reputation += 1;
+            }
+            */
+
+            if (typeof G.addLog === 'function') {
+                G.addLog("去附近散了散步，心情变好了。");
+            }
+            if (typeof G.saveState === 'function') {
+                G.saveState();
+            }
+            updateUI();
+        }
+
+        window.onload = function() {
+            if (!G || !G.state) {
+                document.getElementById('mainCard').innerHTML = `
+                    <h2 style="color:red">⚠️ 数据加载失败</h2>
+                    <p style="font-size:14px; color:#666;">未能连接到游戏主界面。<br>请确保从游戏主页面进入此页。</p>
+                `;
+                return;
+            }
+            updateUI();
+        };
     </script>
 </body>
 </html>

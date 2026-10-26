@@ -86,21 +86,17 @@
         errorOverlay.innerHTML += '<div>🚨 ' + msg + '</div>';
     }
     
-    // 捕获父页面报错
     window.addEventListener('error', function(e) {
-        showError('主页面: ' + e.message + ' (' + e.filename.split('/').pop() + ':' + e.lineno + ')');
+        showError('主页面: ' + e.message + ' (' + (e.filename || '').split('/').pop() + ':' + e.lineno + ')');
     });
 
-    // 捕获 iframe 报错
     function bindErrorCatcher(iframe, name) {
         iframe.addEventListener('load', function () {
             try {
                 iframe.contentWindow.addEventListener('error', function(e) {
-                    showError(name + ': ' + e.message + ' (' + e.filename.split('/').pop() + ':' + e.lineno + ')');
+                    showError(name + ': ' + e.message + ' (' + (e.filename || '').split('/').pop() + ':' + e.lineno + ')');
                 });
-            } catch (err) {
-                showError(name + ' 无法注入报错捕获，可能是跨域限制。');
-            }
+            } catch (err) {}
         });
     }
 
@@ -173,6 +169,8 @@
 
     /* ====== 首屏渲染 ====== */
     try {
+        // 🔥 关键修复：将 Game 挂载到全局，供所有 iframe 子页面调用
+        window.Game = Game; 
         Game.initPage('home', function () {}, true);
     } catch (err) {
         showError('首屏渲染失败: ' + err.message);

@@ -3,53 +3,54 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🎮 娱乐 · 甜蜜物语</title>
-    <link rel="stylesheet" href="../css/styles.css">
+    <title>娱乐</title>
+    <style>
+        body { background: #fff0f5; font-family: sans-serif; padding: 20px; display: flex; justify-content: center; color: #4a3b3f; }
+        .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(255,182,193,0.3); text-align: center; width: 100%; max-width: 300px; }
+        h2 { color: #ff6b81; }
+        button { background: #ff8fa3; color: white; border: none; padding: 12px 20px; border-radius: 25px; font-size: 16px; margin-top: 15px; width: 100%; cursor: pointer; font-weight: bold; }
+        button:disabled { background: #ccc; }
+    </style>
 </head>
 <body>
-    <div class="game-body" style="padding-top: 10px;">
-        <div class="content" id="content"></div>
+    <div class="card">
+        <h2>🎮 娱乐休息</h2>
+        <p>当前体力：<span id="energy">--</span>/100</p>
+        <button id="btnRest" onclick="doRest()">休息一下 (+20体力)</button>
     </div>
-    <script src="../js/core/store.js"></script>
-    <script src="../js/data/ingredients.js"></script>
-    <script src="../js/data/recipes.js"></script>
-    <script src="../js/data/bundles.js"></script>
-    <script src="../js/data/characters.js"></script>
-    <script src="../js/data/events.js"></script>
-    <script src="../js/data/shop-config.js"></script>
-    <script src="../js/data/achievements.js"></script>
-    <script src="../js/core/utils.js"></script>
-    <script src="../js/core/state.js"></script>
-    <script src="../js/core/modal.js"></script>
-    <script src="../js/core/effects.js"></script>
-    <script src="../js/core/render.js"></script>
-    <script src="../js/actions/bakery.js"></script>
-    <script src="../js/actions/shop.js"></script>
-    <script src="../js/actions/social.js"></script>
-    <script src="../js/actions/system.js"></script>
-    <script src="../js/shared.js"></script>
+
     <script>
-        Game.initPage('fun', renderEntertainment);
-        let statusMsg = '放松一下，劳逸结合~';
-        function renderEntertainment() {
-            const s = Game.state;
-            document.getElementById('content').innerHTML = `
-                <div class="card">
-                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-                        <a href="../game.html" style="text-decoration:none;color:#888;font-size:14px;">⬅ 返回</a>
-                        <h2 style="margin:0;">🎮 娱乐</h2>
-                        <div style="width:40px;"></div>
-                    </div>
-                    <p class="muted">精力 ${s.energy}/100</p>
-                    <div class="char-actions" style="flex-direction:column;">
-                        <button class="small" style="padding:15px;font-size:16px;border-radius:12px;background:#a1c4fd;color:#333;" onclick="doWalk()">🚶 出门散步</button>
-                        <button class="small" style="padding:15px;font-size:16px;border-radius:12px;margin-top:10px;" onclick="doRest()">😴 休息一下</button>
-                    </div>
-                    <p class="muted" id="status-msg" style="text-align:center;margin-top:20px;">${statusMsg}</p>
-                </div>`;
+        // 因为页面在 iframe 里，必须从父页面拿 Game 对象
+        var G = window.parent.Game || window.Game;
+
+        function updateUI() {
+            if (!G || !G.state) return;
+            document.getElementById('energy').innerText = G.state.energy;
+            document.getElementById('btnRest').disabled = (G.state.energy >= 100);
         }
-        function doWalk() { if (typeof Game.walk === 'function') { statusMsg = '散步完成，体力恢复啦！'; Game.walk(); } }
-        function doRest() { if (typeof Game.rest === 'function') { statusMsg = '美美地睡了一觉，体力满满！'; Game.rest(); } }
+
+        function doRest() {
+            if (!G || !G.state) return;
+            if (G.state.energy >= 100) return;
+            
+            // 加体力
+            G.state.energy = Math.min(100, G.state.energy + 20);
+            
+            // 加日志
+            if (typeof G.addLog === 'function') {
+                G.addLog("去娱乐室休息了一下，恢复了体力。");
+            }
+            
+            // 存盘（这会自动触发你之前弄好的跨页面同步）
+            if (typeof G.saveState === 'function') {
+                G.saveState();
+            }
+            
+            updateUI();
+        }
+
+        // 页面加载时刷新数据
+        window.onload = updateUI;
     </script>
 </body>
 </html>

@@ -31,8 +31,7 @@
         .game-intro { background: #fff0f5; padding: 16px; border-radius: 16px; margin-bottom: 24px; }
         .game-intro p { color: #666; font-size: 14px; line-height: 1.8; text-align: left; }
         .game-intro strong { color: #ff6b81; }
-        
-        /* 头像选择区域 */
+
         .avatar-group {
             display: flex;
             justify-content: center;
@@ -95,7 +94,6 @@
             你的故事，由你亲手书写。</p>
         </div>
 
-        <!-- 头像选择区 -->
         <div class="avatar-group" id="avatarGroup">
             <div class="avatar-option selected" data-avatar="girl1">👧🏻</div>
             <div class="avatar-option" data-avatar="girl2">👩🏻</div>
@@ -106,19 +104,18 @@
         <div class="input-group">
             <label>👩‍🍳 你的名字（默认：小甜）</label>
             <input type="text" id="playerName" placeholder="请输入你的名字" value="小甜">
-            
+
             <label>🏪 蛋糕店的名字（默认：甜蜜物语）</label>
             <input type="text" id="shopName" placeholder="请输入店铺名字" value="甜蜜物语">
         </div>
 
         <div class="button-group">
             <button class="btn-start" id="btnStart">☀️ 开启甜蜜之旅</button>
-            <button class="btn-continue">📖 继续游戏</button>
+            <button class="btn-continue" id="btnContinue">📖 继续游戏</button>
         </div>
     </div>
 
     <script>
-        // 头像切换逻辑
         const avatarOptions = document.querySelectorAll('.avatar-option');
         let selectedAvatar = 'girl1';
 
@@ -130,7 +127,6 @@
             });
         });
 
-        // 按钮点击逻辑
         document.getElementById('btnStart').addEventListener('click', () => {
             const playerName = document.getElementById('playerName').value || '小甜';
             const shopName = document.getElementById('shopName').value || '甜蜜物语';
@@ -140,6 +136,15 @@
             localStorage.setItem('playerAvatar', selectedAvatar);
 
             window.location.href = 'game.html';
+        });
+
+        // ✨ 修复：绑定「继续游戏」
+        document.getElementById('btnContinue').addEventListener('click', () => {
+            if (localStorage.getItem('cakeShopSave_v1')) {
+                window.location.href = 'game.html';
+            } else {
+                alert('还没有存档哦，先点「开启甜蜜之旅」吧～');
+            }
         });
     </script>
 </body>

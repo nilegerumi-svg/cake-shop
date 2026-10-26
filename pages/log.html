@@ -15,22 +15,32 @@
     <div class="log-list" id="logList"></div>
 
     <script>
-        window.onload = function() {
+        function renderLogList() {
             const Cake = window.parent.Cake;
             if (!Cake) return;
 
             const logList = document.getElementById('logList');
-            const logs = Cake.store.state.log || [];
+            const logs = (Cake.store && Cake.store.state && Cake.store.state.log) || [];
 
             if (logs.length === 0) {
                 logList.innerHTML = '<div style="text-align:center; color:#aaa; margin-top:20px;">暂无记录，快去创造故事吧～</div>';
             } else {
-                // 倒序显示，最新的在最上面
                 logList.innerHTML = logs.slice().reverse().map(l =>
                     `<div style="margin-bottom:8px; line-height:1.5;">📝 第${l.day}天：${Cake.escapeHtml(l.text)}</div>`
                 ).join('');
             }
-        };
+        }
+
+        window.onload = renderLogList;
+
+        // ✨ 跨 iframe 同步：其它窗口保存存档后，本窗口也刷新日志
+        window.addEventListener('storage', function (e) {
+            if (e.key && e.key !== 'cakeShopSave_v1') return;
+            if (e.storageArea && e.storageArea !== window.localStorage) return;
+            // 先让 parent 同步（game.html 里 render.js 的 storage 监听会更新 parent state），
+            // 用 requestAnimationFrame 等下一次渲染再读取
+            requestAnimationFrame(renderLogList);
+        });
     </script>
 </body>
 </html>

@@ -33,7 +33,8 @@
     <script src="../js/actions/system.js"></script>
     <script src="../js/shared.js"></script>
     <script>
-        Game.initPage('entertainment', renderEntertainment);
+        // ✨ 修复：tab key 与 renderNav 里一致（'fun'）
+        Game.initPage('fun', renderEntertainment);
 
         let statusMsg = '放松一下，劳逸结合~';
 
@@ -57,22 +58,20 @@
 
         function doWalk() {
             if (typeof Game.walk === 'function') {
-                Game.walk();
                 statusMsg = '散步完成，体力恢复啦！';
+                Game.walk();
             } else {
                 alert('找不到散步功能，请检查代码！');
             }
-            renderEntertainment();
         }
 
         function doRest() {
             if (typeof Game.rest === 'function') {
-                Game.rest();
                 statusMsg = '美美地睡了一觉，体力满满！';
+                Game.rest();
             } else {
                 alert('找不到休息功能，请检查代码！');
             }
-            renderEntertainment();
         }
     </script>
 </body>

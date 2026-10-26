@@ -6,37 +6,60 @@
     <title>🍰 甜蜜物语</title>
     <link rel="stylesheet" href="css/styles.css">
     <style>
-        /* 1. 外层容器，撑满全屏 */
+        /* 1. 外层撑满全屏 */
         body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; background: #fff0f5; }
         .app-wrapper { display: flex; flex-direction: column; height: 100vh; }
         
-        /* 2. 顶部栏和导航栏固定 */
+        /* 2. 顶部固定 */
         header, nav { flex: 0 0 auto; z-index: 10; }
 
-        /* 3. 核心画框：用 iframe 装子页面 */
-        .iframe-container {
-            flex: 1; /* 占据剩余所有空间 */
+        /* 3. 主分割容器：上面是功能，下面是日记 */
+        .split-container {
+            flex: 1; /* 占满剩余所有空间 */
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* 4. 功能主画框 (占据大部分空间) */
+        .main-frame {
+            flex: 1; 
             width: 100%;
             border: none;
             background: transparent;
-            /* 防止内容被底部悬浮按钮挡住，可以留点底边距 */
-            padding-bottom: 10px; 
         }
-        iframe { width: 100%; height: 100%; border: none; display: block; }
+
+        /* 5. 独立日记画框 (固定高度，在底部) */
+        .log-frame {
+            flex: 0 0 200px; /* 固定高度 200px，你可以按需调整 */
+            width: 100%;
+            border: none;
+            background: #fff;
+            border-top: 2px dashed #ffd1dc; /* 和上方功能区分隔 */
+            box-shadow: 0 -4px 10px rgba(255, 143, 163, 0.1);
+        }
+        
+        iframe { display: block; width: 100%; height: 100%; }
     </style>
 </head>
 <body>
 
 <div class="app-wrapper">
-    <!-- 顶部状态和导航（由 shared.js 渲染） -->
+    <!-- 顶部状态栏和导航（由 shared.js 渲染） -->
     <header id="header"></header>
     <nav id="navBar"></nav>
 
-    <!-- 画框：默认加载主页 -->
-    <iframe id="mainFrame" src="pages/home.html" class="iframe-container"></iframe>
+    <!-- 核心嵌套：上下分屏 -->
+    <div class="split-container">
+        <!-- 上屏：功能画框 -->
+        <iframe id="mainFrame" src="pages/home.html" class="main-frame"></iframe>
+        
+        <!-- 下屏：独立日记画框 -->
+        <iframe id="logFrame" src="pages/log.html" class="log-frame"></iframe>
+    </div>
 </div>
 
-<!-- 引入所有基础 JS -->
+<!-- 你所有的 JS 核心文件 -->
 <script src="js/core/store.js"></script>
 <script src="js/data/ingredients.js"></script>
 <script src="js/data/recipes.js"></script>
@@ -57,29 +80,28 @@
 <script src="js/shared.js"></script>
 
 <script>
-    // 初始化主框架
     Game.initPage('home', () => {}, true); 
 
-    // 【关键逻辑】：拦截导航栏点击，阻止整页跳转，改为替换 iframe 的内容
+    // 【导航拦截】点击导航切换上方的功能画框
     document.addEventListener('click', function(e) {
         const link = e.target.closest('nav a');
         if (link) {
             const href = link.getAttribute('href');
-            // 如果链接有效且不是空链接
             if (href && href !== '#' && href !== 'javascript:;') {
-                e.preventDefault(); // 阻止浏览器整页刷新跳转
-                
-                // 如果原链接是 bake.html，拼成 pages/bake.html
-                let targetUrl = href;
-                if (!href.includes('pages/')) {
-                    targetUrl = 'pages/' + href;
-                }
-                
-                // 切换画框里的内容
+                e.preventDefault(); 
+                let targetUrl = href.includes('pages/') ? href : 'pages/' + href;
                 document.getElementById('mainFrame').src = targetUrl;
             }
         }
     });
+
+    // 【暴露全局方法】让子页面（如 home.html）在写日记后，可以调用这个方法刷新下面的日记画框
+    window.refreshDiary = function() {
+        const logFrame = document.getElementById('logFrame');
+        if (logFrame && logFrame.contentWindow) {
+            logFrame.contentWindow.location.reload(); 
+        }
+    };
 </script>
 </body>
 </html>

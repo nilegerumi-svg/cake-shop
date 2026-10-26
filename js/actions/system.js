@@ -1,61 +1,6 @@
 window.Cake = window.Cake || {};
 (function () {
-    function rest() {
-        var state = window.Cake.store.state;
-        var before = state.energy;
-        state.energy = Math.min(100, state.energy + 40);
-        var gain = state.energy - before;
-        var text = gain > 0 ? '精力 +' + gain : '精力已满';
-        window.Cake.addLog('😴 你休息了一下，' + text + '（当前' + state.energy + '）');
-        window.Cake.refreshPage();
-    }
-
-    function walk() {
-        var state = window.Cake.store.state;
-        if (state.energy < 8) { window.Cake.addLog('😵 精力不足，无法出门散步！'); window.Cake.refreshPage(); return; }
-        var before = state.energy;
-        state.energy -= 8;
-
-        var CHARACTERS = window.Cake.CHARACTERS;
-        var WALK_EVENTS = window.Cake.WALK_EVENTS;
-        var evPool = [];
-        for (var i = 0; i < WALK_EVENTS.length; i++) {
-            var ev = WALK_EVENTS[i];
-            var blocked = false;
-            for (var cid in CHARACTERS) {
-                if (!Object.prototype.hasOwnProperty.call(CHARACTERS, cid)) continue;
-                if (ev[cid] && (!state.characters[cid] || !state.characters[cid].met)) { blocked = true; break; }
-            }
-            if (!blocked) evPool.push(ev);
-        }
-        var pool = evPool.length ? evPool : WALK_EVENTS;
-        var chosen = pool[Math.floor(Math.random() * pool.length)];
-
-        // ✨ 本次改动：记录散步前的好感，事件生效后对变化角色补触发好感事件
-        var beforeAff = {};
-        for (var c0 in state.characters) {
-            if (!Object.prototype.hasOwnProperty.call(state.characters, c0)) continue;
-            if (state.characters[c0].met) beforeAff[c0] = state.characters[c0].affection;
-        }
-
-        window.Cake.applyEventEffects(chosen);
-
-        var delta = state.energy - before;
-        var sign = delta >= 0 ? '+' : '';
-        window.Cake.addLog('🚶‍♀️ 出门散步（⚡' + sign + delta + '）：' + chosen.text);
-
-        // ✨ 本次改动：对本次好感有变化的角色触发好感事件（会弹模态框）
-        var triggeredCid = null;
-        for (var c1 in state.characters) {
-            if (!Object.prototype.hasOwnProperty.call(state.characters, c1)) continue;
-            var cs1 = state.characters[c1];
-            if (cs1.met && cs1.affection !== beforeAff[c1]) { triggeredCid = c1; break; }
-        }
-        if (triggeredCid) window.Cake.checkAffEvent(triggeredCid);
-
-        window.Cake.checkAchievements();
-        window.Cake.refreshPage();
-    }
+    // 💡 注意：rest() 和 walk() 已经拆分到 entertainment.js 里了
 
     function computeEnding() {
         var state = window.Cake.store.state;
@@ -111,24 +56,11 @@ window.Cake = window.Cake || {};
         window.Cake.store.state = window.Cake.loadStateFromStorage();
         window.Cake.addLog('📂 读取存档成功，欢迎回来～');
         window.Cake.refreshPage();
-        var state = window.Cake.store.state;
-        window.Cake.showModal('📂 读取存档',
-            '<p>欢迎回来，' + window.Cake.escapeHtml(state.playerName) + '！<br>' +
-            '你的「' + window.Cake.escapeHtml(state.shopName) + '」已经经营到第' + state.day + '天了。</p>');
     }
 
-    function resetGame() {
-        if (confirm('确定要重新开始吗？当前进度将被清除。')) {
-            try { localStorage.removeItem(window.Cake.SAVE_KEY); } catch (e) {}
-            location.href = 'index.html';
-        }
-    }
-
-    window.Cake.rest = rest;
-    window.Cake.walk = walk;
+    // 挂载到全局
     window.Cake.computeEnding = computeEnding;
     window.Cake.showEnding = showEnding;
     window.Cake.saveGame = saveGame;
     window.Cake.loadGame = loadGame;
-    window.Cake.resetGame = resetGame;
 })();

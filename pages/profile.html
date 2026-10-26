@@ -3,33 +3,95 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>我的</title>
+    <title>📊 我的 · 甜蜜物语</title>
     <link rel="stylesheet" href="../css/styles.css">
-    <style> body { background: transparent; padding: 16px; margin: 0; } </style>
 </head>
 <body>
-<div id="content"></div>
-<script>
-    window.onload = function() {
-        const Cake = window.parent.Cake;
-        if (!Cake) return;
+    <header id="header"></header>
+    <nav id="navBar"></nav>
+    <div class="game-body">
+        <div class="content" id="content"></div>
+    </div>
+    <div class="action-footer" id="footer"></div>
 
-        function render() {
-            const s = Cake.store.state;
+    <script src="../js/core/store.js"></script>
+    <script src="../js/data/ingredients.js"></script>
+    <script src="../js/data/recipes.js"></script>
+    <script src="../js/data/bundles.js"></script>
+    <script src="../js/data/characters.js"></script>
+    <script src="../js/data/events.js"></script>
+    <script src="../js/data/shop-config.js"></script>
+    <script src="../js/data/achievements.js"></script>
+    <script src="../js/core/utils.js"></script>
+    <script src="../js/core/state.js"></script>
+    <script src="../js/core/modal.js"></script>
+    <script src="../js/core/effects.js"></script>
+    <script src="../js/core/render.js"></script>
+    <script src="../js/actions/bakery.js"></script>
+    <script src="../js/actions/shop.js"></script>
+    <script src="../js/actions/social.js"></script>
+    <script src="../js/actions/system.js"></script>
+    <script src="../js/shared.js"></script>
+    <script>
+        Game.initPage('profile', renderProfile);
+
+        function renderProfile() {
+            const s = Game.state;
+            const earnedCount = Game.ACHIEVEMENTS.filter(a => s.achievements[a.id]).length;
+            const total = Game.ACHIEVEMENTS.length;
+            const pct = total > 0 ? Math.round(earnedCount / total * 100) : 0;
+
             document.getElementById('content').innerHTML = `
                 <div class="card">
-                    <h2>👤 ${Cake.escapeHtml(s.playerName)}</h2>
-                    <p class="muted">${Cake.escapeHtml(s.shopName)}</p>
-                    <div class="grid-2" style="margin-top:12px;">
-                        <div class="item-card"><span class="item-emoji">💰</span><span class="item-name">${s.money} 元</span><span class="item-desc">当前余额</span></div>
-                        <div class="item-card"><span class="item-emoji">⭐</span><span class="item-name">${s.reputation} 声望</span><span class="item-desc">店铺名气</span></div>
-                        <div class="item-card"><span class="item-emoji">🏪</span><span class="item-name">Lv.${s.shopLevel}</span><span class="item-desc">店铺等级</span></div>
-                        <div class="item-card"><span class="item-emoji">🎂</span><span class="item-name">${s.totalCakes || 0}</span><span class="item-desc">累计烘焙</span></div>
+                    <h2>📊 我的档案</h2>
+                    <div class="grid-2">
+                        <div class="item-card">
+                            <span class="item-emoji">${Game.escapeHtml(s.avatar)}</span>
+                            <span class="item-name">${Game.escapeHtml(s.playerName)}</span>
+                            <span class="item-desc">「${Game.escapeHtml(s.shopName)}」的店长</span>
+                            <span class="item-meta">经营第 ${s.day} 天 · Lv.${s.shopLevel} · 装饰度 ${s.decoration}</span>
+                        </div>
+                        <div class="item-card">
+                            <span class="item-emoji">📈</span>
+                            <span class="item-name">经营数据</span>
+                            <span class="item-desc">
+                                当前余额：${s.money} 元<br>
+                                累计卖出：${s.totalCakes} 个蛋糕<br>
+                                累计收入：${s.totalEarned} 元<br>
+                                当前声望：${s.reputation}
+                            </span>
+                        </div>
                     </div>
+
+                    <h3>🏅 成就（${earnedCount}/${total}，${pct}%）</h3>
+                    <div class="aff-bar" style="height:8px;margin:0 0 10px;" role="progressbar"
+                         aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}"
+                         aria-label="成就完成度 ${pct}%">
+                        <div class="aff-fill" style="width:${pct}%;"></div>
+                    </div>
+                    <div class="achievement-list">
+                        ${Game.ACHIEVEMENTS.map(a => `
+                            <div class="achievement ${s.achievements[a.id] ? 'earned' : ''}">
+                                <span class="a-icon">${s.achievements[a.id] ? '✅' : '🔒'}</span>
+                                <div>
+                                    <div style="font-weight:700;">${a.icon} ${a.name}</div>
+                                    <div class="muted">${a.desc}</div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+
+                    <h3>💾 存档 & 结局</h3>
+                    <div class="char-actions" style="gap:10px;margin-top:8px;">
+                        <button type="button" class="small" onclick="Game.saveGame()">💾 保存游戏</button>
+                        <button type="button" class="small secondary"
+                                onclick="if (confirm('读取存档会回到上次保存的进度，当前未保存的改动会丢失，确定吗？')) Game.loadGame()">📂 读取存档</button>
+                        <button type="button" class="small gold" onclick="Game.showEnding()">🌟 查看结局</button>
+                        <button type="button" class="small" onclick="Game.resetGame()">🔄 重新开始</button>
+                    </div>
+                    <p class="muted" style="margin-top:10px;">游戏会自动保存在浏览器中，随时可以回来继续你的甜蜜故事。</p>
                 </div>`;
         }
-        render();
-    };
-</script>
+    </script>
 </body>
 </html>

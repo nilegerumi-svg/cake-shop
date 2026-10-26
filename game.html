@@ -6,25 +6,14 @@
     <title>🍰 甜蜜物语</title>
     <link rel="stylesheet" href="css/styles.css">
     <style>
-        body, html {
-            margin: 0; padding: 0; height: 100%;
-            overflow: hidden; background: #fff0f5;
-        }
-        .app-wrapper {
-            display: flex; flex-direction: column;
-            height: 100vh; height: 100dvh;
-        }
+        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; background: #fff0f5; }
+        .app-wrapper { display: flex; flex-direction: column; height: 100vh; height: 100dvh; }
         header, nav { flex: 0 0 auto; z-index: 10; }
-
         .split-container {
             flex: 1; display: flex; flex-direction: column; overflow: hidden;
-            /* footer 高度由 JS 动态写入 --footer-h，并叠加 iOS 安全区 */
             padding-bottom: calc(var(--footer-h, 70px) + env(safe-area-inset-bottom));
         }
-        .main-frame {
-            flex: 1; width: 100%; border: none;
-            background: transparent; min-height: 240px;
-        }
+        .main-frame { flex: 1; width: 100%; border: none; background: transparent; min-height: 240px; }
         .log-frame {
             flex: 0 0 clamp(110px, 22vh, 180px);
             width: 100%; border: none; background: #fff;
@@ -32,7 +21,6 @@
             box-shadow: 0 -4px 10px rgba(255, 143, 163, 0.1);
         }
         iframe { display: block; width: 100%; height: 100%; }
-
         .action-footer {
             position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
             width: 100%; max-width: 500px;
@@ -49,18 +37,15 @@
 <div class="app-wrapper">
     <header id="header"></header>
     <nav id="navBar"></nav>
-
     <div class="split-container">
         <iframe id="mainFrame" src="pages/home.html" class="main-frame"></iframe>
         <iframe id="logFrame" src="pages/log.html" class="log-frame"></iframe>
     </div>
-
     <div class="action-footer" id="footer"></div>
 </div>
 
-<!-- 数据层 -->
 <script src="js/core/store.js"></script>
-<script src="js/core/bridge.js"></script><!-- ★ 新增：跨 iframe 状态桥接 -->
+<script src="js/core/bridge.js"></script><!-- ★ 保留 -->
 <script src="js/data/ingredients.js"></script>
 <script src="js/data/recipes.js"></script>
 <script src="js/data/bundles.js"></script>
@@ -68,34 +53,24 @@
 <script src="js/data/events.js"></script>
 <script src="js/data/shop-config.js"></script>
 <script src="js/data/achievements.js"></script>
-
-<!-- 核心 -->
 <script src="js/core/utils.js"></script>
 <script src="js/core/state.js"></script>
 <script src="js/core/modal.js"></script>
 <script src="js/core/effects.js"></script>
 <script src="js/core/render.js"></script>
-
-<!-- 动作 -->
 <script src="js/actions/bakery.js"></script>
 <script src="js/actions/shop.js"></script>
 <script src="js/actions/social.js"></script>
 <script src="js/actions/system.js"></script>
-
-<!-- 统一入口 -->
 <script src="js/shared.js"></script>
 
 <script>
 (function () {
     'use strict';
-
     var mainFrame = document.getElementById('mainFrame');
     var logFrame  = document.getElementById('logFrame');
     var footer    = document.getElementById('footer');
 
-    /* =========================================================
-     * 一、导航：把任意形式的 href 规整到 pages/xxx.html
-     * ======================================================= */
     function normalizePage(href) {
         var t = (href || '').trim().replace(/^\.\//, '');
         if (!t) return null;
@@ -104,17 +79,12 @@
         if (t.indexOf('pages/') === 0) return t;
         return 'pages/' + t;
     }
-
     function navigateTo(href) {
         var target = normalizePage(href);
         if (!target) return false;
-        if (mainFrame.getAttribute('src') !== target) {
-            mainFrame.src = target;
-        }
+        if (mainFrame.getAttribute('src') !== target) mainFrame.src = target;
         return true;
     }
-
-    /* 幂等地给任意文档绑定链接拦截（可用于 iframe.contentDocument） */
     function bindLinkInterceptor(doc) {
         if (!doc || doc.__navBound) return;
         doc.__navBound = true;
@@ -123,60 +93,33 @@
             if (!link || link.target === '_blank') return;
             var href = link.getAttribute('href');
             if (!href || href === '#' || /^javascript:/i.test(href)) return;
-            // 只接管本地 .html 链接
             if (!/^[\w./-]+\.html(#.*)?$/.test(href)) return;
             if (navigateTo(href)) e.preventDefault();
         });
     }
-
     bindLinkInterceptor(document);
     [mainFrame, logFrame].forEach(function (f) {
         f.addEventListener('load', function () {
-            try { bindLinkInterceptor(f.contentDocument); } catch (_) { /* 跨域时忽略 */ }
+            try { bindLinkInterceptor(f.contentDocument); } catch (_) {}
         });
     });
 
-    /* =========================================================
-     * 二、跨 iframe 状态同步
-     * ======================================================= */
+    /* ★ 父页面收到子页面变更：重载 + 重渲染 + 广播 */
     function handleStateChanged(sourceId) {
-        // 任何一处改动后，父页面都从磁盘重载，确保读到最新
-        try {
-            window.Cake.store.state = window.Cake.loadStateFromStorage();
-        } catch (_) { return; }
-
-        // 父页面自身 UI 重渲染
+        try { window.Cake.store.state = window.Cake.loadStateFromStorage(); } catch (_) { return; }
         try {
             Game.renderHeader();
             Game.renderNav();
             Game.renderFooter();
-        } catch (err) {
-            if (window.console) console.warn('[host] render failed', err);
-        }
+        } catch (err) { if (window.console) console.warn('[host] render failed', err); }
 
-        // 广播给两个 iframe（发起者会因 sourceId 匹配而忽略自己）
         var msg = { type: 'state-sync', sourceId: sourceId };
         [mainFrame, logFrame].forEach(function (f) {
             try { f.contentWindow.postMessage(msg, '*'); } catch (_) {}
         });
     }
+    window.Cake.bridge.setHostBroadcaster(handleStateChanged);
 
-    window.addEventListener('message', function (e) {
-        if (!mainFrame || !logFrame) return;
-        if (e.source !== mainFrame.contentWindow && e.source !== logFrame.contentWindow) return;
-        var msg = e.data;
-        if (msg && typeof msg === 'object' && msg.type === 'state-changed') {
-            handleStateChanged(msg.sourceId);
-        }
-    });
-
-    if (window.Cake && window.Cake.bridge && typeof window.Cake.bridge.setHostBroadcaster === 'function') {
-        window.Cake.bridge.setHostBroadcaster(handleStateChanged);
-    }
-
-    /* =========================================================
-     * 三、footer 高度动态测量，避免盖住 logFrame
-     * ======================================================= */
     if (footer && window.ResizeObserver) {
         var ro = new ResizeObserver(function () {
             document.documentElement.style.setProperty('--footer-h', footer.offsetHeight + 'px');
@@ -184,14 +127,8 @@
         ro.observe(footer);
     }
 
-    /* =========================================================
-     * 四、首屏渲染（放在最后，保证 Game 依赖均已就绪）
-     * ======================================================= */
-    try {
-        Game.initPage('home', function () {}, true);
-    } catch (err) {
-        console.error('[game] initPage failed', err);
-    }
+    try { Game.initPage('home', function () {}, true); }
+    catch (err) { console.error('[game] initPage failed', err); }
 })();
 </script>
 </body>

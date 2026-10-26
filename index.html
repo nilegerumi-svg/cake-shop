@@ -134,7 +134,6 @@
         </div>
     </div>
 
-    <!-- 必须加载的底层状态文件 -->
     <script src="js/core/store.js"></script>
     <script src="js/core/state.js"></script>
 
@@ -147,7 +146,6 @@
 
         var AVATAR_EMOJI = { girl1: '👧🏻', girl2: '👩🏻', boy1: '👦🏻', cake: '🧁' };
 
-        // 头像选择逻辑
         function select(opt) {
             options.forEach(function (o) {
                 var on = o === opt;
@@ -176,7 +174,6 @@
         var btnStart = document.getElementById('btnStart');
         var btnContinue = document.getElementById('btnContinue');
 
-        // 检查是否有存档
         function hasSave() {
             try { return typeof Cake.hasSave === 'function' && Cake.hasSave(); }
             catch (_) { return false; }
@@ -197,7 +194,6 @@
 
             try {
                 if (typeof Cake.defaultState === 'function' && typeof Cake.saveState === 'function') {
-                    // 直接构造完整初始存档
                     var s = Cake.defaultState();
                     s.playerName = playerName;
                     s.shopName = shopName;
@@ -205,7 +201,6 @@
                     Cake.store.state = s;
                     Cake.saveState();
                 } else {
-                    // 兜底逻辑
                     localStorage.setItem('playerName', playerName);
                     localStorage.setItem('shopName', shopName);
                     localStorage.setItem('playerAvatar', selectedKey);
@@ -217,13 +212,14 @@
                 console.error("保存初始状态失败:", err);
             }
 
-            // 跳转到主页面（请确认你的主页面名字是不是 game.html 或 index.html）
-            location.href = 'index.html'; 
+            // 👇 关键修改：跳转到 game.html
+            location.href = 'game.html'; 
         });
 
         // 继续游戏
         btnContinue.addEventListener('click', function () {
-            location.href = 'index.html';
+            // 👇 关键修改：跳转到 game.html
+            location.href = 'game.html';
         });
     })();
     </script>

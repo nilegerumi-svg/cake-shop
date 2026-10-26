@@ -71,8 +71,17 @@ window.Game = {
     social: window.Cake.social,
     toggleGiftPanel: window.Cake.toggleGiftPanel,
     giveGift: window.Cake.giveGift,
-    rest: window.Cake.rest,
-    walk: window.Cake.walk,
+    
+    // 👇 修改点：增加了参数校验，防止把 event 对象传进去
+    rest: function() {
+        if (window.Cake.rest) return window.Cake.rest();
+    },
+    walk: function(location) {
+        var loc = (typeof location === 'string') ? location : 'home';
+        if (window.Cake.walk) return window.Cake.walk(loc);
+    },
+    // 👆 修改结束
+
     showEnding: window.Cake.showEnding,
     saveGame: window.Cake.saveGame,
     loadGame: window.Cake.loadGame,

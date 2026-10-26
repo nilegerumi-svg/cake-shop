@@ -99,8 +99,8 @@
     }
 
     window.addEventListener('error', function (e) {
-        showError('主页面: ' + e.message + ' (' +
-            (e.filename || '').split('/').pop() + ':' + e.lineno + ')');
+        var file = e.filename ? e.filename.split('/').pop() : 'unknown';
+        showError('主页面: ' + e.message + ' (' + file + ':' + e.lineno + ')');
     });
 
     var mainFrame = document.getElementById('mainFrame');
@@ -114,8 +114,8 @@
                 if (!win || win.__errorBound) return;
                 win.__errorBound = true;
                 win.addEventListener('error', function (e) {
-                    showError(name + ': ' + e.message + ' (' +
-                        (e.filename || '').split('/').pop() + ':' + e.lineno + ')');
+                    var file = e.filename ? e.filename.split('/').pop() : 'unknown';
+                    showError(name + ': ' + e.message + ' (' + file + ':' + e.lineno + ')');
                 });
             } catch (_) { /* 跨域时忽略 */ }
         }
@@ -165,7 +165,6 @@
         var Cake = window.Cake;
         if (!Cake || !Cake.store) return;
 
-        // 只有拿到有效状态才覆盖，避免把 state 写成 undefined
         try {
             if (typeof Cake.loadStateFromStorage === 'function') {
                 var loaded = Cake.loadStateFromStorage();
@@ -175,7 +174,6 @@
             console.warn('[host] load state failed', err);
         }
 
-        // 直接用 Cake.xxx，不依赖全局 Game 别名是否就绪
         try {
             if (typeof Cake.renderHeader === 'function') Cake.renderHeader();
             if (typeof Cake.renderNav === 'function') Cake.renderNav();
@@ -194,7 +192,6 @@
         typeof window.Cake.bridge.setHostBroadcaster === 'function') {
         window.Cake.bridge.setHostBroadcaster(handleStateChanged);
     } else {
-        // bridge.js 未就绪时，等 DOM 就绪再绑定一次
         document.addEventListener('DOMContentLoaded', function () {
             if (window.Cake && window.Cake.bridge &&
                 typeof window.Cake.bridge.setHostBroadcaster === 'function') {
@@ -214,12 +211,20 @@
 
     /* ====== 首屏渲染 ====== */
     try {
-        // 注意：第三个参数原为 true，若 render.js 的 initPage 签名是
-        // (page, cb, isInIframe)，主页面必须传 false，否则 header/nav/footer
-        // 会被 render.js 里的 "if (isInIframe) return" 跳过。
-        // 请核对 render.js 后决定：false 或不传。
-        if (window.Game && typeof window.Game.initPage === 'function') {
-            window.Game.initPage('home', function () {}, false);
+        // 1. 强制同步一次最新状态（防止开启时有缓存不同步导致白屏）
+        if (window.Cake && window.Cake.store && typeof window.Cake.loadStateFromStorage === 'function') {
+            var freshState = window.Cake.loadStateFromStorage();
+            if (freshState) window.Cake.store.state = freshState;
+        }
+
+        // 2. 优先使用 window.Cake.initPage，避免 shared.js 未能将 Game 挂载到全局的问题
+        var initializer = (window.Cake && window.Cake.initPage) || (window.Game && window.Game.initPage);
+        
+        if (typeof initializer === 'function') {
+            // 第三个参数传 false 表示作为主页面（宿主环境）进行渲染
+            initializer('home', function () {}, false);
+        } else {
+            showError('首屏渲染失败: 未找到 initPage 方法，请检查 render.js 或 shared.js 是否加载成功。');
         }
     } catch (err) {
         showError('首屏渲染失败: ' + err.message);

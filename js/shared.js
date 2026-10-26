@@ -1,9 +1,26 @@
 window.Cake = window.Cake || {};
 
+// ── 1. 初始化状态（带防护，默认值优先复用 store.DEFAULT_STATE）──
 (function initState() {
     var Cake = window.Cake;
-    if (!Cake.hasSave()) {
-        var s = Cake.defaultState();
+    var store = Cake.store;
+    if (!store) return; // core/store.js 未加载则放弃，避免崩
+
+    function getDefaultState() {
+        if (typeof Cake.defaultState === 'function') return Cake.defaultState();
+        if (store.DEFAULT_STATE) return JSON.parse(JSON.stringify(store.DEFAULT_STATE));
+        return {
+            day: 1, money: 500, energy: 100, reputation: 20,
+            shopLevel: 1, decoration: 0, priceRate: 1.0,
+            avatar: '👩‍🍳', shopName: '甜蜜小屋',
+            recipes: {}, cakes: {}, ingredients: {}, characters: {}, log: []
+        };
+    }
+
+    var hasSave = typeof Cake.hasSave === 'function' ? Cake.hasSave() : false;
+
+    if (!hasSave) {
+        var s = getDefaultState();
         try {
             var pn = localStorage.getItem('playerName');
             var sn = localStorage.getItem('shopName');
@@ -13,87 +30,86 @@ window.Cake = window.Cake || {};
             var AVATAR_MAP = { girl1: '👧🏻', girl2: '👩🏻', boy1: '👦🏻', cake: '🧁' };
             if (av && AVATAR_MAP[av]) s.avatar = AVATAR_MAP[av];
         } catch (_) {}
-        Cake.store.state = s;
-        Cake.saveState();
-    } else {
-        Cake.store.state = Cake.loadStateFromStorage();
+        store.state = s;
+        if (typeof Cake.saveState === 'function') Cake.saveState();
+    } else if (typeof Cake.loadStateFromStorage === 'function') {
+        store.state = Cake.loadStateFromStorage();
     }
 })();
 
-window.Game = {
-    get state() { return window.Cake.store.state; },
-    set state(v) { window.Cake.store.state = v; },
-
-    INGREDIENTS: window.Cake.INGREDIENTS,
-    RECIPES: window.Cake.RECIPES,
-    BUNDLES: window.Cake.BUNDLES,
-    CHARACTERS: window.Cake.CHARACTERS,
-    AFF_EVENTS: window.Cake.AFF_EVENTS,
-    CHAT_DIALOGUES: window.Cake.CHAT_DIALOGUES,
-    DATE_DIALOGUES: window.Cake.DATE_DIALOGUES,
-    MEETINGS: window.Cake.MEETINGS,
-    RANDOM_EVENTS: window.Cake.RANDOM_EVENTS,
-    WALK_EVENTS: window.Cake.WALK_EVENTS,
-    ACHIEVEMENTS: window.Cake.ACHIEVEMENTS,
-    SHOP_UPGRADE_COSTS: window.Cake.SHOP_UPGRADE_COSTS,
-
-    SAVE_KEY: window.Cake.SAVE_KEY,
-    SAVE_VERSION: window.Cake.SAVE_VERSION,
-    defaultState: window.Cake.defaultState,
-    hasSave: window.Cake.hasSave,
-    saveState: window.Cake.saveState,
-    loadStateFromStorage: window.Cake.loadStateFromStorage,
-
-    $: window.Cake.$,
-    addLog: window.Cake.addLog,
-    ingredientTags: window.Cake.ingredientTags,
-    affLevel: window.Cake.affLevel,
-    escapeHtml: window.Cake.escapeHtml,
-
-    showModal: window.Cake.showModal,
-    closeModal: window.Cake.closeModal,
-
-    renderHeader: window.Cake.renderHeader,
-    renderNav: window.Cake.renderNav,
-    renderFooter: window.Cake.renderFooter,
-    renderLog: window.Cake.renderLog,
-    initPage: window.Cake.initPage,
-    refreshPage: window.Cake.refreshPage,
-
-    bakeCake: window.Cake.bakeCake,
-    buyIngredient: window.Cake.buyIngredient,
-    buyBundle: window.Cake.buyBundle,
-    researchRecipe: window.Cake.researchRecipe,
-    upgradeShop: window.Cake.upgradeShop,
-    decorateShop: window.Cake.decorateShop,
-    setPriceRate: window.Cake.setPriceRate,
-    openShop: window.Cake.openShop,
-    social: window.Cake.social,
-    toggleGiftPanel: window.Cake.toggleGiftPanel,
-    giveGift: window.Cake.giveGift,
-    
-    rest: function() {
-        if (window.Cake.rest) return window.Cake.rest();
-    },
-    walk: function(location) {
-        var loc = (typeof location === 'string') ? location : 'home';
-        if (window.Cake.walk) return window.Cake.walk(loc);
-    },
-
-    showEnding: window.Cake.showEnding,
-    saveGame: window.Cake.saveGame,
-    loadGame: window.Cake.loadGame,
-    resetGame: window.Cake.resetGame,
-};
-
-(function () {
+// ── 2. Game 兼容层：全部改为实时读取，消除加载顺序依赖 ──
+(function exposeGameAlias() {
     var Cake = window.Cake;
-    if (!Cake.bridge || !Cake.bridge.inIframe) return;
-    Cake.bridge.onStateChanged(function () {
-        Cake.store.state = Cake.loadStateFromStorage();
-        if (typeof Cake.refreshPage === 'function') {
-            try { Cake.refreshPage(); return; } catch (_) {}
-        }
-        try { window.location.reload(); } catch (_) {}
+    var Game = window.Game = window.Game || {};
+
+    var LIVE_KEYS = [
+        'INGREDIENTS', 'RECIPES', 'BUNDLES', 'CHARACTERS', 'AFF_EVENTS',
+        'CHAT_DIALOGUES', 'DATE_DIALOGUES', 'MEETINGS', 'RANDOM_EVENTS',
+        'WALK_EVENTS', 'ACHIEVEMENTS', 'SHOP_UPGRADE_COSTS',
+        'SAVE_KEY', 'SAVE_VERSION',
+        'defaultState', 'hasSave', 'saveState', 'loadStateFromStorage',
+        '$', 'addLog', 'ingredientTags', 'affLevel', 'escapeHtml', 'fail',
+        'showModal', 'closeModal',
+        'renderHeader', 'renderNav', 'renderFooter', 'renderLog',
+        'initPage', 'refreshPage',
+        'bakeCake', 'buyIngredient', 'buyBundle', 'researchRecipe',
+        'upgradeShop', 'decorateShop', 'setPriceRate', 'openShop',
+        'social', 'toggleGiftPanel', 'giveGift',
+        'showEnding', 'saveGame', 'loadGame', 'resetGame'
+    ];
+
+    for (var i = 0; i < LIVE_KEYS.length; i++) {
+        (function (key) {
+            Object.defineProperty(Game, key, {
+                configurable: true,
+                enumerable: true,
+                get: function () { return Cake[key]; },
+                set: function (v) { Cake[key] = v; }
+            });
+        })(LIVE_KEYS[i]);
+    }
+
+    Object.defineProperty(Game, 'state', {
+        configurable: true,
+        enumerable: true,
+        get: function () { return Cake.store.state; },
+        set: function (v) { Cake.store.state = v; }
     });
+
+    // 这两个有参数处理，保留包装函数；内部实时访问 Cake，不受加载顺序影响
+    Game.rest = function () {
+        if (typeof Cake.rest === 'function') return Cake.rest();
+    };
+
+    // 原参数名 location 遮蔽了 window.location，改名 locName
+    Game.walk = function (locName) {
+        var loc = (typeof locName === 'string') ? locName : 'home';
+        if (typeof Cake.walk === 'function') return Cake.walk(loc);
+    };
+})();
+
+// ── 3. bridge：就绪检测 + 延迟重试，避免加载顺序导致静默失效 ──
+(function bindBridge() {
+    var Cake = window.Cake;
+
+    function setup() {
+        if (!Cake.bridge || !Cake.bridge.inIframe) return false;
+        if (typeof Cake.bridge.onStateChanged !== 'function') return false;
+        Cake.bridge.onStateChanged(function () {
+            Cake.store.state = Cake.loadStateFromStorage();
+            if (typeof Cake.refreshPage === 'function') {
+                try { Cake.refreshPage(); return; } catch (_) {}
+            }
+            try { window.location.reload(); } catch (_) {}
+        });
+        return true;
+    }
+
+    if (setup()) return;
+    // bridge.js 可能晚于 shared.js 加载：DOM 就绪后再试一次
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', setup);
+    } else {
+        setTimeout(setup, 0);
+    }
 })();

@@ -16,21 +16,66 @@
 
         function render() {
             const s = Cake.store.state;
-            let html = `<div class="card"><h2>🛒 采购市场</h2><p class="muted">余额 ${s.money} 元 · 精力 ${s.energy}/100</p><div class="grid-2" style="margin-top:12px;">`;
-            
+            let html = `<div class="card">
+                <h2>🛒 采购市场</h2>
+                <p class="muted">余额 ${s.money} 元</p>`;
+
+            // 组合包区域
+            if (Cake.BUNDLES && Cake.BUNDLES.length > 0) {
+                html += `<h3>📦 组合包</h3><div class="grid-2" style="margin-top:12px;">`;
+                Cake.BUNDLES.forEach(bundle => {
+                    html += `
+                        <div class="item-card" onclick="buyBundle('${bundle.id}')">
+                            <span class="item-emoji">${bundle.emoji}</span>
+                            <span class="item-name">${bundle.name}</span>
+                            <span class="item-desc">${bundle.desc}</span>
+                            <span class="item-meta">💰 ${bundle.cost} 元</span>
+                        </div>`;
+                });
+                html += `</div>`;
+            }
+
+            // 单件食材区域
+            html += `<h3>🥚 单件食材</h3><div class="grid-2" style="margin-top:12px;">`;
             for (const key in Cake.INGREDIENTS) {
                 const ing = Cake.INGREDIENTS[key];
                 html += `
-                    <div class="item-card" onclick="parent.Cake.buyIngredient('${key}'); parent.Cake.refreshPage(); render();">
+                    <div class="item-card" onclick="buyIngredient('${key}')">
                         <span class="item-emoji">${ing.emoji}</span>
                         <span class="item-name">${ing.name}</span>
                         <span class="item-desc">库存：${s.ingredients[key] || 0}</span>
-                        <span class="item-meta">价格 ${ing.price}元</span>
+                        <span class="item-meta">💰 ${ing.price} 元</span>
                     </div>`;
             }
             html += `</div></div>`;
+
             document.getElementById('content').innerHTML = html;
         }
+
+        // 把购买函数暴露给全局，供 onclick 调用
+        window.buyBundle = function(id) {
+            const bundle = Cake.BUNDLES.find(b => b.id === id);
+            if (!bundle) return;
+            if (Cake.store.state.money < bundle.cost) { alert('余额不足！'); return; }
+            Cake.store.state.money -= bundle.cost;
+            for (const key in bundle.contents) {
+                Cake.store.state.ingredients[key] = (Cake.store.state.ingredients[key] || 0) + bundle.contents[key];
+            }
+            Cake.saveState();
+            Cake.refreshPage();
+            render();
+        };
+
+        window.buyIngredient = function(key) {
+            const ing = Cake.INGREDIENTS[key];
+            if (Cake.store.state.money < ing.price) { alert('余额不足！'); return; }
+            Cake.store.state.money -= ing.price;
+            Cake.store.state.ingredients[key] = (Cake.store.state.ingredients[key] || 0) + 1;
+            Cake.saveState();
+            Cake.refreshPage();
+            render();
+        };
+
         render();
     };
 </script>

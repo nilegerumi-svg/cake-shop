@@ -18,7 +18,7 @@ body {
     flex-direction: column;
     align-items: center;
     min-height: 100vh;
-    padding-bottom: 80px; /* 给底部留空间 */
+    /* 移除原本的 padding-bottom: 80px; 防止在子页面里内容被顶上去 */
 }
 
 /* 限制最大宽度，保证在电脑和手机上都不错乱 */
@@ -45,7 +45,7 @@ body {
     padding: 0 15px 10px 15px;
 }
 
-/* 导航按钮（根据你的截图推断，可能需要美化你的 a 标签） */
+/* 导航按钮 */
 #navBar a {
     text-decoration: none;
     color: #d6336c;
@@ -61,7 +61,7 @@ body {
 .game-body {
     display: flex;
     flex-direction: column;
-    padding: 0 15px;
+    padding: 0 15px 80px 15px; /* 底部留白防止被按钮挡住 */
     gap: 15px;
 }
 
@@ -69,19 +69,14 @@ body {
     width: 100%;
 }
 
-/* 日志面板在手机端默认隐藏，或者你可以让它显示在下面 */
-.log-panel {
-    display: none; 
-}
-
-/* 4. 卡片与网格系统 (对应你 renderDashboard 里的代码) */
+/* 4. 卡片与网格系统 */
 .card {
     background: #fff;
     border-radius: 16px;
     padding: 15px;
     box-shadow: 0 4px 12px rgba(255, 105, 180, 0.08);
     margin-bottom: 15px;
-    word-break: break-word; /* 防止文字溢出 */
+    word-break: break-word;
 }
 
 h2 {
@@ -121,27 +116,10 @@ h3 {
     text-align: center;
 }
 
-.item-emoji {
-    font-size: 24px;
-    margin-bottom: 5px;
-}
-
-.item-name {
-    font-weight: bold;
-    font-size: 14px;
-    color: #333;
-}
-
-.item-desc, .item-meta {
-    font-size: 12px;
-    color: #888;
-    margin-top: 4px;
-}
-
-.price-tag {
-    color: #ff4757;
-    font-weight: bold;
-}
+.item-emoji { font-size: 24px; margin-bottom: 5px; }
+.item-name { font-weight: bold; font-size: 14px; color: #333; }
+.item-desc, .item-meta { font-size: 12px; color: #888; margin-top: 4px; }
+.price-tag { color: #ff4757; font-weight: bold; }
 
 /* 5. 按钮系统 */
 .char-actions {
@@ -166,30 +144,34 @@ button.small, .btn-link.small {
     transition: transform 0.1s;
 }
 
-button.small:active, .btn-link.small:active {
-    transform: scale(0.95);
-}
+button.small:active { transform: scale(0.95); }
 
-/* 次要按钮（比如散步、去烘焙） */
 button.secondary, .btn-link.secondary {
     background: #fff;
     color: #d6336c;
     border: 1px solid #ffb6c1;
 }
 
-/* 6. 底部大按钮 (开店营业) */
+/* =========================================
+   6. 底部大按钮 (开店营业) - 已修复挤压问题
+   ========================================= */
 .action-footer {
     position: fixed;
     bottom: 0;
     left: 50%;
     transform: translateX(-50%);
     padding: 10px 15px;
-    background: linear-gradient(to top, #fff0f5 80%, transparent);
+    background: linear-gradient(to top, #fff0f5 90%, transparent);
     display: flex;
-    justify-content: center;
+    flex-direction: column; /* 强制上下排列，防止挤压 */
+    align-items: center;    /* 居中 */
+    gap: 6px;               /* 按钮和文字的间距 */
+    width: 100%;
+    max-width: 500px;
+    z-index: 100;
 }
-/* 假设你底部的按钮长这样，统一美化一下 */
-.action-footer button {
+
+.action-footer button.big-btn {
     background: #ffd700;
     color: #8b4513;
     border: none;
@@ -199,40 +181,39 @@ button.secondary, .btn-link.secondary {
     font-weight: bold;
     box-shadow: 0 4px 0 #e6c200;
     width: 100%;
+    max-width: 320px; /* 限制最大宽度，保证圆润 */
+    margin: 0 auto;
 }
-.action-footer button:active {
+
+.action-footer button.big-btn:active {
     transform: translateY(2px);
     box-shadow: 0 2px 0 #e6c200;
+}
+
+.action-footer .hint {
+    font-size: 12px;
+    color: #888;
+    text-align: center;
+    line-height: 1.4;
+    padding: 0 10px;
 }
 
 /* =========================================
    开始界面专属样式 (index.html)
    ========================================= */
-
-/* 1. 让整个页面变成粉嫩背景，并垂直水平居中 */
 .start-container {
-  max-width: 600px;         /* 限制最大宽度，看起来像一张卡片 */
-  margin: 40px auto;        /* 上下留白，左右居中 */
-  background: #ffffff;      /* 纯白卡片背景 */
-  padding: 40px 30px;       /* 卡片内边距 */
-  border-radius: 24px;      /* 大圆角，更可爱 */
-  box-shadow: 0 10px 30px rgba(255, 182, 193, 0.3); /* 柔和的粉色阴影 */
-  text-align: center;       /* 文字居中 */
+  max-width: 600px;
+  margin: 40px auto;
+  background: #ffffff;
+  padding: 40px 30px;
+  border-radius: 24px;
+  box-shadow: 0 10px 30px rgba(255, 182, 193, 0.3);
+  text-align: center;
 }
 
-/* 2. 标题样式 */
-.game-header h1 {
-  color: #ff6b81;
-  font-size: 32px;
-  margin-bottom: 8px;
-}
-.game-header .subtitle {
-  color: #ff9eaa;
-  font-size: 14px;
-  margin-bottom: 24px;
-}
+.game-header h1 { color: #ff6b81; font-size: 32px; margin-bottom: 8px; }
+.game-header .subtitle { color: #ff9eaa; font-size: 14px; margin-bottom: 24px; }
 
-/* 3. 简介文字样式 */
 .game-intro p {
   color: #666;
   font-size: 15px;
@@ -242,15 +223,9 @@ button.secondary, .btn-link.secondary {
   padding: 15px;
   border-radius: 12px;
 }
-.game-intro strong {
-  color: #ff6b81;
-}
+.game-intro strong { color: #ff6b81; }
 
-/* 4. 输入框区域美化 */
-.input-group {
-  text-align: left;         /* 输入框的文字靠左对齐 */
-  margin-bottom: 30px;
-}
+.input-group { text-align: left; margin-bottom: 30px; }
 .input-group label {
   display: block;
   font-size: 14px;
@@ -267,7 +242,6 @@ button.secondary, .btn-link.secondary {
   font-size: 16px;
   background: #fafafa;
   color: #333;
-  box-sizing: border-box;   /* 防止输入框撑破卡片 */
   transition: all 0.3s ease;
 }
 .input-group input:focus {
@@ -277,17 +251,12 @@ button.secondary, .btn-link.secondary {
   box-shadow: 0 0 0 4px rgba(255, 143, 163, 0.15);
 }
 
-/* 5. 按钮区域美化 */
-.button-group {
-  display: flex;
-  flex-direction: column;   /* 按钮上下排列 */
-  gap: 12px;                /* 按钮之间的间距 */
-}
+.button-group { display: flex; flex-direction: column; gap: 12px; }
 .button-group button {
   width: 100%;
   padding: 14px;
   border: none;
-  border-radius: 50px;      /* 胶囊按钮 */
+  border-radius: 50px;
   font-size: 16px;
   font-weight: bold;
   cursor: pointer;
@@ -298,15 +267,10 @@ button.secondary, .btn-link.secondary {
   color: white;
   box-shadow: 0 4px 15px rgba(255, 143, 163, 0.4);
 }
-.btn-start:hover {
-  background: #ff6b81;
-  transform: translateY(-2px); /* 悬浮时往上浮 */
-}
+.btn-start:hover { background: #ff6b81; transform: translateY(-2px); }
 .btn-continue {
   background: #fff;
   color: #ff8fa3;
   border: 2px solid #ff8fa3 !important;
 }
-.btn-continue:hover {
-  background: #fff0f5;
-}
+.btn-continue:hover { background: #fff0f5; }

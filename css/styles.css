@@ -1,8 +1,41 @@
 /* ==================================================
-   甜蜜物语 - 专属全局样式表 (完美兼容你的 HTML 结构)
+   甜蜜物语 - 专属全局样式表（现代化整理版）
    ================================================== */
 
-/* 1. 基础重置 */
+/* 1. 主题变量：所有硬编码颜色集中到这里，改一处全站生效 */
+:root {
+    /* 品牌粉 */
+    --pink-50:  #fff0f5;
+    --pink-100: #ffe4e1;
+    --pink-200: #ffd1dc;
+    --pink-300: #ffb6c1;
+    --pink-400: #ff8fa3;
+    --pink-500: #ff6b81;
+    --pink-600: #d6336c;
+    --pink-700: #d85c74;
+    --pink-deep: #ff4757;
+
+    /* 中性色 */
+    --text-main:  #333;
+    --text-mid:   #555;
+    --text-muted: #888;
+
+    /* 金色按钮 */
+    --gold:        #ffd700;
+    --gold-shadow: #e6c200;
+    --gold-text:   #8b4513;
+
+    /* 布局 */
+    --app-max-width: 500px;
+    --radius-card:   16px;
+    --radius-item:   12px;
+    --radius-pill:   20px;
+    --shadow-card:   0 4px 12px rgba(255, 105, 180, 0.08);
+
+    --font-stack: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+}
+
+/* 2. 基础重置 */
 * {
     box-sizing: border-box;
     margin: 0;
@@ -11,24 +44,26 @@
 }
 
 body {
-    background-color: #fff0f5; /* 浅粉色背景 */
-    font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
-    color: #333;
+    background-color: var(--pink-50);
+    font-family: var(--font-stack);
+    color: var(--text-main);
     display: flex;
     flex-direction: column;
     align-items: center;
     min-height: 100vh;
-    /* 移除原本的 padding-bottom: 80px; 防止在子页面里内容被顶上去 */
 }
 
 /* 限制最大宽度，保证在电脑和手机上都不错乱 */
-#header, #navBar, .game-body, .action-footer {
+#header,
+#navBar,
+.game-body,
+.action-footer {
     width: 100%;
-    max-width: 500px; 
-    margin: 0 auto;
+    max-width: var(--app-max-width);
+    margin-inline: auto;
 }
 
-/* 2. 顶部状态和导航 */
+/* 3. 顶部状态和导航 */
 #header {
     padding: 15px;
     background: #fff;
@@ -42,26 +77,25 @@ body {
     flex-wrap: wrap;
     justify-content: center;
     gap: 8px;
-    padding: 0 15px 10px 15px;
+    padding: 0 15px 10px;
 }
 
-/* 导航按钮 */
 #navBar a {
     text-decoration: none;
-    color: #d6336c;
+    color: var(--pink-600);
     background: #fff;
     padding: 8px 12px;
-    border-radius: 20px;
+    border-radius: var(--radius-pill);
     font-size: 14px;
     font-weight: bold;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
 }
 
-/* 3. 主体内容排版 */
+/* 4. 主体内容排版 */
 .game-body {
     display: flex;
     flex-direction: column;
-    padding: 0 15px 80px 15px; /* 底部留白防止被按钮挡住 */
+    padding: 0 15px 80px;
     gap: 15px;
 }
 
@@ -69,32 +103,32 @@ body {
     width: 100%;
 }
 
-/* 4. 卡片与网格系统 */
+/* 5. 卡片与网格系统 */
 .card {
     background: #fff;
-    border-radius: 16px;
+    border-radius: var(--radius-card);
     padding: 15px;
-    box-shadow: 0 4px 12px rgba(255, 105, 180, 0.08);
+    box-shadow: var(--shadow-card);
     margin-bottom: 15px;
     word-break: break-word;
 }
 
 h2 {
     font-size: 18px;
-    color: #d6336c;
+    color: var(--pink-600);
     margin-bottom: 8px;
 }
 
 h3 {
     font-size: 16px;
-    color: #555;
-    margin: 15px 0 10px 0;
-    border-left: 4px solid #ffb6c1;
+    color: var(--text-mid);
+    margin: 15px 0 10px;
+    border-left: 4px solid var(--pink-300);
     padding-left: 8px;
 }
 
 .muted {
-    color: #888;
+    color: var(--text-muted);
     font-size: 13px;
 }
 
@@ -107,8 +141,8 @@ h3 {
 
 .item-card {
     background: #fff8fa;
-    border: 1px solid #ffe4e1;
-    border-radius: 12px;
+    border: 1px solid var(--pink-100);
+    border-radius: var(--radius-item);
     padding: 10px;
     display: flex;
     flex-direction: column;
@@ -117,11 +151,12 @@ h3 {
 }
 
 .item-emoji { font-size: 24px; margin-bottom: 5px; }
-.item-name { font-weight: bold; font-size: 14px; color: #333; }
-.item-desc, .item-meta { font-size: 12px; color: #888; margin-top: 4px; }
-.price-tag { color: #ff4757; font-weight: bold; }
+.item-name  { font-weight: bold; font-size: 14px; color: var(--text-main); }
+.item-desc,
+.item-meta  { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+.price-tag  { color: var(--pink-deep); font-weight: bold; }
 
-/* 5. 按钮系统 */
+/* 6. 按钮系统 */
 .char-actions {
     display: flex;
     flex-wrap: wrap;
@@ -129,12 +164,13 @@ h3 {
     margin-top: 10px;
 }
 
-button.small, .btn-link.small {
-    background: #ffb6c1;
+button.small,
+.btn-link.small {
+    background: var(--pink-300);
     color: #fff;
     border: none;
     padding: 8px 16px;
-    border-radius: 20px;
+    border-radius: var(--radius-pill);
     font-size: 13px;
     font-weight: bold;
     cursor: pointer;
@@ -146,131 +182,146 @@ button.small, .btn-link.small {
 
 button.small:active { transform: scale(0.95); }
 
-button.secondary, .btn-link.secondary {
+button.secondary,
+.btn-link.secondary {
     background: #fff;
-    color: #d6336c;
-    border: 1px solid #ffb6c1;
+    color: var(--pink-600);
+    border: 1px solid var(--pink-300);
 }
 
-/* =========================================
-   6. 底部大按钮 (开店营业) - 已修复挤压问题
-   ========================================= */
+/* 7. 底部大按钮（开店营业） */
 .action-footer {
     position: fixed;
     bottom: 0;
     left: 50%;
     transform: translateX(-50%);
     padding: 10px 15px;
-    background: linear-gradient(to top, #fff0f5 90%, transparent);
+    background: linear-gradient(to top, var(--pink-50) 90%, transparent);
     display: flex;
-    flex-direction: column; /* 强制上下排列，防止挤压 */
-    align-items: center;    /* 居中 */
-    gap: 6px;               /* 按钮和文字的间距 */
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
     width: 100%;
-    max-width: 500px;
+    max-width: var(--app-max-width);
     z-index: 100;
 }
 
 .action-footer button.big-btn {
-    background: #ffd700;
-    color: #8b4513;
+    background: var(--gold);
+    color: var(--gold-text);
     border: none;
     padding: 12px 40px;
     border-radius: 30px;
     font-size: 16px;
     font-weight: bold;
-    box-shadow: 0 4px 0 #e6c200;
+    box-shadow: 0 4px 0 var(--gold-shadow);
     width: 100%;
-    max-width: 320px; /* 限制最大宽度，保证圆润 */
+    max-width: 320px;
     margin: 0 auto;
 }
 
 .action-footer button.big-btn:active {
     transform: translateY(2px);
-    box-shadow: 0 2px 0 #e6c200;
+    box-shadow: 0 2px 0 var(--gold-shadow);
 }
 
 .action-footer .hint {
     font-size: 12px;
-    color: #888;
+    color: var(--text-muted);
     text-align: center;
     line-height: 1.4;
     padding: 0 10px;
 }
 
 /* =========================================
-   开始界面专属样式 (index.html)
+   8. 开始界面专属样式 (index.html)
    ========================================= */
 .start-container {
-  max-width: 600px;
-  margin: 40px auto;
-  background: #ffffff;
-  padding: 40px 30px;
-  border-radius: 24px;
-  box-shadow: 0 10px 30px rgba(255, 182, 193, 0.3);
-  text-align: center;
+    max-width: 600px;
+    margin: 40px auto;
+    background: #fff;
+    padding: 40px 30px;
+    border-radius: 24px;
+    box-shadow: 0 10px 30px rgba(255, 182, 193, 0.3);
+    text-align: center;
 }
 
-.game-header h1 { color: #ff6b81; font-size: 32px; margin-bottom: 8px; }
-.game-header .subtitle { color: #ff9eaa; font-size: 14px; margin-bottom: 24px; }
+.game-header h1 {
+    color: var(--pink-500);
+    font-size: 32px;
+    margin-bottom: 8px;
+}
+
+.game-header .subtitle {
+    color: #ff9eaa;
+    font-size: 14px;
+    margin-bottom: 24px;
+}
 
 .game-intro p {
-  color: #666;
-  font-size: 15px;
-  line-height: 1.8;
-  margin-bottom: 30px;
-  background: #fff0f5;
-  padding: 15px;
-  border-radius: 12px;
+    color: #666;
+    font-size: 15px;
+    line-height: 1.8;
+    margin-bottom: 30px;
+    background: var(--pink-50);
+    padding: 15px;
+    border-radius: 12px;
 }
-.game-intro strong { color: #ff6b81; }
+.game-intro strong { color: var(--pink-500); }
 
 .input-group { text-align: left; margin-bottom: 30px; }
 .input-group label {
-  display: block;
-  font-size: 14px;
-  font-weight: bold;
-  color: #d85c74;
-  margin-bottom: 8px;
+    display: block;
+    font-size: 14px;
+    font-weight: bold;
+    color: var(--pink-700);
+    margin-bottom: 8px;
 }
 .input-group input {
-  width: 100%;
-  padding: 12px 16px;
-  margin-bottom: 16px;
-  border: 2px solid #ffd1dc;
-  border-radius: 12px;
-  font-size: 16px;
-  background: #fafafa;
-  color: #333;
-  transition: all 0.3s ease;
+    width: 100%;
+    padding: 12px 16px;
+    margin-bottom: 16px;
+    border: 2px solid var(--pink-200);
+    border-radius: 12px;
+    font-size: 16px;
+    background: #fafafa;
+    color: var(--text-main);
+    transition: all 0.3s ease;
 }
 .input-group input:focus {
-  outline: none;
-  border-color: #ff8fa3;
-  background: #fff;
-  box-shadow: 0 0 0 4px rgba(255, 143, 163, 0.15);
+    outline: none;
+    border-color: var(--pink-400);
+    background: #fff;
+    box-shadow: 0 0 0 4px rgba(255, 143, 163, 0.15);
 }
 
-.button-group { display: flex; flex-direction: column; gap: 12px; }
+.button-group {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
 .button-group button {
-  width: 100%;
-  padding: 14px;
-  border: none;
-  border-radius: 50px;
-  font-size: 16px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: all 0.2s ease;
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 50px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s ease;
 }
 .btn-start {
-  background: #ff8fa3;
-  color: white;
-  box-shadow: 0 4px 15px rgba(255, 143, 163, 0.4);
+    background: var(--pink-400);
+    color: #fff;
+    box-shadow: 0 4px 15px rgba(255, 143, 163, 0.4);
 }
-.btn-start:hover { background: #ff6b81; transform: translateY(-2px); }
+.btn-start:hover {
+    background: var(--pink-500);
+    transform: translateY(-2px);
+}
 .btn-continue {
-  background: #fff;
-  color: #ff8fa3;
-  border: 2px solid #ff8fa3 !important;
+    background: #fff;
+    color: var(--pink-400);
+    border: 2px solid var(--pink-400) !important;
 }
-.btn-continue:hover { background: #fff0f5; }
+.btn-continue:hover { background: var(--pink-50); }

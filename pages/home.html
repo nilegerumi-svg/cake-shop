@@ -5,10 +5,34 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>主页</title>
     <link rel="stylesheet" href="../css/styles.css">
-    <style> body { background: transparent; padding: 16px; margin: 0; } </style>
+    <style> 
+        body { background: transparent; padding: 16px; margin: 0; } 
+        
+        /* === 散步地点选择弹窗样式 === */
+        #walkModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; justify-content: center; align-items: center; }
+        .modal-box { background: white; padding: 20px; border-radius: 15px; width: 80%; max-width: 300px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+        .modal-box h3 { color: #ff6b81; margin-top: 0; margin-bottom: 5px; }
+        .loc-btn { display: block; width: 100%; padding: 12px; margin-bottom: 10px; border: none; border-radius: 20px; font-size: 15px; font-weight: bold; color: #4a3b3f; cursor: pointer; transition: transform 0.1s; }
+        .loc-btn:active { transform: scale(0.95); }
+        .cancel-btn { background: #eee; margin-top: 15px; }
+    </style>
 </head>
 <body>
 <div id="content"></div>
+
+<!-- === 散步地点选择弹窗 HTML === -->
+<div id="walkModal">
+    <div class="modal-box">
+        <h3>去哪里散步？</h3>
+        <p style="font-size: 13px; color: #666; margin-bottom: 15px;">每次消耗 8 点体力</p>
+        <button class="loc-btn" onclick="executeWalk('home')" style="background: #ffb7b2;">🏡 家园周围</button>
+        <button class="loc-btn" onclick="executeWalk('park')" style="background: #a8e6cf;">🌳 街心公园</button>
+        <button class="loc-btn" onclick="executeWalk('street')" style="background: #ffd3b6;">🛍️ 商业街</button>
+        <button class="loc-btn" onclick="executeWalk('river')" style="background: #a1c4fd;">🌊 河边</button>
+        <button class="loc-btn cancel-btn" onclick="closeWalkModal()">取消</button>
+    </div>
+</div>
+
 <script src="../js/core/store.js"></script>
 <script src="../js/data/ingredients.js"></script>
 <script src="../js/data/recipes.js"></script>
@@ -26,9 +50,13 @@
 <script src="../js/actions/shop.js"></script>
 <script src="../js/actions/social.js"></script>
 <script src="../js/actions/system.js"></script>
+<!-- 👇 关键：引入拆分的娱乐模块 -->
+<script src="../js/actions/entertainment.js"></script>
 <script src="../js/shared.js"></script>
+
 <script>
     Game.initPage('home', renderHome);
+    
     function renderHome() {
         const s = Game.state;
         const cakes = Object.entries(s.cakes).filter(([n, v]) => v > 0 && Game.RECIPES[n]);
@@ -45,7 +73,8 @@
                 <h3>⚡ 快速行动</h3>
                 <div class="char-actions">
                     <button type="button" class="small" onclick="Game.rest()">😴 休息</button>
-                    <button type="button" class="small secondary" onclick="Game.walk()">🚶‍♀️ 散步</button>
+                    <!-- 🔥 改成调用弹窗 -->
+                    <button type="button" class="small secondary" onclick="openWalkModal()">🚶‍♀️ 散步</button>
                 </div>
                 <h3>🧁 库存蛋糕</h3>
                 ${cakes.length === 0 ? '<p class="muted">还没有蛋糕库存，快去「烘焙」页面做几个吧！</p>' : 
@@ -56,6 +85,26 @@
                         <span class="item-meta">售价 <span class="price-tag">${Math.round(Game.RECIPES[n].price * s.priceRate)}元</span></span>
                     </div>`).join('')}</div>`}
             </div>`;
+    }
+
+    // === 散步扩展逻辑 ===
+    function openWalkModal() {
+        // 检查体力（原版逻辑扣 8 点）
+        if (Game.state.energy < 8) {
+            alert("体力不足 8 点，无法出门散步啦！");
+            return;
+        }
+        document.getElementById('walkModal').style.display = 'flex';
+    }
+
+    function closeWalkModal() {
+        document.getElementById('walkModal').style.display = 'none';
+    }
+
+    function executeWalk(location) {
+        closeWalkModal();
+        // 🔥 直接调用核心引擎，传入地点，引擎会自动处理扣体力、随机事件、弹窗和刷新
+        Game.walk(location); 
     }
 </script>
 </body>

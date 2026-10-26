@@ -34,7 +34,7 @@ window.Cake = window.Cake || {};
 
         var s = Object.assign({}, def, saved);
 
-        // ✨ 本次改动：显式新建 characters 对象，避免与 def.characters 共享引用
+        // 显式新建 characters 对象，避免与 def.characters 共享引用
         s.characters = Object.assign({}, saved.characters || {});
         for (var k in def.characters) {
             if (!Object.prototype.hasOwnProperty.call(def.characters, k)) continue;
@@ -122,8 +122,14 @@ window.Cake = window.Cake || {};
     function saveState() {
         try {
             localStorage.setItem(SAVE_KEY, JSON.stringify(window.Cake.store.state));
-            return true;
-        } catch (e) { return false; }
+        } catch (e) {
+            return false;
+        }
+        // ★ 写盘成功后广播；bridge 未加载时静默跳过
+        if (window.Cake.bridge && typeof window.Cake.bridge.notifyStateChanged === 'function') {
+            window.Cake.bridge.notifyStateChanged();
+        }
+        return true;
     }
 
     window.Cake.SAVE_KEY = SAVE_KEY;

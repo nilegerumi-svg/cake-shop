@@ -21,6 +21,9 @@ window.Cake = window.Cake || {};
     }
 
     function addLog(text, day) {
+        // 防护：极早期没拿到 state 时直接返回，避免报错
+        if (!window.Cake.store || !window.Cake.store.state) return;
+        
         var s = window.Cake.store.state;
         s.log = s.log || [];
         s.log.push({ day: day == null ? s.day : day, text: text });
@@ -45,7 +48,9 @@ window.Cake = window.Cake || {};
     }
 
     function hasIngredients(ing) {
+        if (!window.Cake.store || !window.Cake.store.state) return false;
         var s = window.Cake.store.state;
+        
         for (var k in ing) {
             if (!Object.prototype.hasOwnProperty.call(ing, k)) continue;
             if ((s.ingredients[k] || 0) < ing[k]) return false;
@@ -54,7 +59,9 @@ window.Cake = window.Cake || {};
     }
 
     function consumeIngredients(ing) {
+        if (!window.Cake.store || !window.Cake.store.state) return;
         var s = window.Cake.store.state;
+        
         for (var k in ing) {
             if (!Object.prototype.hasOwnProperty.call(ing, k)) continue;
             s.ingredients[k] = (s.ingredients[k] || 0) - ing[k];
@@ -62,11 +69,15 @@ window.Cake = window.Cake || {};
     }
 
     function ingredientTags(ing) {
+        if (!window.Cake.store || !window.Cake.store.state) return '';
         var s = window.Cake.store.state;
-        var ING = window.Cake.INGREDIENTS;
+        var ING = window.Cake.INGREDIENTS || {};
         var parts = [];
+        
         for (var k in ing) {
             if (!Object.prototype.hasOwnProperty.call(ing, k)) continue;
+            if (!ING[k]) continue; // 防止未知食材报错
+            
             var v = ing[k];
             var have = s.ingredients[k] || 0;
             var cls = have >= v ? 'ok' : 'lack';

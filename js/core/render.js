@@ -2,18 +2,15 @@ window.Cake = window.Cake || {};
 (function () {
     var currentRender = null;
     var currentActiveTab = 'home';
-
-    // 判断是否在 iframe 内部（内层页面）
+    // 判断是否在 iframe 内部
     var isInIframe = (window.self !== window.top);
 
     function renderHeader() {
         var el = window.Cake.$('header');
         if (!el) return;
-        // ✨ 修复：内层 iframe 不渲染顶栏，直接隐藏，避免和外层重复
-        if (isInIframe) {
-            el.style.display = 'none';
-            return;
-        }
+        
+        // ✨ 彻底修复：如果是 iframe 内部，直接跳过，不用渲染，也不要删 DOM
+        if (isInIframe) return;
         
         var state = window.Cake.store.state;
         var pct = Math.max(0, Math.min(100, Math.round(state.energy)));
@@ -38,11 +35,9 @@ window.Cake = window.Cake || {};
     function renderNav(active) {
         var el = window.Cake.$('navBar');
         if (!el) return;
-        // ✨ 修复：内层 iframe 不渲染导航，直接隐藏
-        if (isInIframe) {
-            el.style.display = 'none';
-            return;
-        }
+        
+        // ✨ 彻底修复：如果是 iframe 内部，直接跳过
+        if (isInIframe) return;
 
         var items = [
             { key: 'home',    label: '🏠 主页', href: 'game.html' },
@@ -66,13 +61,8 @@ window.Cake = window.Cake || {};
         var el = window.Cake.$('footer');
         if (!el) return;
         
-        // ✨ 修复：内层 iframe 简化 footer，去掉长提示文字，避免按钮被挤压变形
-        if (isInIframe) {
-            el.innerHTML = '<button class="big-btn gold" onclick="Game.openShop()" style="width: 100%; max-width: 300px;">🧁 开店营业</button>';
-            el.style.padding = '10px';
-            el.style.justifyContent = 'center';
-            return;
-        }
+        // ✨ 彻底修复：如果是 iframe 内部，直接跳过
+        if (isInIframe) return;
 
         el.innerHTML =
             '<button class="big-btn gold" onclick="Game.openShop()">🧁 开店营业</button>' +

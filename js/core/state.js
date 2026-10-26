@@ -1,5 +1,42 @@
 window.Cake = window.Cake || {};
 (function () {
+    /* ========= 兜底 bridge：pages 没加载 bridge.js 时自动创建 ========= */
+    if (!window.Cake.bridge) {
+        var inIframe = window.parent !== window;
+        var instanceId = (inIframe ? 'f:' : 'h:') +
+                         Math.random().toString(36).slice(2, 10) +
+                         Date.now().toString(36);
+        var stateListeners = [];
+
+        window.addEventListener('message', function (e) {
+            var msg = e.data;
+            if (!msg || typeof msg !== 'object' || !msg.type) return;
+            if (msg.sourceId && msg.sourceId === instanceId) return;
+            if (inIframe && msg.type === 'state-sync') {
+                for (var i = 0; i < stateListeners.length; i++) {
+                    try { stateListeners[i](msg.sourceId); } catch (_) {}
+                }
+            }
+        });
+
+        window.Cake.bridge = {
+            inIframe: inIframe,
+            instanceId: instanceId,
+            onStateChanged: function (fn) {
+                if (typeof fn === 'function') stateListeners.push(fn);
+            },
+            setHostBroadcaster: function () {},
+            notifyStateChanged: function () {
+                if (!inIframe) return;
+                try {
+                    window.parent.postMessage(
+                        { type: 'state-changed', sourceId: instanceId }, '*');
+                } catch (_) {}
+            }
+        };
+    }
+
+    /* ========= 以下是你原来的 state 逻辑，唯一改动在 saveState ========= */
     var SAVE_KEY = 'cakeShopSave_v1';
     var SAVE_VERSION = 1;
 
@@ -34,7 +71,6 @@ window.Cake = window.Cake || {};
 
         var s = Object.assign({}, def, saved);
 
-        // 显式新建 characters 对象，避免与 def.characters 共享引用
         s.characters = Object.assign({}, saved.characters || {});
         for (var k in def.characters) {
             if (!Object.prototype.hasOwnProperty.call(def.characters, k)) continue;
@@ -122,11 +158,9 @@ window.Cake = window.Cake || {};
     function saveState() {
         try {
             localStorage.setItem(SAVE_KEY, JSON.stringify(window.Cake.store.state));
-        } catch (e) {
-            return false;
-        }
-        // ★ 写盘成功后广播；bridge 未加载时静默跳过
-        if (window.Cake.bridge && typeof window.Cake.bridge.notifyStateChanged === 'function') {
+        } catch (e) { return false; }
+        // ★ 唯一改动：写盘成功后广播
+        if (window.Cake.bridge && window.Cake.bridge.notifyStateChanged) {
             window.Cake.bridge.notifyStateChanged();
         }
         return true;

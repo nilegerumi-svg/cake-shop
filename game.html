@@ -15,13 +15,14 @@
 
         /* 3. 主分割容器：上面是功能，下面是日记 */
         .split-container {
-            flex: 1; /* 占满剩余所有空间 */
+            flex: 1;
             display: flex;
             flex-direction: column;
             overflow: hidden;
+            padding-bottom: 80px; /* ✨ 给外层的底部按钮留出空间 */
         }
 
-        /* 4. 功能主画框 (占据大部分空间) */
+        /* 4. 功能主画框 */
         .main-frame {
             flex: 1; 
             width: 100%;
@@ -29,37 +30,54 @@
             background: transparent;
         }
 
-        /* 5. 独立日记画框 (固定高度，在底部) */
+        /* 5. 独立日记画框 */
         .log-frame {
-            flex: 0 0 200px; /* 固定高度 200px，你可以按需调整 */
+            flex: 0 0 180px; /* 稍微调小一点给上面留空间 */
             width: 100%;
             border: none;
             background: #fff;
-            border-top: 2px dashed #ffd1dc; /* 和上方功能区分隔 */
+            border-top: 2px dashed #ffd1dc;
             box-shadow: 0 -4px 10px rgba(255, 143, 163, 0.1);
         }
         
         iframe { display: block; width: 100%; height: 100%; }
+
+        /* ✨ 外层统一定义底部按钮样式，解决挤压变形 */
+        .action-footer {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 500px;
+            padding: 10px 15px;
+            background: linear-gradient(to top, #fff0f5 80%, transparent);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            z-index: 100;
+        }
     </style>
 </head>
 <body>
 
 <div class="app-wrapper">
-    <!-- 顶部状态栏和导航（由 shared.js 渲染） -->
+    <!-- 顶部状态栏和导航（由外层 game.html 负责） -->
     <header id="header"></header>
     <nav id="navBar"></nav>
 
     <!-- 核心嵌套：上下分屏 -->
     <div class="split-container">
-        <!-- 上屏：功能画框 -->
         <iframe id="mainFrame" src="pages/home.html" class="main-frame"></iframe>
-        
-        <!-- 下屏：独立日记画框 -->
         <iframe id="logFrame" src="pages/log.html" class="log-frame"></iframe>
     </div>
+    
+    <!-- ✨ 外层统一接管底部按钮，子页面里的 footer 会被删掉 -->
+    <div class="action-footer" id="footer"></div>
 </div>
 
-<!-- 你所有的 JS 核心文件 -->
+<!-- 所有的 JS 核心文件 -->
 <script src="js/core/store.js"></script>
 <script src="js/data/ingredients.js"></script>
 <script src="js/data/recipes.js"></script>
@@ -80,7 +98,23 @@
 <script src="js/shared.js"></script>
 
 <script>
+    // 外层只渲染顶部和底部
     Game.initPage('home', () => {}, true); 
+
+    const mainFrame = document.getElementById('mainFrame');
+
+    // ✨ 核心修复：每次 iframe 加载页面完成后，物理干掉子页面里重复的头、尾
+    mainFrame.addEventListener('load', function() {
+        try {
+            const doc = this.contentWindow.document;
+            const h = doc.getElementById('header');
+            const n = doc.getElementById('navBar');
+            const f = doc.getElementById('footer');
+            if (h) h.remove();
+            if (n) n.remove();
+            if (f) f.remove(); // 删掉子页面的底部按钮，用外层的
+        } catch(e) {}
+    });
 
     // 【导航拦截】点击导航切换上方的功能画框
     document.addEventListener('click', function(e) {
@@ -90,21 +124,17 @@
             if (href && href !== '#' && href !== 'javascript:;') {
                 e.preventDefault(); 
                 
-                // 👇【核心修改在这里】处理主页和子页面的路径映射 👇
                 let targetUrl = href;
                 if (href === 'game.html' || href === 'index.html') {
                     targetUrl = 'pages/home.html';
                 } else if (!href.includes('pages/')) {
                     targetUrl = 'pages/' + href;
                 }
-                // 👆-----------------------------------------👆
-
-                document.getElementById('mainFrame').src = targetUrl;
+                mainFrame.src = targetUrl;
             }
         }
     });
 
-    // 【暴露全局方法】让子页面（如 home.html）在写日记后，可以调用这个方法刷新下面的日记画框
     window.refreshDiary = function() {
         const logFrame = document.getElementById('logFrame');
         if (logFrame && logFrame.contentWindow) {

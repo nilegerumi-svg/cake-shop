@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>店铺</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <style> body { background: transparent; padding: 16px; margin: 0; } </style>
+</head>
+<body>
+<div id="content"></div>
+<script>
+    window.onload = function() {
+        const Cake = window.parent.Cake;
+        if (!Cake) return;
+
+        function render() {
+            const s = Cake.store.state;
+            document.getElementById('content').innerHTML = `
+                <div class="card">
+                    <h2>🏪 店铺经营</h2>
+                    <p class="muted">等级 Lv.${s.shopLevel} · 装饰度 ${s.decoration}</p>
+                    <div class="char-actions" style="margin-top:16px;">
+                        <button class="small" onclick="parent.Cake.openShop(); parent.Cake.refreshPage(); render();">🚪 开店营业</button>
+                    </div>
+                </div>`;
+        }
+        render();
+    };
+</script>
+</body>
+</html>

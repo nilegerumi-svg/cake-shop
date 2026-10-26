@@ -1,7 +1,27 @@
 window.Cake = window.Cake || {};
 
-// 初始化 state
-window.Cake.store.state = window.Cake.loadStateFromStorage();
+// ============ 初始化 state ============
+(function initState() {
+    var Cake = window.Cake;
+
+    if (!Cake.hasSave()) {
+        // 首次进入：用 index.html 保存的初始设置，避免玩家名字被 defaultState 覆盖
+        var s = Cake.defaultState();
+        try {
+            var pn = localStorage.getItem('playerName');
+            var sn = localStorage.getItem('shopName');
+            var av = localStorage.getItem('playerAvatar');
+            if (pn && pn.trim()) s.playerName = pn.trim().slice(0, 12);
+            if (sn && sn.trim()) s.shopName = sn.trim().slice(0, 12);
+            var AVATAR_MAP = { girl1: '👧🏻', girl2: '👩🏻', boy1: '👦🏻', cake: '🧁' };
+            if (av && AVATAR_MAP[av]) s.avatar = AVATAR_MAP[av];
+        } catch (_) {}
+        Cake.store.state = s;
+        Cake.saveState(); // 首次落盘；此时父页面 broadcaster 可能未设置，静默跳过
+    } else {
+        Cake.store.state = Cake.loadStateFromStorage();
+    }
+})();
 
 window.Game = {
     get state() { return window.Cake.store.state; },
@@ -67,3 +87,24 @@ window.Game = {
     loadGame: window.Cake.loadGame,
     resetGame: window.Cake.resetGame,
 };
+
+// ============ 子页面：收到父页面的 state-sync 后从磁盘重载并重渲染 ============
+(function () {
+    var Cake = window.Cake;
+    if (!Cake.bridge || !Cake.bridge.inIframe) return;
+
+    Cake.bridge.onHostMessage(function (msg) {
+        if (msg.type !== 'state-sync') return;
+
+        Cake.store.state = Cake.loadStateFromStorage();
+
+        // 优先调用页面自定义的刷新；没有则重载 iframe 兜底
+        if (typeof Cake.refreshPage === 'function') {
+            try { Cake.refreshPage(); return; }
+            catch (err) {
+                if (window.console) console.warn('[bridge] refreshPage failed', err);
+            }
+        }
+        try { window.location.reload(); } catch (_) {}
+    });
+})();

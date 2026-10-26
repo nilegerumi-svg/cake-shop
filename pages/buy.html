@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>采购</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <style> body { background: transparent; padding: 16px; margin: 0; } </style>
+</head>
+<body>
+<div id="content"></div>
+<script>
+    window.onload = function() {
+        const Cake = window.parent.Cake;
+        if (!Cake) return;
+
+        function render() {
+            const s = Cake.store.state;
+            let html = `<div class="card"><h2>🛒 采购市场</h2><p class="muted">余额 ${s.money} 元 · 精力 ${s.energy}/100</p><div class="grid-2" style="margin-top:12px;">`;
+            
+            for (const key in Cake.INGREDIENTS) {
+                const ing = Cake.INGREDIENTS[key];
+                html += `
+                    <div class="item-card" onclick="parent.Cake.buyIngredient('${key}'); parent.Cake.refreshPage(); render();">
+                        <span class="item-emoji">${ing.emoji}</span>
+                        <span class="item-name">${ing.name}</span>
+                        <span class="item-desc">库存：${s.ingredients[key] || 0}</span>
+                        <span class="item-meta">价格 ${ing.price}元</span>
+                    </div>`;
+            }
+            html += `</div></div>`;
+            document.getElementById('content').innerHTML = html;
+        }
+        render();
+    };
+</script>
+</body>
+</html>

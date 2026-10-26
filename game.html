@@ -30,9 +30,20 @@
             display: flex; flex-direction: column; align-items: center;
             gap: 6px; z-index: 100;
         }
+        /* 报错浮层样式 */
+        #error-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; z-index: 999999;
+            background: rgba(220, 38, 38, 0.95); color: white;
+            padding: 10px; font-size: 13px; line-height: 1.4;
+            word-break: break-all; pointer-events: none;
+            max-height: 40vh; overflow-y: auto; display: none;
+        }
     </style>
 </head>
 <body>
+
+<!-- 报错显示区 -->
+<div id="error-overlay"></div>
 
 <div class="app-wrapper">
     <header id="header"></header>
@@ -45,7 +56,7 @@
 </div>
 
 <script src="js/core/store.js"></script>
-<script src="js/core/bridge.js"></script><!-- ★ 保留 -->
+<script src="js/core/bridge.js"></script>
 <script src="js/data/ingredients.js"></script>
 <script src="js/data/recipes.js"></script>
 <script src="js/data/bundles.js"></script>
@@ -67,10 +78,40 @@
 <script>
 (function () {
     'use strict';
+
+    /* ====== 报错捕获系统 ====== */
+    var errorOverlay = document.getElementById('error-overlay');
+    function showError(msg) {
+        errorOverlay.style.display = 'block';
+        errorOverlay.innerHTML += '<div>🚨 ' + msg + '</div>';
+    }
+    
+    // 捕获父页面报错
+    window.addEventListener('error', function(e) {
+        showError('主页面: ' + e.message + ' (' + e.filename.split('/').pop() + ':' + e.lineno + ')');
+    });
+
+    // 捕获 iframe 报错
+    function bindErrorCatcher(iframe, name) {
+        iframe.addEventListener('load', function () {
+            try {
+                iframe.contentWindow.addEventListener('error', function(e) {
+                    showError(name + ': ' + e.message + ' (' + e.filename.split('/').pop() + ':' + e.lineno + ')');
+                });
+            } catch (err) {
+                showError(name + ' 无法注入报错捕获，可能是跨域限制。');
+            }
+        });
+    }
+
     var mainFrame = document.getElementById('mainFrame');
     var logFrame  = document.getElementById('logFrame');
     var footer    = document.getElementById('footer');
 
+    bindErrorCatcher(mainFrame, '主页');
+    bindErrorCatcher(logFrame, '日志');
+
+    /* ====== 导航拦截 ====== */
     function normalizePage(href) {
         var t = (href || '').trim().replace(/^\.\//, '');
         if (!t) return null;
@@ -104,22 +145,25 @@
         });
     });
 
-    /* ★ 父页面收到子页面变更：重载 + 重渲染 + 广播 */
+    /* ====== 跨 iframe 广播 ====== */
     function handleStateChanged(sourceId) {
         try { window.Cake.store.state = window.Cake.loadStateFromStorage(); } catch (_) { return; }
         try {
             Game.renderHeader();
             Game.renderNav();
             Game.renderFooter();
-        } catch (err) { if (window.console) console.warn('[host] render failed', err); }
+        } catch (err) { console.warn('[host] render failed', err); }
 
         var msg = { type: 'state-sync', sourceId: sourceId };
         [mainFrame, logFrame].forEach(function (f) {
             try { f.contentWindow.postMessage(msg, '*'); } catch (_) {}
         });
     }
-    window.Cake.bridge.setHostBroadcaster(handleStateChanged);
+    if (window.Cake && window.Cake.bridge && window.Cake.bridge.setHostBroadcaster) {
+        window.Cake.bridge.setHostBroadcaster(handleStateChanged);
+    }
 
+    /* ====== Footer 高度自适应 ====== */
     if (footer && window.ResizeObserver) {
         var ro = new ResizeObserver(function () {
             document.documentElement.style.setProperty('--footer-h', footer.offsetHeight + 'px');
@@ -127,8 +171,12 @@
         ro.observe(footer);
     }
 
-    try { Game.initPage('home', function () {}, true); }
-    catch (err) { console.error('[game] initPage failed', err); }
+    /* ====== 首屏渲染 ====== */
+    try {
+        Game.initPage('home', function () {}, true);
+    } catch (err) {
+        showError('首屏渲染失败: ' + err.message);
+    }
 })();
 </script>
 </body>

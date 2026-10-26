@@ -3,30 +3,130 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>店铺</title>
+    <title>🏪 店铺 · 甜蜜物语</title>
     <link rel="stylesheet" href="../css/styles.css">
-    <style> body { background: transparent; padding: 16px; margin: 0; } </style>
 </head>
 <body>
-<div id="content"></div>
-<script>
-    window.onload = function() {
-        const Cake = window.parent.Cake;
-        if (!Cake) return;
+    <header id="header"></header>
+    <nav id="navBar"></nav>
+    <div class="game-body">
+        <div class="content" id="content"></div>
+    </div>
+    <div class="action-footer" id="footer"></div>
 
-        function render() {
-            const s = Cake.store.state;
+    <script src="../js/core/store.js"></script>
+    <script src="../js/data/ingredients.js"></script>
+    <script src="../js/data/recipes.js"></script>
+    <script src="../js/data/bundles.js"></script>
+    <script src="../js/data/characters.js"></script>
+    <script src="../js/data/events.js"></script>
+    <script src="../js/data/shop-config.js"></script>
+    <script src="../js/data/achievements.js"></script>
+    <script src="../js/core/utils.js"></script>
+    <script src="../js/core/state.js"></script>
+    <script src="../js/core/modal.js"></script>
+    <script src="../js/core/effects.js"></script>
+    <script src="../js/core/render.js"></script>
+    <script src="../js/actions/bakery.js"></script>
+    <script src="../js/actions/shop.js"></script>
+    <script src="../js/actions/social.js"></script>
+    <script src="../js/actions/system.js"></script>
+    <script src="../js/shared.js"></script>
+    <script>
+        Game.initPage('shop', renderShop);
+
+        function renderShop() {
+            const s = Game.state;
+            const cakes = Object.entries(s.cakes).filter(
+                ([n, v]) => v > 0 && Game.RECIPES[n]
+            );
+
+            const priceOptions = [
+                { rate: 0.8, name: '亲民价', desc: '顾客更多，薄利多销' },
+                { rate: 0.9, name: '实惠价', desc: '略低于市场价' },
+                { rate: 1.0, name: '标准价', desc: '正常售价' },
+                { rate: 1.2, name: '精品价', desc: '利润更高，顾客略少' },
+                { rate: 1.5, name: '奢华价', desc: '高端定位，客源锐减' },
+            ];
+
+            const atMaxLevel  = s.shopLevel >= 5;
+            const upgradeCost = atMaxLevel ? 0 : (Game.SHOP_UPGRADE_COSTS[s.shopLevel] || 0);
+            const canUpgrade  = !atMaxLevel && s.money >= upgradeCost && s.energy >= 5;
+            const canDecorate = s.money >= 100 && s.energy >= 5;
+
+            let upgradeLabel;
+            if (atMaxLevel) {
+                upgradeLabel = '🌟 已达到最高等级！';
+            } else if (canUpgrade) {
+                upgradeLabel = `⬆️ 升级店铺（${upgradeCost}元）`;
+            } else {
+                const lackMoney  = s.money < upgradeCost;
+                const lackEnergy = s.energy < 5;
+                if (lackMoney && lackEnergy) upgradeLabel = `💸⚡ 缺${upgradeCost}元 & 精力`;
+                else if (lackMoney)          upgradeLabel = `💸 需${upgradeCost}元`;
+                else                         upgradeLabel = '⚡ 精力不足';
+            }
+
+            let decorateLabel;
+            if (canDecorate) {
+                decorateLabel = '🌸 装饰店铺（100元）';
+            } else {
+                const lackMoney  = s.money < 100;
+                const lackEnergy = s.energy < 5;
+                if (lackMoney && lackEnergy) decorateLabel = '💸⚡ 缺100元 & 精力';
+                else if (lackMoney)          decorateLabel = '💸 需100元';
+                else                         decorateLabel = '⚡ 精力不足';
+            }
+
             document.getElementById('content').innerHTML = `
                 <div class="card">
                     <h2>🏪 店铺经营</h2>
-                    <p class="muted">等级 Lv.${s.shopLevel} · 装饰度 ${s.decoration}</p>
-                    <div class="char-actions" style="margin-top:16px;">
-                        <button class="small" onclick="parent.Cake.openShop(); parent.Cake.refreshPage(); render();">🚪 开店营业</button>
+
+                    <div style="margin-bottom:16px;">
+                        <button type="button" class="small gold" onclick="Game.openShop()">🚪 开店营业</button>
                     </div>
+
+                    <div class="grid-2">
+                        <div class="item-card">
+                            <span class="item-emoji">🏪</span>
+                            <span class="item-name">店铺等级 Lv.${s.shopLevel}</span>
+                            <span class="item-desc">等级越高，客流量与顾客预算越高。</span>
+                            ${atMaxLevel
+                                ? `<span class="item-meta">${upgradeLabel}</span>`
+                                : `<button type="button" class="small" ${canUpgrade ? '' : 'disabled'} onclick="Game.upgradeShop()">${upgradeLabel}</button>`}
+                        </div>
+                        <div class="item-card">
+                            <span class="item-emoji">🛋️</span>
+                            <span class="item-name">装饰度 ${s.decoration}</span>
+                            <span class="item-desc">每10点装饰度，每单声望+1。让小店更温馨吧！</span>
+                            <button type="button" class="small" ${canDecorate ? '' : 'disabled'} onclick="Game.decorateShop()">${decorateLabel}</button>
+                        </div>
+                    </div>
+
+                    <h3>💰 定价策略</h3>
+                    <div class="ing-row" style="gap:8px;">
+                        ${priceOptions.map(p => `
+                            <button type="button" class="small ${s.priceRate === p.rate ? 'gold' : 'secondary'}"
+                                    title="${p.desc}"
+                                    onclick="Game.setPriceRate(${p.rate})">${p.name} ${p.rate.toFixed(1)}x</button>
+                        `).join('')}
+                    </div>
+                    <p class="muted" style="margin-top:8px;">当前售价 = 基础价 × ${s.priceRate.toFixed(1)}</p>
+
+                    <h3>🧁 库存蛋糕</h3>
+                    ${cakes.length === 0
+                        ? '<p class="muted">还没有蛋糕库存，快去烘焙吧！</p>'
+                        : `<div class="grid-2">
+                            ${cakes.map(([n, v]) => `
+                                <div class="item-card">
+                                    <span class="item-emoji">${Game.RECIPES[n].emoji}</span>
+                                    <span class="item-name">${n} <span class="muted">×${v}</span></span>
+                                    <span class="item-meta">售价 <span class="price-tag">${Math.round(Game.RECIPES[n].price * s.priceRate)}元</span></span>
+                                </div>
+                            `).join('')}
+                        </div>`}
                 </div>`;
         }
-        render();
-    };
-</script>
+    </script>
 </body>
 </html>

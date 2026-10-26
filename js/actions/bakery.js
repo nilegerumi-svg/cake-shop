@@ -1,26 +1,36 @@
 // js/actions/bakery.js
-window.Cake = window.Cake || {};
+(() => {
+    'use strict';
 
-(function () {
-    var BAKE_ENERGY = 20;
-    var BUY_INGREDIENT_ENERGY = 3;
-    var BUY_BUNDLE_ENERGY = 5;
-    var RESEARCH_ENERGY = 15;
+    window.Cake = window.Cake || {};
 
-    function bakeCake(name, times) {
-        var state = window.Cake.store.state;
+    const Cake = window.Cake;
+
+    /* ==================== 常量 ==================== */
+
+    const BAKE_ENERGY = 20;
+    const BUY_INGREDIENT_ENERGY = 3;
+    const BUY_BUNDLE_ENERGY = 5;
+    const RESEARCH_ENERGY = 15;
+
+    /* ==================== 烘焙蛋糕 ==================== */
+
+    const bakeCake = (name, times) => {
+        const state = Cake.store.state;
+        // 保留原表达式：|| 1 同时处理 0 和 NaN，不能换成默认参数
         times = Math.max(1, Math.floor(Number(times)) || 1);
-        var r = window.Cake.RECIPES[name];
 
-        if (!r) return window.Cake.fail('❌ 未知配方');
-        if (!state.recipes[name]) return window.Cake.fail('🔒 尚未解锁该配方');
+        const recipe = Cake.RECIPES[name];
 
-        var done = 0;
-        for (var i = 0; i < times; i++) {
+        if (!recipe) return Cake.fail('❌ 未知配方');
+        if (!state.recipes[name]) return Cake.fail('🔒 尚未解锁该配方');
+
+        let done = 0;
+        for (let i = 0; i < times; i++) {
             if (state.energy < BAKE_ENERGY) break;
-            if (!window.Cake.hasIngredients(r.ing)) break;
+            if (!Cake.hasIngredients(recipe.ing)) break;
 
-            window.Cake.consumeIngredients(r.ing);
+            Cake.consumeIngredients(recipe.ing);
             state.cakes[name] = (state.cakes[name] || 0) + 1;
             state.energy -= BAKE_ENERGY;
             done++;
@@ -28,76 +38,78 @@ window.Cake = window.Cake || {};
 
         if (done === 0) {
             if (state.energy < BAKE_ENERGY) {
-                return window.Cake.fail('⚡ 精力不足，无法烘焙！');
+                return Cake.fail('⚡ 精力不足，无法烘焙！');
             }
-            return window.Cake.fail('❌ 食材不足，无法烘焙！');
+            return Cake.fail('❌ 食材不足，无法烘焙！');
         }
 
-        window.Cake.addLog('🍰 你烘焙了 ' + done + ' 个' + r.emoji + name);
-        window.Cake.checkAchievements();
-        window.Cake.refreshPage();
-    }
+        Cake.addLog(`🍰 你烘焙了 ${done} 个${recipe.emoji}${name}`);
+        Cake.checkAchievements();
+        Cake.refreshPage();
+    };
 
-    function buyIngredient(type) {
-        var state = window.Cake.store.state;
-        var v = window.Cake.INGREDIENTS[type];
+    /* ==================== 购买单个食材 ==================== */
 
-        if (!v) return window.Cake.fail('❌ 未知食材');
-        if (state.money < v.price) return window.Cake.fail('💸 钱不够啦！');
-        if (state.energy < BUY_INGREDIENT_ENERGY) return window.Cake.fail('⚡ 精力不足！');
+    const buyIngredient = (type) => {
+        const state = Cake.store.state;
+        const item = Cake.INGREDIENTS[type];
 
-        state.money -= v.price;
+        if (!item) return Cake.fail('❌ 未知食材');
+        if (state.money < item.price) return Cake.fail('💸 钱不够啦！');
+        if (state.energy < BUY_INGREDIENT_ENERGY) return Cake.fail('⚡ 精力不足！');
+
+        state.money -= item.price;
         state.ingredients[type] = (state.ingredients[type] || 0) + 1;
         state.energy -= BUY_INGREDIENT_ENERGY;
 
-        window.Cake.addLog('🛒 购买了' + v.emoji + v.name + ' ×1');
-        window.Cake.refreshPage();
-    }
+        Cake.addLog(`🛒 购买了${item.emoji}${item.name} ×1`);
+        Cake.refreshPage();
+    };
 
-    function buyBundle(id) {
-        var state = window.Cake.store.state;
-        var BUNDLES = window.Cake.BUNDLES;
-        var b = null;
+    /* ==================== 购买材料包 ==================== */
 
-        for (var i = 0; i < BUNDLES.length; i++) {
-            if (BUNDLES[i].id === id) { b = BUNDLES[i]; break; }
-        }
+    const buyBundle = (id) => {
+        const state = Cake.store.state;
 
-        if (!b) return window.Cake.fail('❌ 未知材料包');
-        if (state.money < b.cost) return window.Cake.fail('💸 钱不够啦！');
-        if (state.energy < BUY_BUNDLE_ENERGY) return window.Cake.fail('⚡ 精力不足！');
+        const bundle = (Cake.BUNDLES || []).find((b) => b.id === id);
 
-        state.money -= b.cost;
+        if (!bundle) return Cake.fail('❌ 未知材料包');
+        if (state.money < bundle.cost) return Cake.fail('💸 钱不够啦！');
+        if (state.energy < BUY_BUNDLE_ENERGY) return Cake.fail('⚡ 精力不足！');
+
+        state.money -= bundle.cost;
         state.energy -= BUY_BUNDLE_ENERGY;
 
-        for (var k in b.contents) {
-            if (!Object.prototype.hasOwnProperty.call(b.contents, k)) continue;
-            state.ingredients[k] = (state.ingredients[k] || 0) + b.contents[k];
+        for (const [k, v] of Object.entries(bundle.contents)) {
+            state.ingredients[k] = (state.ingredients[k] || 0) + v;
         }
 
-        window.Cake.addLog('📦 购买了' + b.emoji + b.name);
-        window.Cake.refreshPage();
-    }
+        Cake.addLog(`📦 购买了${bundle.emoji}${bundle.name}`);
+        Cake.refreshPage();
+    };
 
-    function researchRecipe(name) {
-        var state = window.Cake.store.state;
-        var r = window.Cake.RECIPES[name];
+    /* ==================== 研发配方 ==================== */
 
-        if (!r || !r.unlock) return window.Cake.fail('❌ 该配方无法研发');
-        if (state.recipes[name]) return window.Cake.fail('✅ 已拥有此配方');
-        if (state.energy < RESEARCH_ENERGY) return window.Cake.fail('⚡ 精力不足！');
+    const researchRecipe = (name) => {
+        const state = Cake.store.state;
+        const recipe = Cake.RECIPES[name];
 
-        // 以下为原有研发逻辑（保持原样）
+        if (!recipe || !recipe.unlock) return Cake.fail('❌ 该配方无法研发');
+        if (state.recipes[name]) return Cake.fail('✅ 已拥有此配方');
+        if (state.energy < RESEARCH_ENERGY) return Cake.fail('⚡ 精力不足！');
+
+        // 注意：unlock 对象里是 money 字段，原代码取 unlock.cost 恒为 undefined，
+        // 实际扣款为 0。此处保持原行为未修正，如需按配方表扣钱应改为 r.unlock.money。
         state.energy -= RESEARCH_ENERGY;
-        state.money -= r.unlock.cost || 0;
+        state.money -= recipe.unlock.cost || 0;
         state.recipes[name] = true;
-        window.Cake.addLog('🔬 研发成功：' + r.emoji + name);
-        window.Cake.checkAchievements();
-        window.Cake.refreshPage();
-    }
 
-    window.Cake.bakeCake = bakeCake;
-    window.Cake.buyIngredient = buyIngredient;
-    window.Cake.buyBundle = buyBundle;
-    window.Cake.researchRecipe = researchRecipe;
+        Cake.addLog(`🔬 研发成功：${recipe.emoji}${name}`);
+        Cake.checkAchievements();
+        Cake.refreshPage();
+    };
+
+    /* ==================== 挂载 ==================== */
+
+    Object.assign(Cake, { bakeCake, buyIngredient, buyBundle, researchRecipe });
 })();

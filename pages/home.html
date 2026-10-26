@@ -7,8 +7,6 @@
     <link rel="stylesheet" href="../css/styles.css">
     <style> 
         body { background: transparent; padding: 16px; margin: 0; } 
-        
-        /* === 散步地点选择弹窗样式 === */
         #walkModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; justify-content: center; align-items: center; }
         .modal-box { background: white; padding: 20px; border-radius: 15px; width: 80%; max-width: 300px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
         .modal-box h3 { color: #ff6b81; margin-top: 0; margin-bottom: 5px; }
@@ -20,7 +18,6 @@
 <body>
 <div id="content"></div>
 
-<!-- === 散步地点选择弹窗 HTML === -->
 <div id="walkModal">
     <div class="modal-box">
         <h3>去哪里散步？</h3>
@@ -50,7 +47,6 @@
 <script src="../js/actions/shop.js"></script>
 <script src="../js/actions/social.js"></script>
 <script src="../js/actions/system.js"></script>
-<!-- 👇 关键：引入拆分的娱乐模块 -->
 <script src="../js/actions/entertainment.js"></script>
 <script src="../js/shared.js"></script>
 
@@ -73,7 +69,6 @@
                 <h3>⚡ 快速行动</h3>
                 <div class="char-actions">
                     <button type="button" class="small" onclick="Game.rest()">😴 休息</button>
-                    <!-- 🔥 改成调用弹窗 -->
                     <button type="button" class="small secondary" onclick="openWalkModal()">🚶‍♀️ 散步</button>
                 </div>
                 <h3>🧁 库存蛋糕</h3>
@@ -87,9 +82,7 @@
             </div>`;
     }
 
-    // === 散步扩展逻辑 ===
     function openWalkModal() {
-        // 检查体力（原版逻辑扣 8 点）
         if (Game.state.energy < 8) {
             alert("体力不足 8 点，无法出门散步啦！");
             return;
@@ -103,7 +96,6 @@
 
     function executeWalk(location) {
         closeWalkModal();
-        // 🔥 直接调用核心引擎，传入地点，引擎会自动处理扣体力、随机事件、弹窗和刷新
         Game.walk(location); 
     }
 </script>

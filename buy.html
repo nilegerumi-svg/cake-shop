@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🛒 采购 · 甜蜜物语</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <header id="header"></header>
+    <nav id="navBar"></nav>
+    <div class="game-body">
+        <div class="content" id="content"></div>
+    </div>
+    <div class="action-footer" id="footer"></div>
+
+    <script src="js/core/store.js"></script>
+<script src="js/data/ingredients.js"></script>
+<script src="js/data/recipes.js"></script>
+<script src="js/data/bundles.js"></script>
+<script src="js/data/characters.js"></script>
+<script src="js/data/events.js"></script>
+<script src="js/data/shop-config.js"></script>
+<script src="js/data/achievements.js"></script>
+<script src="js/core/utils.js"></script>
+<script src="js/core/state.js"></script>
+<script src="js/core/modal.js"></script>
+<script src="js/core/effects.js"></script>
+<script src="js/core/render.js"></script>
+<script src="js/actions/bakery.js"></script>
+<script src="js/actions/shop.js"></script>
+<script src="js/actions/social.js"></script>
+<script src="js/actions/system.js"></script>
+<script src="js/shared.js"></script>
+    <script>
+        Game.initPage('buy', renderBuy);
+
+        function buyLabel(cost, energyCost) {
+            const s = Game.state;
+            const lackMoney = s.money < cost;
+            const lackEnergy = s.energy < energyCost;
+            if (!lackMoney && !lackEnergy) return { disabled: false, label: '购买' };
+            if (lackMoney && lackEnergy) return { disabled: true, label: '💸⚡ 钱和精力不足' };
+            if (lackMoney) return { disabled: true, label: '💸 钱不够' };
+            return { disabled: true, label: '⚡ 精力不足' };
+        }
+
+        function renderBuy() {
+            const s = Game.state;
+            document.getElementById('content').innerHTML = `
+                <div class="card">
+                    <h2>🛒 采购食材</h2>
+                    <p class="muted">购买单个食材消耗 3 精力，购买材料包消耗 5 精力。</p>
+
+                    <h3>🎁 优惠材料包</h3>
+                    <div class="grid-2">
+                        ${Game.BUNDLES.map(b => {
+                            const btn = buyLabel(b.cost, 5);
+                            return `
+                            <div class="item-card">
+                                <span class="item-emoji">${b.emoji}</span>
+                                <span class="item-name">${b.name}</span>
+                                <span class="item-desc">${b.desc}</span>
+                                <span class="item-meta">${b.cost}元</span>
+                                <button type="button" class="small" ${btn.disabled ? 'disabled' : ''} onclick="Game.buyBundle('${b.id}')">${btn.label}</button>
+                            </div>`;
+                        }).join('')}
+                    </div>
+
+                    <h3>🌾 单个食材</h3>
+                    <div class="grid-3">
+                        ${Object.entries(Game.INGREDIENTS).map(([k, v]) => {
+                            const btn = buyLabel(v.price, 3);
+                            return `
+                            <div class="item-card">
+                                <span class="item-emoji">${v.emoji}</span>
+                                <span class="item-name">${v.name} <span class="muted">×${s.ingredients[k] || 0}</span></span>
+                                <span class="item-meta">${v.price}元/个</span>
+                                <button type="button" class="small" ${btn.disabled ? 'disabled' : ''} onclick="Game.buyIngredient('${k}')">${btn.label}</button>
+                            </div>`;
+                        }).join('')}
+                    </div>
+                </div>`;
+        }
+    </script>
+</body>
+</html>

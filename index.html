@@ -134,7 +134,7 @@
         </div>
     </div>
 
-    <!-- 只加载 core 层，绝对不要加载 shared.js -->
+    <!-- 必须加载的底层状态文件 -->
     <script src="js/core/store.js"></script>
     <script src="js/core/state.js"></script>
 
@@ -147,6 +147,7 @@
 
         var AVATAR_EMOJI = { girl1: '👧🏻', girl2: '👩🏻', boy1: '👦🏻', cake: '🧁' };
 
+        // 头像选择逻辑
         function select(opt) {
             options.forEach(function (o) {
                 var on = o === opt;
@@ -175,6 +176,7 @@
         var btnStart = document.getElementById('btnStart');
         var btnContinue = document.getElementById('btnContinue');
 
+        // 检查是否有存档
         function hasSave() {
             try { return typeof Cake.hasSave === 'function' && Cake.hasSave(); }
             catch (_) { return false; }
@@ -185,6 +187,7 @@
             btnStart.textContent = '重新开始';
         }
 
+        // 开始新游戏
         btnStart.addEventListener('click', function () {
             if (hasSave() && !confirm('已有存档，重新开始会覆盖当前进度，确定吗？')) return;
 
@@ -194,7 +197,7 @@
 
             try {
                 if (typeof Cake.defaultState === 'function' && typeof Cake.saveState === 'function') {
-                    // 推荐路径：直接构造完整初始存档，主页面走 loadStateFromStorage
+                    // 直接构造完整初始存档
                     var s = Cake.defaultState();
                     s.playerName = playerName;
                     s.shopName = shopName;
@@ -202,7 +205,7 @@
                     Cake.store.state = s;
                     Cake.saveState();
                 } else {
-                    // 退化路径：只写三个 key，依赖主页面 shared.js 的 initState
+                    // 兜底逻辑
                     localStorage.setItem('playerName', playerName);
                     localStorage.setItem('shopName', shopName);
                     localStorage.setItem('playerAvatar', selectedKey);
@@ -210,13 +213,17 @@
                         localStorage.removeItem(Cake.SAVE_KEY);
                     }
                 }
-            } catch (_) {}
+            } catch (err) {
+                console.error("保存初始状态失败:", err);
+            }
 
-            location.href = 'main.html';
+            // 跳转到主页面（请确认你的主页面名字是不是 game.html 或 index.html）
+            location.href = 'index.html'; 
         });
 
+        // 继续游戏
         btnContinue.addEventListener('click', function () {
-            location.href = 'main.html';
+            location.href = 'index.html';
         });
     })();
     </script>

@@ -7,13 +7,9 @@
     <link rel="stylesheet" href="../css/styles.css">
 </head>
 <body>
-    <header id="header"></header>
-    <nav id="navBar"></nav>
-    <div class="game-body">
+    <div class="game-body" style="padding-top: 10px;">
         <div class="content" id="content"></div>
     </div>
-    <div class="action-footer" id="footer"></div>
-
     <script src="../js/core/store.js"></script>
     <script src="../js/data/ingredients.js"></script>
     <script src="../js/data/recipes.js"></script>
@@ -34,15 +30,10 @@
     <script src="../js/shared.js"></script>
     <script>
         Game.initPage('love', renderLove);
-
         function renderLove() {
             const s = Game.state;
-
-            const validCakes = Object.entries(s.cakes).filter(
-                ([n, v]) => v > 0 && Game.RECIPES[n]
-            );
+            const validCakes = Object.entries(s.cakes).filter(([n, v]) => v > 0 && Game.RECIPES[n]);
             const hasCakes = validCakes.length > 0;
-
             document.getElementById('content').innerHTML = `
                 <div class="card">
                     <h2>💕 缘分相遇</h2>
@@ -50,67 +41,33 @@
                     <div class="grid-2" style="margin-top:12px;">
                         ${Object.entries(Game.CHARACTERS).map(([cid, c]) => {
                             const cs = s.characters[cid] || { met: false, affection: 0 };
-
                             if (!cs.met) {
-                                return `
-                                <div class="char-card" style="border-color:${c.color}33;opacity:0.82;">
-                                    <div class="char-head">
-                                        <span class="char-emoji">${c.emoji}</span>
-                                        <div>
-                                            <div class="char-name">${c.name}</div>
-                                            <div class="aff-text">🔒 尚未相遇</div>
-                                        </div>
-                                    </div>
-                                    <span class="char-desc">${c.desc}</span>
-                                    <p class="muted">继续经营蛋糕店，也许某天会在这里遇到对方……</p>
+                                return `<div class="char-card" style="border-color:${c.color}33;opacity:0.82;">
+                                    <div class="char-head"><span class="char-emoji">${c.emoji}</span><div><div class="char-name">${c.name}</div><div class="aff-text">🔒 尚未相遇</div></div></div>
+                                    <span class="char-desc">${c.desc}</span><p class="muted">继续经营蛋糕店，也许某天会在这里遇到对方……</p>
                                 </div>`;
                             }
-
                             const dateHint = (() => {
-                                const lackAff = cs.affection < 40;
-                                const lackMoney = s.money < 50;
-                                const lackEnergy = s.energy < 12;
+                                const lackAff = cs.affection < 40, lackMoney = s.money < 50, lackEnergy = s.energy < 12;
                                 if (!lackAff && !lackMoney && !lackEnergy) return '';
-
                                 const parts = [];
-                                if (lackAff)    parts.push('💭 好感 40');
-                                if (lackMoney)  parts.push('💸 50 元');
+                                if (lackAff) parts.push('💭 好感 40');
+                                if (lackMoney) parts.push('💸 50 元');
                                 if (lackEnergy) parts.push('⚡ 12 精力');
                                 return '邀约需 ' + parts.join(' · ');
                             })();
-
-                            return `
-                            <div class="char-card" style="border-color:${c.color}66;">
-                                <div class="char-head">
-                                    <span class="char-emoji">${c.emoji}</span>
-                                    <div>
-                                        <div class="char-name">${c.name}</div>
-                                        <div class="aff-text">${Game.affLevel(cs.affection)} ${cs.affection}/100</div>
-                                    </div>
-                                </div>
+                            return `<div class="char-card" style="border-color:${c.color}66;">
+                                <div class="char-head"><span class="char-emoji">${c.emoji}</span><div><div class="char-name">${c.name}</div><div class="aff-text">${Game.affLevel(cs.affection)} ${cs.affection}/100</div></div></div>
                                 <div class="aff-bar"><div class="aff-fill" style="width:${cs.affection}%;"></div></div>
                                 <span class="char-desc">${c.desc}</span>
                                 <span class="char-desc">💝 喜欢的蛋糕：${c.likes.join('、')}</span>
-
                                 <div class="char-actions">
                                     <button type="button" class="small" onclick="Game.social('${cid}','chat')">💬 聊天</button>
                                     <button type="button" class="small" onclick="Game.social('${cid}','date')">🌹 邀约</button>
-                                    <button type="button" class="small ${s.giftPanelFor === cid ? 'gold' : 'secondary'}"
-                                            onclick="Game.toggleGiftPanel('${cid}')">🎁 送蛋糕</button>
+                                    <button type="button" class="small ${s.giftPanelFor === cid ? 'gold' : 'secondary'}" onclick="Game.toggleGiftPanel('${cid}')">🎁 送蛋糕</button>
                                 </div>
                                 ${dateHint ? `<p class="muted" style="margin-top:2px;">${dateHint}</p>` : ''}
-
-                                ${s.giftPanelFor === cid ? `
-                                    <div class="gift-panel">
-                                        ${hasCakes
-                                            ? validCakes.map(([cake, cnt]) => `
-                                                <button type="button" class="small" onclick="Game.giveGift('${cid}','${cake}')">
-                                                    ${Game.RECIPES[cake].emoji}${cake} ×${cnt} ${c.likes.includes(cake) ? '💕' : ''}
-                                                </button>
-                                            `).join('')
-                                            : '<span class="muted">没有蛋糕可送，先去烘焙吧～</span>'}
-                                    </div>
-                                ` : ''}
+                                ${s.giftPanelFor === cid ? `<div class="gift-panel">${hasCakes ? validCakes.map(([cake, cnt]) => `<button type="button" class="small" onclick="Game.giveGift('${cid}','${cake}')">${Game.RECIPES[cake].emoji}${cake} ×${cnt} ${c.likes.includes(cake) ? '💕' : ''}</button>`).join('') : '<span class="muted">没有蛋糕可送，先去烘焙吧～</span>'}</div>` : ''}
                             </div>`;
                         }).join('')}
                     </div>

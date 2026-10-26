@@ -31,141 +31,136 @@
         }
 
         /* 标题区域 */
-        .game-header h1 {
-            color: #ff6b81;
-            font-size: 32px;
-            margin-bottom: 8px;
-            letter-spacing: 1px;
-        }
-        .game-header .subtitle {
-            color: #ff9eaa;
-            font-size: 14px;
-            margin-bottom: 24px;
-            font-weight: bold;
-        }
+        .game-header h1 { color: #ff6b81; font-size: 32px; margin-bottom: 8px; }
+        .game-header .subtitle { color: #ff9eaa; font-size: 14px; margin-bottom: 24px; font-weight: bold; }
 
         /* 简介区域 */
-        .game-intro {
-            background: #fff0f5;
-            padding: 16px;
-            border-radius: 16px;
-            margin-bottom: 30px;
-        }
-        .game-intro p {
-            color: #666;
-            font-size: 14px;
-            line-height: 1.8;
-            text-align: left;
-        }
-        .game-intro strong {
-            color: #ff6b81;
-        }
+        .game-intro { background: #fff0f5; padding: 16px; border-radius: 16px; margin-bottom: 24px; }
+        .game-intro p { color: #666; font-size: 14px; line-height: 1.8; text-align: left; }
+        .game-intro strong { color: #ff6b81; }
 
-        /* 输入框区域 */
-        .input-group {
-            text-align: left;
-            margin-bottom: 30px;
-        }
-        .input-group label {
-            display: block;
-            font-size: 14px;
-            font-weight: bold;
-            color: #d85c74;
-            margin-bottom: 8px;
-            margin-top: 16px;
-        }
-        .input-group label:first-child {
-            margin-top: 0;
-        }
-        .input-group input {
-            width: 100%;
-            padding: 14px 16px;
-            border: 2px solid #ffd1dc;
-            border-radius: 12px;
-            font-size: 16px;
-            background: #fafafa;
-            color: #333;
-            transition: all 0.3s ease;
-        }
-        .input-group input:focus {
-            outline: none;
-            border-color: #ff8fa3;
-            background: #fff;
-            box-shadow: 0 0 0 4px rgba(255, 143, 163, 0.15);
-        }
-
-        /* 按钮区域 */
-        .button-group {
+        /* 新增：头像选择区域 */
+        .avatar-group {
             display: flex;
-            flex-direction: column;
-            gap: 12px;
+            justify-content: space-around;
+            margin-bottom: 24px;
         }
-        .button-group button {
-            width: 100%;
-            padding: 16px;
-            border: none;
-            border-radius: 50px;
-            font-size: 16px;
-            font-weight: bold;
+        .avatar-option {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: #fff0f5;
+            border: 2px solid transparent;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
             cursor: pointer;
             transition: all 0.2s ease;
         }
-        .btn-start {
-            background: #ff8fa3;
-            color: white;
-            box-shadow: 0 4px 15px rgba(255, 143, 163, 0.4);
+        .avatar-option:hover {
+            transform: scale(1.1);
         }
-        .btn-start:active {
-            transform: scale(0.98);
-        }
-        .btn-continue {
-            background: #ffffff;
-            color: #ff8fa3;
-            border: 2px solid #ff8fa3 !important;
-        }
-        .btn-continue:active {
-            background: #fff0f5;
-            transform: scale(0.98);
+        /* 选中头像的样式 */
+        .avatar-option.selected {
+            border-color: #ff6b81;
+            background: #ffe4e8;
+            box-shadow: 0 0 10px rgba(255, 107, 129, 0.3);
         }
 
-        /* 淡入动画 */
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+        /* 输入框区域 */
+        .input-group { text-align: left; margin-bottom: 24px; }
+        .input-group label { display: block; font-size: 14px; font-weight: bold; color: #d85c74; margin-bottom: 8px; margin-top: 16px; }
+        .input-group label:first-child { margin-top: 0; }
+        .input-group input {
+            width: 100%; padding: 14px 16px; border: 2px solid #ffd1dc;
+            border-radius: 12px; font-size: 16px; background: #fafafa; color: #333; transition: all 0.3s ease;
         }
+        .input-group input:focus { outline: none; border-color: #ff8fa3; background: #fff; box-shadow: 0 0 0 4px rgba(255, 143, 163, 0.15); }
+
+        /* 按钮区域 */
+        .button-group { display: flex; flex-direction: column; gap: 12px; }
+        .button-group button {
+            width: 100%; padding: 16px; border: none; border-radius: 50px;
+            font-size: 16px; font-weight: bold; cursor: pointer; transition: all 0.2s ease;
+        }
+        .btn-start { background: #ff8fa3; color: white; box-shadow: 0 4px 15px rgba(255, 143, 163, 0.4); }
+        .btn-start:active { transform: scale(0.98); }
+        .btn-continue { background: #ffffff; color: #ff8fa3; border: 2px solid #ff8fa3 !important; }
+        .btn-continue:active { background: #fff0f5; transform: scale(0.98); }
+
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
 
     <div class="start-card">
-        <!-- 标题区 -->
         <div class="game-header">
             <h1>🍰 甜蜜物语</h1>
             <div class="subtitle">✨ 女性向 · 高自由度蛋糕店模拟器 ✨</div>
         </div>
 
-        <!-- 简介区 -->
         <div class="game-intro">
             <p>你刚刚接手了街角一间小小的蛋糕店。<br>
             在这里，你可以<strong>自由烘焙每一款蛋糕</strong>、<strong>随心装饰你的店铺</strong>、邂逅温柔的邻居们，甚至——谈一场甜甜的恋爱。💕<br>
             你的故事，由你亲手书写。</p>
         </div>
 
-        <!-- 输入区 -->
-        <div class="input-group">
-            <label>👩‍🍳 你的名字（默认：小甜）</label>
-            <input type="text" placeholder="请输入你的名字" value="小甜">
-            
-            <label>🏪 蛋糕店的名字（默认：甜蜜物语）</label>
-            <input type="text" placeholder="请输入店铺名字" value="甜蜜物语">
+        <!-- 恢复头像选择功能 -->
+        <div class="avatar-group" id="avatarGroup">
+            <!-- 这里我用了Emoji代替你原来的图片，你需要把你原来的 <img> 标签换回来 -->
+            <div class="avatar-option selected" data-avatar="girl1">👧🏻</div>
+            <div class="avatar-option" data-avatar="girl2">👩🏻</div>
+            <div class="avatar-option" data-avatar="boy1">👦🏻</div>
+            <div class="avatar-option" data-avatar="cake">🧁</div>
         </div>
 
-        <!-- 按钮区 -->
+        <div class="input-group">
+            <label>👩‍🍳 你的名字（默认：小甜）</label>
+            <input type="text" id="playerName" placeholder="请输入你的名字" value="小甜">
+            
+            <label>🏪 蛋糕店的名字（默认：甜蜜物语）</label>
+            <input type="text" id="shopName" placeholder="请输入店铺名字" value="甜蜜物语">
+        </div>
+
         <div class="button-group">
-            <button class="btn-start">☀️ 开启甜蜜之旅</button>
+            <!-- 注意：去掉了 onclick，改由下方 JS 统一接管 -->
+            <button class="btn-start" id="btnStart">☀️ 开启甜蜜之旅</button>
             <button class="btn-continue">📖 继续游戏</button>
         </div>
     </div>
 
+    <!-- 把这段 JS 放在最下面 -->
+    <script>
+        // 1. 处理头像点击选中效果
+        const avatarOptions = document.querySelectorAll('.avatar-option');
+        let selectedAvatar = 'girl1'; // 默认选中第一个
+
+        avatarOptions.forEach(option => {
+            option.addEventListener('click', () => {
+                // 移除所有人的选中状态
+                avatarOptions.forEach(opt => opt.classList.remove('selected'));
+                // 给自己加上选中状态
+                option.classList.add('selected');
+                // 记录选中的头像数据
+                selectedAvatar = option.getAttribute('data-avatar');
+            });
+        });
+
+        // 2. 处理“开启甜蜜之旅”按钮点击
+        document.getElementById('btnStart').addEventListener('click', () => {
+            // 获取玩家输入的名字和店铺名
+            const playerName = document.getElementById('playerName').value || '小甜';
+            const shopName = document.getElementById('shopName').value || '甜蜜物语';
+
+            // 【关键】将数据保存到浏览器本地（localStorage），这样下一个页面才能读到
+            localStorage.setItem('playerName', playerName);
+            localStorage.setItem('shopName', shopName);
+            localStorage.setItem('playerAvatar', selectedAvatar);
+
+            // 跳转到游戏主页面
+            window.location.href = 'game.html'; 
+        });
+    </script>
 </body>
 </html>

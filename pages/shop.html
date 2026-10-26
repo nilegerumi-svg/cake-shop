@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="../css/styles.css">
 </head>
 <body>
+    <div id="shop-error" style="display:none; background:#dc2626; color:#fff; padding:10px; font-size:12px; margin-bottom:10px; word-break:break-all;"></div>
     <div class="game-body" style="padding-top: 10px;">
         <div class="content" id="content"></div>
     </div>
@@ -29,7 +30,21 @@
     <script src="../js/actions/system.js"></script>
     <script src="../js/shared.js"></script>
     <script>
-        Game.initPage('shop', renderShop);
+        window.onerror = function(msg, url, line) {
+            var err = document.getElementById('shop-error');
+            if (err) {
+                err.style.display = 'block';
+                err.innerHTML += '<div>❌ 店铺页报错: ' + msg + ' (' + line + ')</div>';
+            }
+            return false;
+        };
+
+        try {
+            Game.initPage('shop', renderShop);
+        } catch (e) {
+            document.getElementById('content').innerHTML = '<div style="color:red; padding:20px;">页面初始化失败: ' + e.message + '</div>';
+        }
+
         function renderShop() {
             const s = Game.state;
             const cakes = Object.entries(s.cakes).filter(([n, v]) => v > 0 && Game.RECIPES[n]);
@@ -48,7 +63,7 @@
                 <div class="card">
                     <h2>🏪 店铺经营</h2>
                     <div style="margin-bottom:16px;">
-                        <button type="button" class="small gold" onclick="Game.openShop()">🚪 开店营业</button>
+                        <button type="button" class="small gold" onclick="window.openShopWrapper()">🚪 开店营业</button>
                     </div>
                     <div class="grid-2">
                         <div class="item-card">
@@ -80,6 +95,23 @@
                     </div>`}
                 </div>`;
         }
+
+        // 包装一层用于捕获报错
+        window.openShopWrapper = function() {
+            try {
+                if (typeof Game.openShop !== 'function') {
+                    alert('错误：openShop 函数未定义！');
+                    return;
+                }
+                Game.openShop();
+            } catch (e) {
+                var err = document.getElementById('shop-error');
+                if (err) {
+                    err.style.display = 'block';
+                    err.innerHTML += '<div>❌ 开店报错: ' + e.message + '</div>';
+                }
+            }
+        };
     </script>
 </body>
 </html>

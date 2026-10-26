@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <style> body { background: transparent; padding: 16px; margin: 0; } </style>
+</head>
+<body>
+<div id="content"></div>
+<script>
+    window.onload = function() {
+        const Cake = window.parent.Cake;
+        if (!Cake) return;
+
+        function render() {
+            const s = Cake.store.state;
+            document.getElementById('content').innerHTML = `
+                <div class="card">
+                    <h2>👤 ${Cake.escapeHtml(s.playerName)}</h2>
+                    <p class="muted">${Cake.escapeHtml(s.shopName)}</p>
+                    <div class="grid-2" style="margin-top:12px;">
+                        <div class="item-card"><span class="item-emoji">💰</span><span class="item-name">${s.money} 元</span><span class="item-desc">当前余额</span></div>
+                        <div class="item-card"><span class="item-emoji">⭐</span><span class="item-name">${s.reputation} 声望</span><span class="item-desc">店铺名气</span></div>
+                        <div class="item-card"><span class="item-emoji">🏪</span><span class="item-name">Lv.${s.shopLevel}</span><span class="item-desc">店铺等级</span></div>
+                        <div class="item-card"><span class="item-emoji">🎂</span><span class="item-name">${s.totalCakes || 0}</span><span class="item-desc">累计烘焙</span></div>
+                    </div>
+                </div>`;
+        }
+        render();
+    };
+</script>
+</body>
+</html>

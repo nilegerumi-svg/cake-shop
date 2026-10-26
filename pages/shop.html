@@ -30,36 +30,87 @@
     <script src="../js/actions/system.js"></script>
     <script src="../js/shared.js"></script>
     <script>
-        window.onerror = function(msg, url, line) {
-            var err = document.getElementById('shop-error');
-            if (err) {
-                err.style.display = 'block';
-                err.innerHTML += '<div>❌ 店铺页报错: ' + msg + ' (' + line + ')</div>';
-            }
-            return false;
+    (() => {
+        'use strict';
+
+        /* ==================== 常量 ==================== */
+
+        const PRICE_OPTIONS = Object.freeze([
+            { rate: 0.8, name: '亲民价' },
+            { rate: 0.9, name: '实惠价' },
+            { rate: 1.0, name: '标准价' },
+            { rate: 1.2, name: '精品价' },
+            { rate: 1.5, name: '奢华价' },
+        ]);
+
+        const contentEl = document.getElementById('content');
+        const shopErrorEl = document.getElementById('shop-error');
+
+        /* ==================== 错误提示 ==================== */
+
+        const showError = (msg) => {
+            if (!shopErrorEl) return;
+            shopErrorEl.style.display = 'block';
+            shopErrorEl.insertAdjacentHTML('beforeend', `<div>❌ ${msg}</div>`);
         };
 
-        try {
-            Game.initPage('shop', renderShop);
-        } catch (e) {
-            document.getElementById('content').innerHTML = '<div style="color:red; padding:20px;">页面初始化失败: ' + e.message + '</div>';
-        }
+        window.addEventListener('error', (e) => {
+            showError(`店铺页报错: ${e.message} (${e.lineno})`);
+        });
 
-        function renderShop() {
+        /* ==================== 店铺渲染 ==================== */
+
+        const buildUpgradeLabel = (s, atMaxLevel, canUpgrade, upgradeCost) => {
+            if (atMaxLevel) return '🌟 已达到最高等级！';
+            if (canUpgrade) return `⬆️ 升级店铺（${upgradeCost}元）`;
+            return s.money < upgradeCost ? `💸 需${upgradeCost}元` : '⚡ 精力不足';
+        };
+
+        const buildDecorateLabel = (s, canDecorate) => {
+            if (canDecorate) return '🌸 装饰店铺（100元）';
+            return s.money < 100 ? '💸 需100元' : '⚡ 精力不足';
+        };
+
+        const renderCakes = (cakes, priceRate) => {
+            if (cakes.length === 0) {
+                return '<p class="muted">还没有蛋糕库存，快去烘焙吧！</p>';
+            }
+            const items = cakes.map(([name, count]) => {
+                const recipe = Game.RECIPES[name];
+                const price = Math.round(recipe.price * priceRate);
+                return `<div class="item-card">
+                    <span class="item-emoji">${recipe.emoji}</span>
+                    <span class="item-name">${name} <span class="muted">×${count}</span></span>
+                    <span class="item-meta">售价 <span class="price-tag">${price}元</span></span>
+                </div>`;
+            }).join('');
+
+            return `<div class="grid-2">${items}</div>`;
+        };
+
+        const renderShop = () => {
             const s = Game.state;
-            const cakes = Object.entries(s.cakes).filter(([n, v]) => v > 0 && Game.RECIPES[n]);
-            const priceOptions = [
-                { rate: 0.8, name: '亲民价' }, { rate: 0.9, name: '实惠价' }, { rate: 1.0, name: '标准价' }, { rate: 1.2, name: '精品价' }, { rate: 1.5, name: '奢华价' },
-            ];
+            const cakes = Object.entries(s.cakes)
+                .filter(([name, count]) => count > 0 && Game.RECIPES[name]);
+
             const atMaxLevel = s.shopLevel >= 5;
             const upgradeCost = atMaxLevel ? 0 : (Game.SHOP_UPGRADE_COSTS[s.shopLevel] || 0);
             const canUpgrade = !atMaxLevel && s.money >= upgradeCost && s.energy >= 5;
             const canDecorate = s.money >= 100 && s.energy >= 5;
-            
-            let upgradeLabel = atMaxLevel ? '🌟 已达到最高等级！' : (canUpgrade ? `⬆️ 升级店铺（${upgradeCost}元）` : (s.money < upgradeCost ? `💸 需${upgradeCost}元` : '⚡ 精力不足'));
-            let decorateLabel = canDecorate ? '🌸 装饰店铺（100元）' : (s.money < 100 ? '💸 需100元' : '⚡ 精力不足');
 
-            document.getElementById('content').innerHTML = `
+            const upgradeLabel = buildUpgradeLabel(s, atMaxLevel, canUpgrade, upgradeCost);
+            const decorateLabel = buildDecorateLabel(s, canDecorate);
+
+            const upgradeBtnHtml = atMaxLevel
+                ? `<span class="item-meta">${upgradeLabel}</span>`
+                : `<button type="button" class="small" ${canUpgrade ? '' : 'disabled'} onclick="Game.upgradeShop()">${upgradeLabel}</button>`;
+
+            const priceButtons = PRICE_OPTIONS.map(({ rate, name }) => {
+                const active = s.priceRate === rate ? 'gold' : 'secondary';
+                return `<button type="button" class="small ${active}" onclick="Game.setPriceRate(${rate})">${name} ${rate.toFixed(1)}x</button>`;
+            }).join('');
+
+            contentEl.innerHTML = `
                 <div class="card">
                     <h2>🏪 店铺经营</h2>
                     <div style="margin-bottom:16px;">
@@ -70,7 +121,7 @@
                             <span class="item-emoji">🏪</span>
                             <span class="item-name">店铺等级 Lv.${s.shopLevel}</span>
                             <span class="item-desc">等级越高，客流量与顾客预算越高。</span>
-                            ${atMaxLevel ? `<span class="item-meta">${upgradeLabel}</span>` : `<button type="button" class="small" ${canUpgrade ? '' : 'disabled'} onclick="Game.upgradeShop()">${upgradeLabel}</button>`}
+                            ${upgradeBtnHtml}
                         </div>
                         <div class="item-card">
                             <span class="item-emoji">🛋️</span>
@@ -80,24 +131,16 @@
                         </div>
                     </div>
                     <h3>💰 定价策略</h3>
-                    <div class="ing-row" style="gap:8px;">
-                        ${priceOptions.map(p => `<button type="button" class="small ${s.priceRate === p.rate ? 'gold' : 'secondary'}" onclick="Game.setPriceRate(${p.rate})">${p.name} ${p.rate.toFixed(1)}x</button>`).join('')}
-                    </div>
+                    <div class="ing-row" style="gap:8px;">${priceButtons}</div>
                     <p class="muted" style="margin-top:8px;">当前售价 = 基础价 × ${s.priceRate.toFixed(1)}</p>
                     <h3>🧁 库存蛋糕</h3>
-                    ${cakes.length === 0 ? '<p class="muted">还没有蛋糕库存，快去烘焙吧！</p>' : `
-                    <div class="grid-2">
-                        ${cakes.map(([n, v]) => `<div class="item-card">
-                            <span class="item-emoji">${Game.RECIPES[n].emoji}</span>
-                            <span class="item-name">${n} <span class="muted">×${v}</span></span>
-                            <span class="item-meta">售价 <span class="price-tag">${Math.round(Game.RECIPES[n].price * s.priceRate)}元</span></span>
-                        </div>`).join('')}
-                    </div>`}
+                    ${renderCakes(cakes, s.priceRate)}
                 </div>`;
-        }
+        };
 
-        // 包装一层用于捕获报错
-        window.openShopWrapper = function() {
+        /* ==================== 开店（带错误捕获） ==================== */
+
+        window.openShopWrapper = () => {
             try {
                 if (typeof Game.openShop !== 'function') {
                     alert('错误：openShop 函数未定义！');
@@ -105,13 +148,18 @@
                 }
                 Game.openShop();
             } catch (e) {
-                var err = document.getElementById('shop-error');
-                if (err) {
-                    err.style.display = 'block';
-                    err.innerHTML += '<div>❌ 开店报错: ' + e.message + '</div>';
-                }
+                showError(`开店报错: ${e.message}`);
             }
         };
+
+        /* ==================== 页面初始化 ==================== */
+
+        try {
+            Game.initPage('shop', renderShop);
+        } catch (e) {
+            contentEl.innerHTML = `<div style="color:red; padding:20px;">页面初始化失败: ${e.message}</div>`;
+        }
+    })();
     </script>
 </body>
 </html>

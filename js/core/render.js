@@ -36,6 +36,7 @@ window.Cake = window.Cake || {};
             { key: 'buy',     label: '🛒 采购', href: 'buy.html' },
             { key: 'recipe',  label: '📖 配方', href: 'recipe.html' },
             { key: 'love',    label: '💕 缘分', href: 'love.html' },
+            { key: 'fun',     label: '🎮 娱乐', href: 'rest_and_outside.html' },
             { key: 'profile', label: '📊 我的', href: 'profile.html' },
         ];
         var html = '';

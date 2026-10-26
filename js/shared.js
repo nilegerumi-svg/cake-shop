@@ -72,7 +72,6 @@ window.Game = {
     toggleGiftPanel: window.Cake.toggleGiftPanel,
     giveGift: window.Cake.giveGift,
     
-    // 👇 修改点：增加了参数校验，防止把 event 对象传进去
     rest: function() {
         if (window.Cake.rest) return window.Cake.rest();
     },
@@ -80,7 +79,6 @@ window.Game = {
         var loc = (typeof location === 'string') ? location : 'home';
         if (window.Cake.walk) return window.Cake.walk(loc);
     },
-    // 👆 修改结束
 
     showEnding: window.Cake.showEnding,
     saveGame: window.Cake.saveGame,
@@ -88,14 +86,11 @@ window.Game = {
     resetGame: window.Cake.resetGame,
 };
 
-/* ★ 子页面收到 state-sync 后重载并重绘 */
 (function () {
     var Cake = window.Cake;
     if (!Cake.bridge || !Cake.bridge.inIframe) return;
-
     Cake.bridge.onStateChanged(function () {
         Cake.store.state = Cake.loadStateFromStorage();
-
         if (typeof Cake.refreshPage === 'function') {
             try { Cake.refreshPage(); return; } catch (_) {}
         }

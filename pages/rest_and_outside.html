@@ -3,34 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- 强制浏览器每次重新拉取数据，不走缓存 -->
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <meta http-equiv="Pragma" content="no-cache">
-    <meta http-equiv="Expires" content="0">
-    <title>娱乐</title>
+    <title>娱乐与外出</title>
     <style>
         body { background: #fff0f5; font-family: sans-serif; padding: 20px; display: flex; justify-content: center; color: #4a3b3f; }
-        .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(255,182,193,0.3); text-align: center; width: 100%; max-width: 300px; }
-        h2 { color: #ff6b81; margin-bottom: 10px; }
-        p { margin: 10px 0; }
+        .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(255,182,193,0.3); text-align: center; width: 100%; max-width: 320px; }
+        h2 { color: #ff6b81; margin-top: 20px; margin-bottom: 10px; font-size: 18px; }
+        .energy-box { background: #fff9fa; padding: 10px; border-radius: 10px; margin-bottom: 15px; border: 1px solid #ffd1dc; font-weight: bold; }
         button { background: #ff8fa3; color: white; border: none; padding: 12px 20px; border-radius: 25px; font-size: 16px; margin-top: 10px; width: 100%; cursor: pointer; font-weight: bold; }
         button:disabled { background: #ccc; }
         #btnWalk { background: #7ec4cf; } 
         #btnWalk:disabled { background: #ccc; }
+        
+        /* 弹窗样式 */
+        #walkModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999; justify-content: center; align-items: center; }
+        .modal-content { background: white; padding: 20px; border-radius: 15px; width: 85%; max-width: 300px; text-align: center; }
+        .modal-content button { background: #a8e6cf; color: #4a3b3f; margin-bottom: 8px; padding: 10px; font-size: 14px; }
+        .modal-content button.cancel { background: #eee; margin-top: 15px; }
     </style>
 </head>
 <body>
     <div class="card" id="mainCard">
-        <!-- 注意这里加了 V2 标识 -->
-        <h2>🎮 休息 (V2)</h2>
-        <p>当前体力：<span id="energy">--</span>/100</p>
         
+        <!-- 统一的体力显示 -->
+        <div class="energy-box">
+            ⚡ 当前体力：<span id="energy">--</span>/100
+        </div>
+
+        <h2>🎮 休息区</h2>
         <button id="btnRest" onclick="doRest()">休息一下 (+20体力)</button>
 
-        <h2>🛴 外出 (V2)</h2>
-        <p>当前体力：<span id="energy">--</span>/100</p>
-        
-        <button id="btnWalk" onclick="doWalk()">出门散步 (-10体力)</button>
+        <h2>🛴 外出区</h2>
+        <button id="btnWalk" onclick="openWalkModal()">出门散步 (-10体力)</button>
+    </div>
+
+    <!-- 散步地点选择弹窗 -->
+    <div id="walkModal">
+        <div class="modal-content">
+            <h3 style="color: #ff6b81; margin-top: 0;">去哪里散步？</h3>
+            <button onclick="doWalk('park')">🌳 街心公园</button>
+            <button onclick="doWalk('street')">🛍️ 商业街</button>
+            <button onclick="doWalk('river')">🌊 河边</button>
+            <button class="cancel" onclick="closeWalkModal()">取消</button>
+        </div>
     </div>
 
     <script>
@@ -38,38 +53,69 @@
 
         function updateUI() {
             if (!G || !G.state) return;
+            // 现在只有一个 id="energy" 了，更新绝对准确
             document.getElementById('energy').innerText = G.state.energy;
             document.getElementById('btnRest').disabled = (G.state.energy >= 100);
             document.getElementById('btnWalk').disabled = (G.state.energy < 10);
         }
 
+        // === 休息逻辑 ===
         function doRest() {
-            if (!G || !G.state) return;
-            if (G.state.energy >= 100) return;
+            if (!G || !G.state || G.state.energy >= 100) return;
             G.state.energy = Math.min(100, G.state.energy + 20);
             if (typeof G.addLog === 'function') G.addLog("去娱乐室休息了一下，恢复了20点体力。");
             if (typeof G.saveState === 'function') G.saveState();
             updateUI();
         }
 
-        function doWalk() {
+        // === 散步逻辑 ===
+        function openWalkModal() {
             if (!G || !G.state) return;
             if (G.state.energy < 10) {
                 alert("体力不足，无法散步啦！");
                 return;
             }
-            G.state.energy -= 10;
-            if (typeof G.addLog === 'function') G.addLog("去附近散了散步，心情变好了。");
+            document.getElementById('walkModal').style.display = 'flex';
+        }
+
+        function closeWalkModal() {
+            document.getElementById('walkModal').style.display = 'none';
+        }
+
+        function doWalk(location) {
+            if (!G || !G.state || G.state.energy < 10) return;
+            
+            G.state.energy -= 10; // 扣除体力
+            let logMsg = "";
+            let bonusMsg = "";
+
+            // 根据地点给出不同反馈
+            switch(location) {
+                case 'park':
+                    logMsg = "去街心公园散了散步。";
+                    bonusMsg = "呼吸了新鲜空气，感觉心情变好了！";
+                    break;
+                case 'street':
+                    logMsg = "去商业街逛了逛。";
+                    if (G.state.fame !== undefined) G.state.fame += 1;
+                    bonusMsg = "看了很多新奇的店铺，声望 +1。";
+                    break;
+                case 'river':
+                    logMsg = "沿着河边散了散步。";
+                    bonusMsg = "吹了吹晚风，非常惬意。";
+                    break;
+            }
+
+            if (typeof G.addLog === 'function') G.addLog(logMsg + " " + bonusMsg);
             if (typeof G.saveState === 'function') G.saveState();
+            
+            closeWalkModal();
             updateUI();
         }
 
         window.onload = function() {
             if (!G || !G.state) {
-                document.getElementById('mainCard').innerHTML = `
-                    <h2 style="color:red">⚠️ 数据加载失败</h2>
-                    <p style="font-size:14px; color:#666;">未能连接到游戏主界面。</p>
-                `;
+                document.getElementById('mainCard').innerHTML = `<h2 style="color:red">⚠️ 数据加载失败</h2><p>请从主页面进入</p>`;
                 return;
             }
             updateUI();

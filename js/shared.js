@@ -1,3 +1,4 @@
+// js/shared.js
 window.Cake = window.Cake || {};
 
 // ── 1. 初始化状态（带防护，默认值优先复用 store.DEFAULT_STATE）──
@@ -45,7 +46,11 @@ window.Cake = window.Cake || {};
     const LIVE_KEYS = [
         'INGREDIENTS', 'RECIPES', 'BUNDLES', 'CHARACTERS', 'AFF_EVENTS',
         'CHAT_DIALOGUES', 'DATE_DIALOGUES', 'MEETINGS', 'RANDOM_EVENTS',
-        'WALK_EVENTS', 'ACHIEVEMENTS', 'SHOP_UPGRADE_COSTS',
+        'ACHIEVEMENTS', 'SHOP_UPGRADE_COSTS',
+        
+        // 🌟 新增：地图与事件模块
+        'LOCATIONS', 'COMMON_WALK_EVENTS',
+        
         'SAVE_KEY', 'SAVE_VERSION',
         'defaultState', 'hasSave', 'saveState', 'loadStateFromStorage',
         '$', 'addLog', 'ingredientTags', 'affLevel', 'escapeHtml', 'fail',

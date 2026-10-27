@@ -6,24 +6,66 @@
     <title>🍰 甜蜜物语</title>
     <link rel="stylesheet" href="css/styles.css">
     <style>
-        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; background: #fff0f5; font-family: sans-serif; }
+        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; background: #fff0f5; }
+        .app-wrapper { display: flex; flex-direction: column; height: 100vh; height: 100dvh; }
+        header, nav { flex: 0 0 auto; z-index: 10; }
+        .split-container {
+            flex: 1; display: flex; flex-direction: column; overflow: hidden;
+            padding-bottom: calc(var(--footer-h, 70px) + env(safe-area-inset-bottom));
+        }
+        .main-frame { flex: 1; width: 100%; border: none; background: transparent; min-height: 240px; }
+        .log-frame {
+            flex: 0 0 clamp(110px, 22vh, 180px);
+            width: 100%; border: none; background: #fff;
+            border-top: 2px dashed #ffd1dc;
+            box-shadow: 0 -4px 10px rgba(255, 143, 163, 0.1);
+        }
+        iframe { display: block; width: 100%; height: 100%; }
+        .action-footer {
+            position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+            width: 100%; max-width: 500px;
+            padding: 10px 15px calc(10px + env(safe-area-inset-bottom));
+            box-sizing: border-box;
+            background: linear-gradient(to top, #fff0f5 80%, transparent);
+            display: flex; flex-direction: column; align-items: center;
+            gap: 6px; z-index: 100;
+        }
+        #error-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; z-index: 999999;
+            background: rgba(220, 38, 38, 0.95); color: white;
+            padding: 10px; font-size: 13px; line-height: 1.4;
+            word-break: break-all; pointer-events: none;
+            max-height: 40vh; overflow-y: auto; display: none;
+        }
         #app-loading {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #fff0f5; z-index: 9999;
-            display: flex; justify-content: center; align-items: center;
+            background: #fff0f5; z-index: 99999;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
             color: #d6336c; font-weight: bold; font-size: 18px;
             transition: opacity 0.3s ease;
         }
     </style>
 </head>
 <body>
-    <!-- 初始加载动画 -->
-    <div id="app-loading">🍰 正在烘焙你的甜蜜物语...</div>
 
-    <!-- 所有的结构（header, nav, iframe）都将由 JS 动态生成 -->
-    <div id="app-root"></div>
+    <!-- 初始加载遮罩 -->
+    <div id="app-loading">🍰 正在准备烘焙你的甜蜜物语...</div>
 
-    <!-- 🚀 唯一启动入口 -->
-    <script type="module" src="js/main.js"></script>
+    <div id="error-overlay"></div>
+
+    <div class="app-wrapper">
+        <header id="header"></header>
+        <nav id="navBar"></nav>
+        <div class="split-container">
+            <!-- 🌟 注意：src 先设置为空白，让 monitor.js 来决定何时加载 -->
+            <iframe id="mainFrame" src="about:blank" class="main-frame"></iframe>
+            <iframe id="logFrame" src="pages/log.html" class="log-frame"></iframe>
+        </div>
+        <div class="action-footer" id="footer"></div>
+    </div>
+
+    <!-- ==================== 🚀 根目录超级监视器入口 ==================== -->
+    <script type="module" src="monitor.js"></script>
+
 </body>
 </html>

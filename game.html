@@ -53,35 +53,9 @@
     <div class="action-footer" id="footer"></div>
 </div>
 
-<!-- ==================== 核心与数据层 ==================== -->
-<script src="js/core/store.js"></script>
-<script src="js/core/bridge.js"></script>
-<script src="js/data/ingredients.js"></script>
-<script src="js/data/recipes.js"></script>
-<script src="js/data/bundles.js"></script>
-<script src="js/data/characters.js"></script>
-<script src="js/data/events.js"></script>
-<script src="js/data/shop-config.js"></script>
-<script src="js/data/achievements.js"></script>
-<script src="js/core/utils.js"></script>
-<script src="js/core/state.js"></script>
-<script src="js/core/modal.js"></script>
-<script src="js/core/effects.js"></script>
-<script src="js/core/render.js"></script>
-
-<!-- ==================== 🕒 时间系统 ==================== -->
-<script src="js/time/index.js"></script>
-
-<!-- ==================== 🌟 玩法与娱乐逻辑 (ES Module 统一入口) ==================== -->
-<!-- 这一行会自动连锁加载：bakery, shop, social, system, 以及整个 entertainment (包含地图、事件、休息) -->
-<script type="module" src="js/actions/index.js"></script>
-
-<!-- ==================== 宿主协调层 ==================== -->
-<script src="js/shared.js"></script>
-<script src="js/host/error.js"></script>
-<script src="js/host/router.js"></script>
-<script src="js/host/sync.js"></script>
-<script src="js/host/main.js"></script>
+<!-- ==================== 🚀 游戏唯一启动入口 ==================== -->
+<!-- 这一行代码将拉取所有核心、数据、地图、UI逻辑 -->
+<script type="module" src="js/main.js"></script>
 
 </body>
 </html>

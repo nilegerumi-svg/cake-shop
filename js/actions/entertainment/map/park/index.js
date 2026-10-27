@@ -1,10 +1,7 @@
-// js/entertainment/map/park.js
 (() => {
     'use strict';
     window.Cake = window.Cake || {};
-    window.Cake._MAP_REGISTRY = window.Cake._MAP_REGISTRY || {};
-
-    window.Cake._MAP_REGISTRY['park'] = {
+    window.Cake._MAP_DATA_PARK = {
         id: 'park',
         name: '街心公园', emoji: '🌳', cost: 8,
         desc: '绿树成荫，适合放松心情。',

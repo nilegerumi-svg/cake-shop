@@ -2,27 +2,19 @@
 (() => {
     'use strict';
     
+    // 获取当前页面的完整路径，例如 /cake-shop/index.html
     const path = window.location.pathname;
 
-    const routes = {
-        'home': './home/index.js',
-        'index': './start/index.js'  // 🌟 新增：匹配 index.html
-    };
-
-    let matched = false;
-
-    for (const key in routes) {
-        // 针对根目录的 index.html，做特殊处理
-        if ((key === 'index' && (path.endsWith('index.html') || path.endsWith('/'))) || 
-            (key !== 'index' && path.includes(`${key}.html`))) {
-            import(routes[key]);
-            matched = true;
-            break;
-        }
-    }
-
-    if (!matched && (path.endsWith('pages/') || path.endsWith('pages/index.html'))) {
-        import('./home/index.js');
-        matched = true;
+    // 如果是主页
+    if (path.includes('home.html')) {
+        import('./home/index.js')
+            .then(() => console.log('✅ home 逻辑加载成功'))
+            .catch(err => console.error('❌ 加载 home 失败:', err));
+    } 
+    // 如果是开始页（包括直接访问根目录或 index.html）
+    else {
+        import('./start/index.js')
+            .then(() => console.log('✅ start 逻辑加载成功'))
+            .catch(err => console.error('❌ 加载 start 失败:', err));
     }
 })();

@@ -50,74 +50,90 @@
             <!-- 动态生成的地点卡片 -->
         </div>
     </div>
+<script>
+(() => {
+    'use strict';
 
-    <script>
-    (() => {
-        'use strict';
+    // 双重保险获取数据
+    const Cake = window.parent.Cake || window.Cake;
+    const G = window.parent.Game || window.Game;
+    
+    const $ = (id) => document.getElementById(id);
+    const locListEl = $('locList');
+    const energyEl  = $('energy');
 
-        const G = window.parent.Game || window.Game;
-        const $ = (id) => document.getElementById(id);
+    const renderList = () => {
+        // 1. 先渲染体力，保证 UI 有用
+        if (G && G.state) {
+            energyEl.innerText = G.state.energy;
+        }
 
-        const locListEl = $('locList');
-        const energyEl  = $('energy');
+        // 2. 尝试从多个地方获取 LOCATIONS 数据
+        const locs = (G && G.LOCATIONS) || (Cake && Cake.LOCATIONS);
 
-        const renderList = () => {
-            if (!G || !G.state || !G.LOCATIONS) return;
+        // 3. 如果找不到数据，直接红字报错，绝不白屏！
+        if (!locs || Object.keys(locs).length === 0) {
+            locListEl.innerHTML = `
+                <div style="color: red; text-align: center; padding: 20px;">
+                    ⚠️ 未读取到地点数据！<br>
+                    请检查 game.html 是否引入了 home.js 等地图文件，并且 index.js 是否正常工作。
+                </div>`;
+            return;
+        }
+
+        const state = G.state;
+        let html = '';
+        
+        for (const [key, loc] of Object.entries(locs)) {
+            const disabled = state.energy < loc.cost;
+            const cls = disabled ? 'loc-item disabled' : 'loc-item';
             
-            const state = G.state;
-            energyEl.innerText = state.energy;
-
-            let html = '';
-            for (const [key, loc] of Object.entries(G.LOCATIONS)) {
-                const disabled = state.energy < loc.cost;
-                const cls = disabled ? 'loc-item disabled' : 'loc-item';
-                
-                html += `
-                    <div class="${cls}" data-loc="${key}">
-                        <div class="loc-info">
-                            <span class="loc-emoji">${loc.emoji}</span>
-                            <div class="loc-text">
-                                <span class="loc-name">${loc.name}</span>
-                                <span class="loc-desc">${loc.desc || '未知的区域'}</span>
-                            </div>
+            html += `
+                <div class="${cls}" data-loc="${key}">
+                    <div class="loc-info">
+                        <span class="loc-emoji">${loc.emoji}</span>
+                        <div class="loc-text">
+                            <span class="loc-name">${loc.name}</span>
+                            <span class="loc-desc">${loc.desc || '未知的区域'}</span>
                         </div>
-                        <div class="loc-cost">⚡${loc.cost}</div>
                     </div>
-                `;
-            }
-            locListEl.innerHTML = html;
-        };
+                    <div class="loc-cost">⚡${loc.cost}</div>
+                </div>
+            `;
+        }
+        locListEl.innerHTML = html;
+    };
 
-        // 点击返回主菜单
-        $('btnBack').addEventListener('click', () => {
-            window.location.href = 'pages/entertainment/index.html'; // 同目录下
-        });
+    // 点击返回主菜单
+    $('btnBack').addEventListener('click', () => {
+        window.location.href = 'pages/entertainment/index.html'; 
+    });
 
-        // 点击地点去散步
-        locListEl.addEventListener('click', (e) => {
-            const item = e.target.closest('.loc-item');
-            if (!item || item.classList.contains('disabled')) return;
+    // 点击地点去散步
+    locListEl.addEventListener('click', (e) => {
+        const item = e.target.closest('.loc-item');
+        if (!item || item.classList.contains('disabled')) return;
 
-            const locKey = item.dataset.loc;
-            item.style.pointerEvents = 'none';
-            item.querySelector('.loc-cost').innerText = '出发中...';
+        const locKey = item.dataset.loc;
+        item.style.pointerEvents = 'none';
+        item.querySelector('.loc-cost').innerText = '出发中...';
 
+        if (G && typeof G.walk === 'function') {
             G.walk(locKey);
+        } else if (Cake && typeof Cake.walk === 'function') {
+            Cake.walk(locKey);
+        }
 
-            // 结算后退回主菜单
-            setTimeout(() => {
-                window.location.href = 'pages/entertainment/index.html';
-            }, 600);
-        });
+        // 结算后退回主菜单
+        setTimeout(() => {
+            window.location.href = 'pages/entertainment/index.html';
+        }, 600);
+    });
 
-        window.addEventListener('load', () => {
-            if (!G || !G.state) {
-                document.body.innerHTML = `<h2 style="color:red; padding:20px;">⚠️ 数据加载失败</h2>`;
-                return;
-            }
-            renderList();
-        });
-    })();
-    </script>
+    window.addEventListener('load', () => {
+        renderList();
+    });
+})();
+</script>
 </body>
 </html>

@@ -1,7 +1,8 @@
 (() => {
     'use strict';
-    window.Cake = window.Cake || {};
-    window.Cake._MAP_DATA_RIVER = {
+    const Cake = window.parent.Cake || window.Cake;
+    if (!Cake) return;
+    Cake._MAP_DATA_RIVER = {
         id: 'river',
         name: '河边', emoji: '🌊', cost: 8,
         desc: '水波荡漾，适合一个人静一静。',

@@ -50,25 +50,19 @@ window.Cake = window.Cake || {};
 
     /* ==================== 🎨 核心：导航按钮变色功能 ==================== */
     const renderNav = (active) => {
-        const renderNav = (active) => {
-        const key = active ?? currentActiveTab;   // ✅ 无参时回退到当前 tab，不再清空高亮
-        const el = Cake.$('navBar');
-        if (!el || isInIframe) return;
+    const renderNav = (active) => {
+    const key = active ?? currentActiveTab;   // 无参时回退到当前 tab
+    const el = Cake.$('navBar');
+    if (!el || isInIframe) return;
 
-        el.innerHTML = NAV_ITEMS.map((item) => {
-            const isActive = item.key === key;
-            
-            // 🌟 激活状态：粉色背景 + 白色文字 + 阴影
-            // 🌟 未激活状态：保持原有的基础样式
-            const activeStyle = isActive 
-                ? 'background: #ff8fa3; color: #ffffff; box-shadow: 0 4px 10px rgba(255,143,163,0.4); transform: translateY(-1px);' 
-                : '';
-
-            return `<a class="nav-btn ${isActive ? 'active' : ''}" 
-                       style="${activeStyle}" 
-                       href="${item.href}">${item.label}</a>`;
-        }).join('');
-    };
+    el.innerHTML = NAV_ITEMS.map((item) => {
+        const isActive = item.key === key;
+        const activeStyle = isActive
+            ? 'background: #ff8fa3; color: #ffffff; box-shadow: 0 4px 10px rgba(255,143,163,0.4); transform: translateY(-1px);'
+            : '';
+        return `<a class="nav-btn ${isActive ? 'active' : ''}" style="${activeStyle}" href="${item.href}">${item.label}</a>`;
+    }).join('');
+};
     /* ================================================================= */
 
     const renderFooter = () => {

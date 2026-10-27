@@ -48,13 +48,26 @@ window.Cake = window.Cake || {};
             </div>`;
     };
 
+    /* ==================== 🎨 核心：导航按钮变色功能 ==================== */
     const renderNav = (active) => {
         const el = Cake.$('navBar');
         if (!el || isInIframe) return;
-        el.innerHTML = NAV_ITEMS.map((item) =>
-            `<a class="nav-btn ${item.key === active ? 'active' : ''}" href="${item.href}">${item.label}</a>`
-        ).join('');
+        
+        el.innerHTML = NAV_ITEMS.map((item) => {
+            const isActive = item.key === active;
+            
+            // 🌟 激活状态：粉色背景 + 白色文字 + 阴影
+            // 🌟 未激活状态：保持原有的基础样式
+            const activeStyle = isActive 
+                ? 'background: #ff8fa3; color: #ffffff; box-shadow: 0 4px 10px rgba(255,143,163,0.4); transform: translateY(-1px);' 
+                : '';
+
+            return `<a class="nav-btn ${isActive ? 'active' : ''}" 
+                       style="${activeStyle}" 
+                       href="${item.href}">${item.label}</a>`;
+        }).join('');
     };
+    /* ================================================================= */
 
     const renderFooter = () => {
         const el = Cake.$('footer');
@@ -76,24 +89,21 @@ window.Cake = window.Cake || {};
     };
 
     const renderAll = () => {
-        // 🛡️ 保护父页面外壳渲染，防止崩溃
         try {
             renderHeader();
             renderNav(currentActiveTab);
             renderFooter();
             renderLog();
         } catch (err) {
-            console.error('[Render] 父页面外壳渲染失败:', err);
+            console.error('[Render] 父页面渲染失败:', err);
         }
 
-        // 🛡️ 终极保护：隔离子页面的渲染报错！
+        // 🛡️ 隔离子页面渲染报错
         if (typeof currentRender === 'function') {
             try {
                 currentRender();
             } catch (err) {
                 console.error('[Render] 子页面渲染崩溃:', err);
-                
-                // 🚨 终极救援：如果子页面崩了，强行把红字报错写进子页面的容器里！
                 const iframe = Cake.$('mainFrame');
                 if (iframe && iframe.contentDocument) {
                     const innerContent = iframe.contentDocument.getElementById('content');
@@ -101,8 +111,7 @@ window.Cake = window.Cake || {};
                         innerContent.innerHTML = `
                             <div style="color: red; padding: 20px; background: #fff; border-radius: 10px; margin: 16px;">
                                 <strong>❌ 子页面渲染报错：</strong><br>
-                                ${err.message}<br><br>
-                                <span style="font-size:12px; color:#666;">请打开控制台查看详细堆栈。</span>
+                                ${err.message}
                             </div>`;
                     }
                 }

@@ -23,11 +23,20 @@
     btnRest.addEventListener('click', () => {
         const G = window.parent.Game || window.Game;
         if (!G || !G.state || G.state.energy >= 100) return;
-        G.rest(); 
-        setTimeout(updateUI, 100);
+        
+        // 🚨 核心修改：把 rest 包起来，抓出报错
+        try {
+            if (typeof G.rest === 'function') {
+                G.rest(); 
+                setTimeout(updateUI, 100);
+            } else {
+                alert('❌ 找不到 G.rest 方法！请检查 rest 模块是否加载。');
+            }
+        } catch (e) {
+            alert('❌ 休息发生报错：\n' + e.message);
+        }
     });
 
-    // 🌟 核心修复：调用父页面的统一路由，绝不使用 window.location.href
     btnGoMap.addEventListener('click', (e) => {
         e.preventDefault();
         
@@ -37,7 +46,6 @@
         if (window.parent.HostRouter && window.parent.HostRouter.navigateTo) {
             window.parent.HostRouter.navigateTo('pages/entertainment/map.html');
         } else {
-            // 如果父页面没有提供，说明拦截器没写好，利用正常的 a 标签 href 跳转
             window.location.href = 'map.html'; 
         }
     });

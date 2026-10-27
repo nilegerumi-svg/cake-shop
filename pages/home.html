@@ -91,7 +91,7 @@
                 <div class="char-actions">
                     <button type="button" class="small" data-action="rest" ${s.energy >= 100 ? 'disabled' : ''}>😴 休息</button>
                     <!-- 👇 散步按钮直接变成跳转链接，利用 game.html 的路由拦截 -->
-                    <a href="entertainment/map.html" class="small secondary" style="text-decoration:none; text-align:center;">🚶‍♀️ 散步</a>
+                    <a href="pages/entertainment/map.html" class="small secondary" style="text-decoration:none; text-align:center;">🚶‍♀️ 散步</a>
                 </div>
                 <h3>🧁 库存蛋糕</h3>
                 ${renderCakes(cakes, s.priceRate)}

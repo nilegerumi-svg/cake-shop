@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>主页</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <style>
+        body { background: transparent; padding: 16px; margin: 0; }
+    </style>
+</head>
+<body>
+    <!-- 渲染容器 -->
+    <div id="content"></div>
+
+    <!-- ==================== 核心基础数据层 ==================== -->
+    <!-- 子页面必须有自己的数据底子，才能支撑渲染 -->
+    <script src="../js/core/store.js"></script>
+    <script src="../js/data/ingredients.js"></script>
+    <script src="../js/data/recipes.js"></script>
+    <script src="../js/data/bundles.js"></script>
+    <script src="../js/data/characters.js"></script>
+    <script src="../js/data/events.js"></script>
+    <script src="../js/data/shop-config.js"></script>
+    <script src="../js/data/achievements.js"></script>
+    <script src="../js/core/utils.js"></script>
+    <script src="../js/core/state.js"></script>
+    <script src="../js/core/modal.js"></script>
+    <script src="../js/core/effects.js"></script>
+    <script src="../js/core/render.js"></script>
+
+    <!-- ==================== 兼容层 ==================== -->
+    <!-- 生成 G 对象，让子页面能安全获取父页面的状态 -->
+    <script src="../js/shared.js"></script>
+
+    <!-- ==================== 页面逻辑入口 ==================== -->
+    <!-- 只需要这一个 module，它会自动根据路由拉取 home/index.js -->
+    <script type="module" src="../js/pages/index.js"></script>
+
+</body>
+</html>

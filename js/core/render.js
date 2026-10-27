@@ -76,11 +76,38 @@ window.Cake = window.Cake || {};
     };
 
     const renderAll = () => {
-        renderHeader();
-        renderNav(currentActiveTab);
-        renderFooter();
-        renderLog();
-        if (currentRender) currentRender();
+        // 🛡️ 保护父页面外壳渲染，防止崩溃
+        try {
+            renderHeader();
+            renderNav(currentActiveTab);
+            renderFooter();
+            renderLog();
+        } catch (err) {
+            console.error('[Render] 父页面外壳渲染失败:', err);
+        }
+
+        // 🛡️ 终极保护：隔离子页面的渲染报错！
+        if (typeof currentRender === 'function') {
+            try {
+                currentRender();
+            } catch (err) {
+                console.error('[Render] 子页面渲染崩溃:', err);
+                
+                // 🚨 终极救援：如果子页面崩了，强行把红字报错写进子页面的容器里！
+                const iframe = Cake.$('mainFrame');
+                if (iframe && iframe.contentDocument) {
+                    const innerContent = iframe.contentDocument.getElementById('content');
+                    if (innerContent) {
+                        innerContent.innerHTML = `
+                            <div style="color: red; padding: 20px; background: #fff; border-radius: 10px; margin: 16px;">
+                                <strong>❌ 子页面渲染报错：</strong><br>
+                                ${err.message}<br><br>
+                                <span style="font-size:12px; color:#666;">请打开控制台查看详细堆栈。</span>
+                            </div>`;
+                    }
+                }
+            }
+        }
     };
 
     const refreshPage = () => {
@@ -107,7 +134,6 @@ window.Cake = window.Cake || {};
         Cake.__syncing = false;
     });
 
-    // 🌟 确保这一段成功挂载，否则子页面会报错！
     Object.assign(Cake, {
         renderHeader,
         renderNav,

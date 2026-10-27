@@ -1,8 +1,6 @@
-// js/entertainment/rest/index.js
+// js/actions/entertainment/rest/index.js
 import './core.js';
 import './monitor.js';
-import './town/events/home.js';
-import './town/events/park.js';
 import './town/index.js';
 
 (() => {
@@ -10,60 +8,67 @@ import './town/index.js';
     const Cake = window.parent.Cake || window.Cake;
     if (!Cake) return;
 
-    Cake.Actions = Cake.Actions || {};
-    Cake.Actions.Rest = {
-        town: Cake.TownRestConfig
-    };
-
     /**
-     * 🌟 统一触发引擎
+     * 🌟 终极触发器（包含严密报错）
      */
     Cake.triggerRest = (region, location, action) => {
-        const regConfig = Cake.Actions.Rest[region];
-        if (!regConfig || !regConfig[location]) {
-            Cake.addLog?.(`❌ 这里无法休息。`);
-            Cake.refreshPage?.();
-            return;
-        }
-
-        const baseConfig = regConfig[location][action];
-        if (!baseConfig) {
-            Cake.addLog?.(`❌ 当前位置不支持【${action === 'nap' ? '小憩' : '睡觉'}】。`);
-            Cake.refreshPage?.();
-            return;
-        }
-
-        // 1. 获取基础数值
-        let totalEnergy = baseConfig.energy || 0;
-        let totalTime = baseConfig.time || 0;
-        let logs = [`✨ 你开始了【${baseConfig.name}】。`];
-
-        // 2. 调用监视器，检查是否触发特殊事件
-        const ev = Cake.RestMonitor.check(region, location, action);
-        if (ev) {
-            logs.push(ev.text); // 加入事件文案
-            totalEnergy += (ev.energyBonus || 0); // 叠加额外奖励
-        }
-
-        // 3. 执行核心逻辑
-        if (action === 'nap') {
-            Cake.RestSys.nap({ energy: totalEnergy, time: totalTime, logs });
-        } else if (action === 'sleep') {
-            // 睡觉处理跨天时间
-            let sleepTime = totalTime;
-            if (sleepTime === 'next_day') {
-                const state = Cake.store.state;
-                sleepTime = state.hour < 8 
-                    ? (8 - state.hour) * 60 - state.minute 
-                    : (24 - state.hour + 8) * 60 - state.minute;
+        try {
+            // 1. 区域报错
+            const regConfig = Cake.Actions?.Rest?.[region];
+            if (!regConfig) {
+                return Cake.addLog?.(`❌ [系统错误] 未知的休息区域: ${region}`);
             }
-            Cake.RestSys.sleep({ time: sleepTime, logs });
+
+            // 2. 地点报错
+            const locConfig = regConfig[location];
+            if (!locConfig) {
+                return Cake.addLog?.(`❌ [系统错误] 在 ${region} 找不到地点: ${location}`);
+            }
+
+            // 3. 动作报错
+            const baseConfig = locConfig[action];
+            if (!baseConfig) {
+                const actionName = action === 'nap' ? '小憩' : '睡觉';
+                return Cake.addLog?.(`❌ 当前位置不支持【${actionName}】。`);
+            }
+
+            // --- 验证通过，开始结算 ---
+            let totalEnergy = baseConfig.energy || 0;
+            let totalTime = baseConfig.time || 0;
+            let logs = [`✨ 你开始了【${baseConfig.name}】。`];
+
+            // 检查事件
+            const ev = Cake.RestMonitor.check(region, location, action);
+            if (ev) {
+                logs.push(ev.text);
+                totalEnergy += (ev.energyBonus || 0);
+            }
+
+            // 执行核心逻辑
+            if (action === 'nap') {
+                Cake.RestSys.nap({ energy: totalEnergy, time: totalTime, logs });
+            } else if (action === 'sleep') {
+                let sleepTime = totalTime;
+                if (sleepTime === 'next_day') {
+                    const state = Cake.store.state;
+                    sleepTime = state.hour < 8 
+                        ? (8 - state.hour) * 60 - state.minute 
+                        : (24 - state.hour + 8) * 60 - state.minute;
+                }
+                Cake.RestSys.sleep({ time: sleepTime, logs });
+            }
+        } catch (error) {
+            // 兜底报错：防止代码崩溃白屏
+            console.error('[RestSystem Error]', error);
+            Cake.addLog?.(`❌ 休息时发生未知错误，请检查控制台。`);
+        } finally {
+            Cake.refreshPage?.();
         }
     };
 
-    // 🌟 兼容主页默认调用
+    // 🌟 兼容主页的默认快捷调用
     Cake.rest = () => Cake.triggerRest('town', 'home', 'nap');
     Cake.sleep = () => Cake.triggerRest('town', 'home', 'sleep');
 
-    console.log('🛌 事件驱动型休息系统已装载！');
+    console.log('🛌 事件驱动型休息系统已成功装载！');
 })();

@@ -1,12 +1,10 @@
 // js/pages/home/view.js
 const G = window.parent.Game || window.Game;
 
-// 库存蛋糕渲染（内部工具）
 const renderCakes = (cakes, priceRate) => {
     if (cakes.length === 0) {
         return '<p class="muted">还没有蛋糕库存，快去「烘焙」页面做几个吧！</p>';
     }
-
     const items = cakes.map(([name, count]) => {
         const recipe = G.RECIPES[name];
         const price = Math.round(recipe.price * priceRate);
@@ -16,16 +14,13 @@ const renderCakes = (cakes, priceRate) => {
             <span class="item-meta">售价 <span class="price-tag">${price}元</span></span>
         </div>`;
     }).join('');
-
     return `<div class="grid-2">${items}</div>`;
 };
 
-// 🌟 导出主页渲染函数
 export const renderHome = () => {
     const contentEl = document.getElementById('content');
     const s = G.state;
-    const cakes = Object.entries(s.cakes)
-        .filter(([name, count]) => count > 0 && G.RECIPES[name]);
+    const cakes = Object.entries(s.cakes).filter(([name, count]) => count > 0 && G.RECIPES[name]);
 
     contentEl.innerHTML = `
         <div class="card">

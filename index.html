@@ -1,124 +1,47 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>甜蜜物语 - 开始</title>
+    <title>我的应用</title>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
-            background: linear-gradient(135deg, #fff0f5 0%, #ffe8ee 40%, #fff5f7 100%);
-            min-height: 100vh;
+        /* loading 屏：monitor.js 就绪后会自动淡出并隐藏 */
+        #app-loading {
+            position: fixed;
+            inset: 0;
+            z-index: 9998;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 20px;
-            padding-bottom: calc(20px + env(safe-area-inset-bottom));
-            color: #4a3b3f;
+            gap: 16px;
+            background: #1b1b2f;
+            color: #fff;
+            transition: opacity .3s;
         }
-        .start-card {
-            background: #ffffff;
-            width: 100%;
-            max-width: 500px;
-            padding: 40px 30px;
-            border-radius: 24px;
-            box-shadow: 0 10px 30px rgba(255, 182, 193, 0.3);
-            text-align: center;
-            animation: fadeInUp 0.6s ease-out;
+        #loading-bar-wrap {
+            width: 220px; height: 8px;
+            background: rgba(255,255,255,.15);
+            border-radius: 999px; overflow: hidden;
         }
-        .game-header h1 { color: #ff6b81; font-size: 32px; margin-bottom: 8px; }
-        .game-header .subtitle { color: #ff9eaa; font-size: 14px; margin-bottom: 24px; font-weight: bold; }
-        .game-intro { background: #fff0f5; padding: 16px; border-radius: 16px; margin-bottom: 24px; }
-        .game-intro p { color: #666; font-size: 14px; line-height: 1.8; text-align: left; }
-        .game-intro strong { color: #ff6b81; }
-
-        .avatar-group { display: flex; justify-content: center; gap: 20px; margin-bottom: 24px; }
-        .avatar-option {
-            width: 60px; height: 60px; border-radius: 50%; background: #fff0f5;
-            border: 3px solid transparent; display: flex; align-items: center;
-            justify-content: center; font-size: 30px; cursor: pointer;
-            transition: all 0.2s ease; user-select: none; -webkit-tap-highlight-color: transparent;
+        #loading-bar {
+            width: 0%; height: 100%;
+            background: linear-gradient(90deg,#ff6b81,#ffa502);
+            transition: width .25s;
         }
-        .avatar-option:focus-visible { outline: 2px solid #ff8fa3; outline-offset: 2px; }
-        .avatar-option.selected {
-            border-color: #ff6b81; background: #ffe4e8;
-            box-shadow: 0 0 15px rgba(255, 107, 129, 0.4); transform: scale(1.1);
-        }
-
-        .input-group { text-align: left; margin-bottom: 24px; }
-        .input-group label {
-            display: block; font-size: 14px; font-weight: bold;
-            color: #d85c74; margin-bottom: 8px; margin-top: 16px;
-        }
-        .input-group label:first-child { margin-top: 0; }
-        .input-group input {
-            width: 100%; padding: 14px 16px; border: 2px solid #ffd1dc;
-            border-radius: 12px; font-size: 16px; background: #fafafa; color: #333;
-            transition: all 0.3s ease;
-        }
-        .input-group input:focus {
-            outline: none; border-color: #ff8fa3; background: #fff;
-            box-shadow: 0 0 0 4px rgba(255, 143, 163, 0.15);
-        }
-
-        .button-group { display: flex; flex-direction: column; gap: 12px; }
-        .button-group button {
-            width: 100%; padding: 16px; border: none; border-radius: 50px;
-            font-size: 16px; font-weight: bold; cursor: pointer;
-            transition: all 0.2s ease; -webkit-tap-highlight-color: transparent;
-        }
-        .btn-start { background: #ff8fa3; color: white; box-shadow: 0 4px 15px rgba(255, 143, 163, 0.4); }
-        .btn-start:active { transform: scale(0.98); }
-        .btn-continue { background: #ffffff; color: #ff8fa3; border: 2px solid #ff8fa3 !important; }
-        .btn-continue:active { background: #fff0f5; transform: scale(0.98); }
-
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to   { opacity: 1; transform: translateY(0); }
-        }
+        #loading-text { font: 14px/1.5 system-ui; }
     </style>
 </head>
 <body>
+    <!-- 应用外壳挂载点：monitor.js 会把 header/nav/iframe/footer 动态塞进来 -->
+    <div id="app-root"></div>
 
-    <div class="start-card">
-        <div class="game-header">
-            <h1>🍰 甜蜜物语</h1>
-            <div class="subtitle">✨ 女性向 · 高自由度蛋糕店模拟器 ✨</div>
-        </div>
-
-        <div class="game-intro">
-            <p>你刚刚接手了街角一间小小的蛋糕店。<br>
-            在这里，你可以<strong>自由烘焙每一款蛋糕</strong>、<strong>随心装饰你的店铺</strong>、邂逅温柔的邻居们，甚至——谈一场甜甜的恋爱。💕<br>
-            你的故事，由你亲手书写。</p>
-        </div>
-
-        <div class="avatar-group" id="avatarGroup" role="radiogroup" aria-label="选择头像">
-            <div class="avatar-option selected" role="radio" tabindex="0"  aria-checked="true"  data-avatar="girl1">👧🏻</div>
-            <div class="avatar-option"          role="radio" tabindex="-1" aria-checked="false" data-avatar="girl2">👩🏻</div>
-            <div class="avatar-option"          role="radio" tabindex="-1" aria-checked="false" data-avatar="boy1">👦🏻</div>
-            <div class="avatar-option"          role="radio" tabindex="-1" aria-checked="false" data-avatar="cake">🧁</div>
-        </div>
-
-        <div class="input-group">
-            <label for="playerName">你的名字</label>
-            <input id="playerName" type="text" maxlength="12" placeholder="给自己起个名字吧" value="小甜心" autocomplete="off">
-            <label for="shopName">店铺名字</label>
-            <input id="shopName" type="text" maxlength="12" placeholder="给蛋糕店起个名字" value="甜蜜小屋" autocomplete="off">
-        </div>
-
-        <div class="button-group">
-            <button class="btn-start" id="btnStart" type="button">开始新游戏</button>
-            <button class="btn-continue" id="btnContinue" type="button" style="display:none;">继续游戏</button>
-        </div>
+    <!-- loading 屏（必须含 loading-text / loading-bar 两个 id） -->
+    <div id="app-loading">
+        <div id="loading-text">初始化中…</div>
+        <div id="loading-bar-wrap"><div id="loading-bar"></div></div>
     </div>
 
-    <!-- 基础数据与核心引入 -->
-    <script src="js/core/store.js"></script>
-    <script src="js/core/state.js"></script>
-
-    <!-- 🌟 页面逻辑统一入口 -->
-    <script type="module" src="js/pages/index.js"></script>
-
+    <script src="js/monitor.js"></script>
 </body>
 </html>

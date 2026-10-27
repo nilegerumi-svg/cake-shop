@@ -34,7 +34,7 @@ window.Cake = window.Cake || {};
                     <span>${esc(state.shopName)}</span>
                 </div>
                 <div class="header-stats" style="display: flex; gap: 8px; font-size: 13px; color: #555; font-weight: bold;">
-                    <span>📅 ${state.day}天</span>
+                    <span>📅 ${state.day}天 ${Cake.getTimeString ? Cake.getTimeString() : '08:00'}</span>
                     <span>💰 ${state.money}</span>
                     <span>⭐ ${state.reputation}</span>
                 </div>

@@ -6,67 +6,24 @@
     <title>🍰 甜蜜物语</title>
     <link rel="stylesheet" href="css/styles.css">
     <style>
-        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; background: #fff0f5; }
-        .app-wrapper { display: flex; flex-direction: column; height: 100vh; height: 100dvh; }
-        header, nav { flex: 0 0 auto; z-index: 10; }
-        .split-container {
-            flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative;
-            padding-bottom: calc(var(--footer-h, 70px) + env(safe-area-inset-bottom));
-        }
-        .main-frame { flex: 1; width: 100%; border: none; background: transparent; min-height: 240px; }
-        .log-frame {
-            flex: 0 0 clamp(110px, 22vh, 180px);
-            width: 100%; border: none; background: #fff;
-            border-top: 2px dashed #ffd1dc;
-            box-shadow: 0 -4px 10px rgba(255, 143, 163, 0.1);
-        }
-        iframe { display: block; width: 100%; height: 100%; }
-        .action-footer {
-            position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
-            width: 100%; max-width: 500px;
-            padding: 10px 15px calc(10px + env(safe-area-inset-bottom));
-            box-sizing: border-box;
-            background: linear-gradient(to top, #fff0f5 80%, transparent);
-            display: flex; flex-direction: column; align-items: center;
-            gap: 6px; z-index: 100;
-        }
-        #loading-overlay {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: #fff0f5; z-index: 50;
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            color: #d6336c; font-weight: bold; font-size: 16px;
+        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; background: #fff0f5; font-family: sans-serif; }
+        #app-loading {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #fff0f5; z-index: 9999;
+            display: flex; justify-content: center; align-items: center;
+            color: #d6336c; font-weight: bold; font-size: 18px;
+            transition: opacity 0.3s ease;
         }
     </style>
 </head>
 <body>
-<div class="app-wrapper">
-    <header id="header"></header>
-    <nav id="navBar"></nav>
-    <div class="split-container">
-        <!-- src 保持为空，等引擎好了再加载 -->
-        <iframe id="mainFrame" src="about:blank" class="main-frame"></iframe>
-        <div id="loading-overlay">🍰 正在准备烘焙引擎...</div>
-        <iframe id="logFrame" src="pages/log.html" class="log-frame"></iframe>
-    </div>
-    <div class="action-footer" id="footer"></div>
-</div>
+    <!-- 初始加载动画 -->
+    <div id="app-loading">🍰 正在烘焙你的甜蜜物语...</div>
 
-<script type="module">
-    import './js/main.js';
+    <!-- 所有的结构（header, nav, iframe）都将由 JS 动态生成 -->
+    <div id="app-root"></div>
 
-    // 🌟 监听 main.js 发出的就绪信号
-    window.addEventListener('cake-ready', () => {
-        console.log('✅ 接收到就绪信号，开始加载主页！');
-        const mainFrame = document.getElementById('mainFrame');
-        const loading = document.getElementById('loading-overlay');
-        
-        // 此时 100% 保证 Game 对象已经存在了
-        mainFrame.src = 'pages/home.html';
-        
-        mainFrame.onload = () => {
-            if (loading) loading.style.display = 'none';
-        };
-    });
-</script>
+    <!-- 🚀 唯一启动入口 -->
+    <script type="module" src="js/main.js"></script>
 </body>
 </html>

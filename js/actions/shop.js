@@ -79,86 +79,95 @@
     /* ==================== 开店营业 ==================== */
 
     const openShop = () => {
-        const state = Cake.store.state;
-        const RECIPES = Cake.RECIPES;
+    const state = Cake.store.state;
+    const RECIPES = Cake.RECIPES;
+    const esc = Cake.escapeHtml;
 
-        // 有库存且配方有效的蛋糕名列表
-        const cakeNames = Object.keys(state.cakes).filter(
-            (n) => (state.cakes[n] || 0) > 0 && RECIPES[n]
+    // 有库存且有配方的蛋糕名列表
+    const cakeNames = Object.keys(state.cakes).filter(
+        (n) => (state.cakes[n] || 0) > 0 && RECIPES[n]
+    );
+
+    const lines = [];
+    const pushLine = (html) => lines.push(html);
+
+    let earned = 0;
+    let sold = 0;
+    let lost = 0;
+
+    if (cakeNames.length === 0) {
+        state.reputation = Math.max(0, state.reputation - 3);
+        const msg = '😢 今天没有蛋糕可以卖，顾客们都失望地离开了……（声望 -3）';
+        pushLine(msg);
+        Cake.addLog(msg);
+    } else {
+        let count = Math.floor(
+            2 + Math.random() * 3 + state.shopLevel +
+            Math.floor(state.reputation / 25)
         );
+        if (state.priceRate > 1.1) count = Math.floor(count * 0.8);
+        if (state.priceRate < 0.9) count = Math.floor(count * 1.2);
+        count = Math.min(Math.max(count, 1), 14);
 
-        const lines = [];
+        for (let i = 0; i < count; i++) {
+            const budget =
+                50 + state.shopLevel * 40 +
+                Math.random() * state.reputation * 2 +
+                Math.random() * 150;
 
-        const pushLine = (html, text) => {
-            lines.push({ html, text: text ?? html, day: state.day });
-        };
-
-        let earned = 0;
-        let sold = 0;
-        let lost = 0;
-
-        if (cakeNames.length === 0) {
-            state.reputation = Math.max(0, state.reputation - 3);
-            const msg = '😢 今天没有蛋糕可以卖，顾客们都失望地离开了……（声望 -3）';
-            pushLine(msg);
-            Cake.addLog(msg);
-        } else {
-            let count = Math.floor(
-                2 + Math.random() * 3 + state.shopLevel +
-                Math.floor(state.reputation / 25)
+            const available = cakeNames.filter(
+                (cn) =>
+                    (state.cakes[cn] || 0) > 0 &&
+                    RECIPES[cn].price * state.priceRate <= budget
             );
-            if (state.priceRate > 1.1) count = Math.floor(count * 0.8);
-            if (state.priceRate < 0.9) count = Math.floor(count * 1.2);
-            count = Math.min(Math.max(count, 1), 14);
 
-            for (let i = 0; i < count; i++) {
-                const budget =
-                    50 + state.shopLevel * 40 +
-                    Math.random() * state.reputation * 2 +
-                    Math.random() * 150;
-
-                const available = cakeNames.filter(
-                    (cn) =>
-                        (state.cakes[cn] || 0) > 0 &&
-                        RECIPES[cn].price * state.priceRate <= budget
-                );
-
-                if (available.length === 0) {
-                    lost++;
-                    continue;
-                }
-
-                // 核心结算逻辑
-                const pick = Cake.randomPick(available);
-                const price = Math.round(RECIPES[pick].price * state.priceRate);
-
-                // 扣除库存，增加金钱和声望
-                state.cakes[pick]--;
-                state.money += price;
-                state.reputation += 1;
-
-                // 记录本次收益
-                earned += price;
-                sold++;
-                pushLine(`🎂 卖出 ${RECIPES[pick].emoji}${pick}，收入 ${price} 元`);
+            if (available.length === 0) {
+                lost++;
+                continue;
             }
 
-            // 最终汇总一句日志
-            if (sold > 0) {
-                Cake.addLog(
-                    `🛍️ 今天卖出了 ${sold} 个蛋糕，赚了 ${earned} 元！` +
-                    (lost > 0 ? `（有 ${lost} 位顾客没买到想要的）` : '')
-                );
-            } else {
-                Cake.addLog('😅 今天顾客嫌价格太高，什么都没卖出去！');
-            }
+            const pick = Cake.randomPick(available);
+            const price = Math.round(RECIPES[pick].price * state.priceRate);
+
+            state.cakes[pick]--;
+            state.money += price;
+            state.reputation += 1;
+
+            earned += price;
+            sold++;
+            pushLine(`🧂 卖出 ${RECIPES[pick].emoji}${esc(pick)}，收入 ${price} 元`);
         }
 
-        if (typeof Cake.checkAchievements === 'function') {
-            try { Cake.checkAchievements(); } catch (_) { /* ignore */ }
+        // ✅ 修复点 1：累计销量与收入（成就「第一桶金」依赖 totalCakes）
+        state.totalCakes += sold;
+        state.totalEarned += earned;
+
+        if (sold > 0) {
+            Cake.addLog(
+                `🛋️ 今天卖出了 ${sold} 个蛋糕，赚了 ${earned} 元！` +
+                (lost > 0 ? `（有 ${lost} 位顾客没买到想要的）` : '')
+            );
+        } else {
+            Cake.addLog('💔 今天顾客预算太低了，什么都没卖出去！');
         }
-        Cake.refreshPage();
-    };
+    }
+
+    // ✅ 修复点 2：把之前收集后从未展示的营业报告真正弹出来
+    const summary = sold > 0
+        ? `<p>卖出 <b>${sold}</b> 个蛋糕，收入 <b>${earned}</b> 元` +
+          (lost > 0 ? `，有 ${lost} 位顾客没买到想要的` : '') + `</p>`
+        : '<p>今天没有卖出任何蛋糕。</p>';
+
+    Cake.showModal(
+        '🧾 今日营业报告',
+        `<div class="shop-report">${summary}<hr>${lines.map((l) => `<p>${l}</p>`).join('')}</div>`
+    );
+
+    if (typeof Cake.checkAchievements === 'function') {
+        try { Cake.checkAchievements(); } catch (_) { /* ignore */ }
+    }
+    Cake.refreshPage();
+};
 
     /* ==================== 挂载 ==================== */
 

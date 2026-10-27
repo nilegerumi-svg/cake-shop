@@ -2,31 +2,22 @@
 (async () => {
     'use strict';
 
-    // 当前正在加载的文件名（用于超时或报错时精准定位）
-    let currentLoadingFile = '准备启动...';
-
-    const log = (msg, isError = false) => {
-        if (window.updateLoadingUI) window.updateLoadingUI(msg, isError);
-        console.log(`[Engine] ${msg}`);
-    };
-
-    // 🚨 超时看门狗：15 秒没加载完，直接指出卡在哪个文件！
-    let isFinished = false;
-    const watchdog = setTimeout(() => {
-        if (!isFinished) {
-            log(`❌ 加载超时！卡在文件: ${currentLoadingFile}`, true);
+    // 🚨 拦截器：如果有任何 JS 文件找不到（404），立刻弹窗报警！
+    window.addEventListener('error', function(e) {
+        if (e.target && (e.target.tagName === 'SCRIPT' || e.target.tagName === 'LINK')) {
+            const badUrl = e.target.src || e.target.href;
+            alert('❌ 文件加载失败 (找不到文件)！\n路径: ' + badUrl);
         }
-    }, 15000);
+    }, true); // true 表示在捕获阶段拦截
 
-    // 核心：带追踪的加载函数
     const loadModule = async (path) => {
-        currentLoadingFile = path;
-        log(`⏳ 正在加载: ${path}...`);
         try {
             await import(path);
+            alert(`✅ 成功加载: ${path}`);
         } catch (err) {
-            // 如果发生语法错误或 404，立即中断并报出具体文件
-            throw new Error(`加载失败 [${path}]: ${err.message}`);
+            // 🚨 抓取具体的错误堆栈，看看到底是哪个子文件炸了
+            alert(`❌ 加载失败！当前正在加载目录: ${path}\n\n错误详情:\n${err.message}\n\n请截图发给我！`);
+            throw err; // 中断后续加载
         }
     };
 
@@ -34,21 +25,16 @@
         await loadModule('./data/index.js');
         await loadModule('./core/index.js');
         await loadModule('./time/index.js');
-        await loadModule('./actions/index.js');
+        
+        // 如果在这个目录下的某个小文件出错，错误信息会被精确捕获并弹窗
+        await loadModule('./actions/index.js'); 
+        
         await loadModule('./shared.js');
         await loadModule('./host/index.js');
         await loadModule('./monitor.js');
-
-        isFinished = true;
-        clearTimeout(watchdog);
         
-        log('🎉 引擎全部准备完毕！');
-        
-    } catch (err) {
-        isFinished = true;
-        clearTimeout(watchdog);
-        // 🚨 直接把具体的死穴文件显示在屏幕上
-        log(`❌ 致命错误：${err.message}`, true);
-        console.error(err);
+        alert('🎉 引擎全部加载完毕！准备进入主页！');
+    } catch (e) {
+        console.error(e);
     }
 })();

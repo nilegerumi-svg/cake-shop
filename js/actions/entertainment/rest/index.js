@@ -7,16 +7,39 @@ import './town/index.js';
     const Cake = window.parent.Cake || window.Cake;
     if (!Cake) return;
 
-    // 🌟 兼容主页的旧按钮调用
-    Cake.rest = Cake.RestTown.homeNap;
-    Cake.sleep = Cake.RestTown.homeSleep;
-
-    // 🌟 建立统一的全局命名空间，方便以后子页面根据位置调用
+    // 🌟 建立统一的全局命名空间
     Cake.Actions = Cake.Actions || {};
     Cake.Actions.Rest = {
         town: Cake.RestTown,
-        // 以后扩展：seaside: Cake.RestSeaside
     };
+
+    /**
+     * 🌟 终极统一触发器
+     * @param {string} region 区域 (如 'town')
+     * @param {string} location 地点 (如 'home', 'park')
+     * @param {string} action 动作 (如 'nap', 'sleep')
+     */
+    Cake.triggerRest = (region, location, action) => {
+        const reg = Cake.Actions.Rest[region];
+        if (!reg) {
+            Cake.addLog?.(`❌ 未知区域: ${region}`);
+            return;
+        }
+
+        // 拼接方法名，比如 'home' + 'Nap' -> 'homeNap'
+        const actionName = `${location}${action.charAt(0).toUpperCase() + action.slice(1)}`;
+        
+        if (typeof reg[actionName] === 'function') {
+            reg[actionName]();
+        } else {
+            Cake.addLog?.(`❌ 在 ${location} 无法进行 ${action} 操作。`);
+            Cake.refreshPage?.();
+        }
+    };
+
+    // 🌟 兼容主页的旧按钮，默认在家里休息/睡觉
+    Cake.rest = () => Cake.triggerRest('town', 'home', 'nap');
+    Cake.sleep = () => Cake.triggerRest('town', 'home', 'sleep');
 
     console.log('🛌 休息系统已装载，支持区域:', Object.keys(Cake.Actions.Rest));
 })();

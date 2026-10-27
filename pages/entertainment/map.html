@@ -54,54 +54,59 @@
 (() => {
     'use strict';
 
-    // 双重保险获取数据
+    // 强制获取最底层的 Cake 对象
     const Cake = window.parent.Cake || window.Cake;
-    const G = window.parent.Game || window.Game;
     
     const $ = (id) => document.getElementById(id);
     const locListEl = $('locList');
     const energyEl  = $('energy');
 
     const renderList = () => {
-        // 1. 先渲染体力，保证 UI 有用
-        if (G && G.state) {
-            energyEl.innerText = G.state.energy;
-        }
+        try {
+            // 1. 安全获取 state
+            const state = Cake && Cake.store && Cake.store.state;
+            if (!state) {
+                throw new Error("无法读取当前游戏状态，请刷新重试");
+            }
 
-        // 2. 尝试从多个地方获取 LOCATIONS 数据
-        const locs = (G && G.LOCATIONS) || (Cake && Cake.LOCATIONS);
+            // 2. 渲染体力
+            energyEl.innerText = state.energy;
 
-        // 3. 如果找不到数据，直接红字报错，绝不白屏！
-        if (!locs || Object.keys(locs).length === 0) {
-            locListEl.innerHTML = `
-                <div style="color: red; text-align: center; padding: 20px;">
-                    ⚠️ 未读取到地点数据！<br>
-                    请检查 game.html 是否引入了 home.js 等地图文件，并且 index.js 是否正常工作。
-                </div>`;
-            return;
-        }
+            // 3. 安全获取地点数据
+            const locs = Cake.LOCATIONS;
+            if (!locs || Object.keys(locs).length === 0) {
+                throw new Error("LOCATIONS 数据为空！请检查 game.html 是否加载了 map 文件夹下的地点");
+            }
 
-        const state = G.state;
-        let html = '';
-        
-        for (const [key, loc] of Object.entries(locs)) {
-            const disabled = state.energy < loc.cost;
-            const cls = disabled ? 'loc-item disabled' : 'loc-item';
-            
-            html += `
-                <div class="${cls}" data-loc="${key}">
-                    <div class="loc-info">
-                        <span class="loc-emoji">${loc.emoji}</span>
-                        <div class="loc-text">
-                            <span class="loc-name">${loc.name}</span>
-                            <span class="loc-desc">${loc.desc || '未知的区域'}</span>
+            // 4. 生成列表
+            let html = '';
+            for (const [key, loc] of Object.entries(locs)) {
+                const disabled = state.energy < loc.cost;
+                const cls = disabled ? 'loc-item disabled' : 'loc-item';
+                
+                html += `
+                    <div class="${cls}" data-loc="${key}">
+                        <div class="loc-info">
+                            <span class="loc-emoji">${loc.emoji}</span>
+                            <div class="loc-text">
+                                <span class="loc-name">${loc.name}</span>
+                                <span class="loc-desc">${loc.desc || '未知的区域'}</span>
+                            </div>
                         </div>
+                        <div class="loc-cost">⚡${loc.cost}</div>
                     </div>
-                    <div class="loc-cost">⚡${loc.cost}</div>
-                </div>
-            `;
+                `;
+            }
+            locListEl.innerHTML = html;
+            
+        } catch (err) {
+            // 🚨 任何错误都会红字显示在这里！
+            locListEl.innerHTML = `
+                <div style="color: red; text-align: left; padding: 15px; font-size: 13px; background: #ffe4e1; border-radius: 10px;">
+                    <strong>⚠️ 渲染失败：</strong><br>
+                    ${err.message}
+                </div>`;
         }
-        locListEl.innerHTML = html;
     };
 
     // 点击返回主菜单
@@ -118,9 +123,7 @@
         item.style.pointerEvents = 'none';
         item.querySelector('.loc-cost').innerText = '出发中...';
 
-        if (G && typeof G.walk === 'function') {
-            G.walk(locKey);
-        } else if (Cake && typeof Cake.walk === 'function') {
+        if (Cake && typeof Cake.walk === 'function') {
             Cake.walk(locKey);
         }
 
@@ -130,9 +133,7 @@
         }, 600);
     });
 
-    window.addEventListener('load', () => {
-        renderList();
-    });
+    window.addEventListener('load', renderList);
 })();
 </script>
 </body>

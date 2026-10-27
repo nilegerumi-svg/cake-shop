@@ -13,32 +13,27 @@ import { bindEvents } from './events.js';
         // 实时去父页面找 Game 对象
         const G = window.parent.Game || window.Game;
 
-        if (!G) {
-            // 如果父页面还没准备好，等 100 毫秒再试，最多试 20 次（2秒）
-            if (retryCount < 20) {
+        // 🚨 核心修改：不仅要有 G，还要等数据 (state) 和 渲染器 (initPage) 都就绪！
+        if (!G || !G.state || typeof G.initPage !== 'function') {
+            if (retryCount < 50) { // 延长到 50 次（约 5 秒），防止手机网络慢
                 retryCount++;
                 setTimeout(init, 100);
             } else {
                 document.getElementById('content').innerHTML = `
                     <div style="color:red; padding:20px; text-align:center;">
-                        ❌ 游戏加载超时！<br>
-                        请检查父页面 js/main.js 是否报错。
+                        ❌ 游戏引擎加载超时！<br>
+                        请检查父页面的 main.js 或 render.js 是否报错。
                     </div>`;
             }
             return;
         }
 
-        // 成功拿到 Game 对象，开始渲染
-        console.log('✅ 成功获取 Game 对象，开始渲染主页');
+        // 🌟 只有完全就绪了，才执行绑定和渲染
+        console.log('✅ 引擎和数据完全就绪，开始渲染主页');
         bindEvents();
-        
-        if (typeof G.initPage === 'function') {
-            G.initPage('home', renderHome);
-        } else {
-            document.getElementById('content').innerHTML = '<div style="color:red; padding:20px;">缺少 initPage 渲染方法</div>';
-        }
+        G.initPage('home', renderHome);
     };
 
-    // 启动
+    // 启动等待
     init();
 })();

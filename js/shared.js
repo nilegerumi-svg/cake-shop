@@ -52,6 +52,7 @@ window.Cake = window.Cake || {};
         // 🌟 地图与事件模块
         'LOCATIONS', 
         'COMMON_WALK_EVENTS',
+        'TOWN_EVENTS', 
         'Entertainment',
         
         // 🕒 时间系统 & 🛌 休息系统

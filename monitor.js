@@ -452,7 +452,15 @@
             onHomeMessage = (e) => {
                 if (e.origin !== location.origin) return;
                 if (!mainFrame || e.source !== mainFrame.contentWindow) return;
-                if (e.data && e.data.type === 'home-ready') markHomeReady(true);
+                if (e.data && e.data.type === 'home-ready') {
+                      markHomeReady(true);
+
+                     // 回执
+                    try {
+                              const targetOrigin = location.origin === 'null' ? '*' : location.origin;
+                              e.source.postMessage({ type: 'home-ready-ack' }, targetOrigin);
+                        } catch { /* ignore */ }
+                }
             };
             window.addEventListener('message', onHomeMessage);
 

@@ -33,8 +33,7 @@
 <script src="../js/actions/social.js"></script>
 <script src="../js/actions/system.js"></script>
 
-<!-- 娱乐模块由 game.html 统一提供，子页面不用重复加载 -->
-<!-- 兼容层 & 全局代理 (必须保留，用于生成 G 对象) -->
+<!-- 兼容层 & 全局代理 (用于生成 G 对象) -->
 <script src="../js/shared.js"></script>
 
 <script>
@@ -98,8 +97,18 @@
     contentEl.addEventListener('click', (e) => {
         const btn = e.target.closest('[data-action]');
         if (!btn) return;
-        if (btn.dataset.action === 'rest') {
-            G.rest();
+        
+        const action = btn.dataset.action;
+        
+        // 🟢 触发小憩
+        if (action === 'nap') {
+            if (G.state.energy >= 100) return; // 满体力不执行
+            G.rest(); 
+        }
+        
+        // 🟢 触发睡觉
+        if (action === 'sleep') {
+            G.sleep();
         }
     });
 

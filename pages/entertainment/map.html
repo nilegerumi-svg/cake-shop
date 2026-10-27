@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!-- 🚨 强制不缓存，防止手机加载旧代码 -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <title>地图与外出</title>
     <link rel="stylesheet" href="../../css/styles.css">
     <style>
@@ -107,8 +109,9 @@
             }
         };
 
+        // 🌟 修复 1：返回按钮直接跳转同级目录下的 index.html
         $('btnBack').addEventListener('click', () => {
-            window.location.href = 'pages/entertainment/index.html'; 
+            window.location.href = 'index.html'; 
         });
 
         locListEl.addEventListener('click', (e) => {
@@ -119,12 +122,14 @@
             item.style.pointerEvents = 'none';
             item.querySelector('.loc-cost').innerText = '出发中...';
 
+            // 触发散步
             if (Cake && typeof Cake.walk === 'function') {
                 Cake.walk(locKey);
             }
 
+            // 🌟 修复 2：结算后退回同级目录下的 index.html
             setTimeout(() => {
-                window.location.href = 'pages/entertainment/index.html';
+                window.location.href = 'index.html';
             }, 600);
         });
 

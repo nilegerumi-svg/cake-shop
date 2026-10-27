@@ -37,6 +37,14 @@
             word-break: break-all; pointer-events: none;
             max-height: 40vh; overflow-y: auto; display: none;
         }
+        
+        /* 🌟 初始加载动画 */
+        #loading-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: #fff0f5; z-index: 50;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            color: #d6336c; font-weight: bold; font-size: 16px;
+        }
     </style>
 </head>
 <body>
@@ -46,16 +54,35 @@
 <div class="app-wrapper">
     <header id="header"></header>
     <nav id="navBar"></nav>
-    <div class="split-container">
-        <iframe id="mainFrame" src="pages/home.html" class="main-frame"></iframe>
+    <div class="split-container" style="position: relative;">
+        <!-- 🌟 1. 初始清空 src，防止子页面抢跑 -->
+        <iframe id="mainFrame" src="about:blank" class="main-frame"></iframe>
+        <div id="loading-overlay">🍰 正在准备烘焙引擎...</div>
+        
         <iframe id="logFrame" src="pages/log.html" class="log-frame"></iframe>
     </div>
     <div class="action-footer" id="footer"></div>
 </div>
 
-<!-- ==================== 🚀 游戏唯一启动入口 ==================== -->
-<!-- 这一行代码将拉取所有核心、数据、地图、UI逻辑 -->
-<script type="module" src="js/main.js"></script>
+<script type="module">
+    // 1. 导入核心引擎
+    import './js/main.js';
+
+    // 🌟 2. 延迟加载主页（控制优先级）
+    // 给 main.js 一点点时间初始化全局状态，然后再塞入真实 src
+    setTimeout(() => {
+        const mainFrame = document.getElementById('mainFrame');
+        const loading = document.getElementById('loading-overlay');
+        
+        // 此时主引擎已经挂载完毕，可以安全加载 home.html 了
+        mainFrame.src = 'pages/home.html';
+        
+        // 页面加载完成后，隐藏 Loading 遮罩
+        mainFrame.onload = () => {
+            if (loading) loading.style.display = 'none';
+        };
+    }, 200); // 等待 200 毫秒确保 Game 对象已生成
+</script>
 
 </body>
 </html>

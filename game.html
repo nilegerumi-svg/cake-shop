@@ -10,9 +10,36 @@
         #app-loading {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: #fff0f5; z-index: 99999;
-            display: flex; justify-content: center; align-items: center;
-            color: #d6336c; font-weight: bold; font-size: 18px;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
             transition: opacity 0.3s ease;
+        }
+        .loading-title { font-size: 24px; font-weight: bold; color: #d6336c; margin-bottom: 20px; }
+        .loading-text { font-size: 14px; color: #888; margin-bottom: 15px; font-weight: bold; }
+        .loading-bar-wrap { width: 80%; max-width: 300px; height: 12px; background: #ffe4e1; border-radius: 6px; overflow: hidden; box-shadow: inset 0 1px 3px rgba(0,0,0,0.1); }
+        .loading-bar-fill { width: 0%; height: 100%; background: #ff8fa3; transition: width 0.2s ease; }
+        
+        .app-wrapper { display: flex; flex-direction: column; height: 100vh; height: 100dvh; }
+        header, nav { flex: 0 0 auto; z-index: 10; }
+        .split-container {
+            flex: 1; display: flex; flex-direction: column; overflow: hidden;
+            padding-bottom: calc(var(--footer-h, 70px) + env(safe-area-inset-bottom));
+        }
+        .main-frame { flex: 1; width: 100%; border: none; background: transparent; min-height: 240px; }
+        .log-frame {
+            flex: 0 0 clamp(110px, 22vh, 180px);
+            width: 100%; border: none; background: #fff;
+            border-top: 2px dashed #ffd1dc;
+            box-shadow: 0 -4px 10px rgba(255, 143, 163, 0.1);
+        }
+        iframe { display: block; width: 100%; height: 100%; }
+        .action-footer {
+            position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+            width: 100%; max-width: 500px;
+            padding: 10px 15px calc(10px + env(safe-area-inset-bottom));
+            box-sizing: border-box;
+            background: linear-gradient(to top, #fff0f5 80%, transparent);
+            display: flex; flex-direction: column; align-items: center;
+            gap: 6px; z-index: 100;
         }
         #error-overlay {
             position: fixed; top: 0; left: 0; width: 100%; z-index: 999999;
@@ -24,14 +51,27 @@
     </style>
 </head>
 <body>
-    <!-- 加载遮罩 -->
-    <div id="app-loading">🍰 正在准备烘焙你的甜蜜物语...</div>
+    <!-- Loading 界面 -->
+    <div id="app-loading">
+        <div class="loading-title">🍰 甜蜜物语</div>
+        <div id="loading-text" class="loading-text">正在准备启动...</div>
+        <div class="loading-bar-wrap">
+            <div id="loading-bar" class="loading-bar-fill"></div>
+        </div>
+    </div>
     
-    <!-- 错误浮层 -->
     <div id="error-overlay"></div>
 
-    <!-- 整个游戏外壳都将由 monitor.js 生成到这里面 -->
-    <div id="app-root"></div>
+    <!-- 游戏外壳 -->
+    <div class="app-wrapper" id="app-root">
+        <header id="header"></header>
+        <nav id="navBar"></nav>
+        <div class="split-container">
+            <iframe id="mainFrame" src="about:blank" class="main-frame"></iframe>
+            <iframe id="logFrame" src="pages/log.html" class="log-frame"></iframe>
+        </div>
+        <div class="action-footer" id="footer"></div>
+    </div>
 
     <!-- 🚀 根目录超级监视器入口 -->
     <script type="module" src="monitor.js"></script>

@@ -1,12 +1,8 @@
-// js/entertainment/map/home.js
 (() => {
     'use strict';
     window.Cake = window.Cake || {};
-    
-    // 将地点注册到全局待合并对象中
-    window.Cake._MAP_REGISTRY = window.Cake._MAP_REGISTRY || {};
-    
-    window.Cake._MAP_REGISTRY['home'] = {
+    // 把数据挂载到一个独立的变量名下，等待注册表来取
+    window.Cake._MAP_DATA_HOME = {
         id: 'home',
         name: '家园周围', emoji: '🏡', cost: 8,
         desc: '熟悉的小路，宁静又安心。',

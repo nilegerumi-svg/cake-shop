@@ -1,8 +1,9 @@
 (() => {
     'use strict';
-    window.Cake = window.Cake || {};
-    // 把数据挂载到一个独立的变量名下，等待注册表来取
-    window.Cake._MAP_DATA_HOME = {
+    const Cake = window.parent.Cake || window.Cake;
+    if (!Cake) return;
+    // 把数据挂载到统一的 Cake 命名空间，等待注册表来取
+    Cake._MAP_DATA_HOME = {
         id: 'home',
         name: '家园周围', emoji: '🏡', cost: 8,
         desc: '熟悉的小路，宁静又安心。',

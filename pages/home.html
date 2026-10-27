@@ -12,6 +12,7 @@
 <body>
 <div id="content"></div>
 
+<!-- 核心基础数据（渲染和基础状态需要） -->
 <script src="../js/core/store.js"></script>
 <script src="../js/data/ingredients.js"></script>
 <script src="../js/data/recipes.js"></script>
@@ -25,28 +26,22 @@
 <script src="../js/core/modal.js"></script>
 <script src="../js/core/effects.js"></script>
 <script src="../js/core/render.js"></script>
+
+<!-- 动作模块（子页面按钮点击时需要调用的方法） -->
 <script src="../js/actions/bakery.js"></script>
 <script src="../js/actions/shop.js"></script>
 <script src="../js/actions/social.js"></script>
 <script src="../js/actions/system.js"></script>
 
-<!-- 👇 换成新的娱乐模块 👇 -->
-<script src="../js/entertainment/common_events.js"></script>
-<script src="../js/entertainment/map/home.js"></script>
-<script src="../js/entertainment/map/park.js"></script>
-<script src="../js/entertainment/map/street.js"></script>
-<script src="../js/entertainment/map/river.js"></script>
-<script src="../js/entertainment/map/index.js"></script>
-<script src="../js/entertainment/rest.js"></script>
-<script src="../js/entertainment/walk.js"></script>
-
+<!-- 娱乐模块由 game.html 统一提供，子页面不用重复加载 -->
+<!-- 兼容层 & 全局代理 (必须保留，用于生成 G 对象) -->
 <script src="../js/shared.js"></script>
 
 <script>
 (() => {
     'use strict';
 
-    // ⭐ 关键修复：安全获取父页面的 Game 对象
+    // ⭐ 安全获取父页面的 Game 对象
     const G = window.parent.Game || window.Game;
     const contentEl = document.getElementById('content');
 
@@ -110,7 +105,6 @@
 
     /* ==================== 页面初始化 ==================== */
 
-    // 防止 G 加载失败直接崩溃
     if (G && typeof G.initPage === 'function') {
         G.initPage('home', renderHome);
     } else {

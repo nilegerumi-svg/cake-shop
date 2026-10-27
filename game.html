@@ -53,7 +53,7 @@
     <div class="action-footer" id="footer"></div>
 </div>
 
-<!-- 确保你的 js 文件路径是正确的 -->
+<!-- 核心与数据 -->
 <script src="js/core/store.js"></script>
 <script src="js/core/bridge.js"></script>
 <script src="js/data/ingredients.js"></script>
@@ -68,26 +68,29 @@
 <script src="js/core/modal.js"></script>
 <script src="js/core/effects.js"></script>
 <script src="js/core/render.js"></script>
+
+<!-- 动作模块 -->
 <script src="js/actions/bakery.js"></script>
 <script src="js/actions/shop.js"></script>
 <script src="js/actions/social.js"></script>
 <script src="js/actions/system.js"></script>
+
 <!-- 👇 全新的娱乐与地图模块 👇 -->
+<!-- 1. 通用事件池 -->
 <script src="js/entertainment/common_events.js"></script>
-<!-- 引入所有地点配置 -->
+<!-- 2. 独立地图模块 (注意顺序，index.js 必须在最后) -->
 <script src="js/entertainment/map/home.js"></script>
 <script src="js/entertainment/map/park.js"></script>
 <script src="js/entertainment/map/street.js"></script>
 <script src="js/entertainment/map/river.js"></script>
-<!-- 汇总地点注册表 -->
 <script src="js/entertainment/map/index.js"></script>
-<!-- 引入核心逻辑 -->
+<!-- 3. 核心逻辑 -->
 <script src="js/entertainment/rest.js"></script>
 <script src="js/entertainment/walk.js"></script>
 
+<!-- 兼容层与状态同步 (只能引入一次) -->
 <script src="js/shared.js"></script>
-<script src="js/actions/entertainment.js"></script>
-<script src="js/shared.js"></script>
+
 
 <script>
 (() => {

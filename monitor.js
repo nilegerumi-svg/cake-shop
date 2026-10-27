@@ -1,4 +1,4 @@
-// js/monitor.js
+//monitor.js
 (() => {
     'use strict';
 

@@ -20,15 +20,13 @@
             const G = window.parent.Game || window.Game;
             const contentEl = document.getElementById('content');
 
-            // 父页面没有准备好时，什么都不显示，就在后台等
             if (!G || !G.state) {
-                setTimeout(render, 100);
+                setTimeout(render, 100); // 死等父页面引擎
                 return;
             }
 
             try {
                 const s = G.state;
-                // ...（渲染你主页卡片的代码，直接用原来的即可）...
                 const cakesObj = s.cakes || {};
                 const recipesObj = G.RECIPES || {};
                 const cakes = Object.entries(cakesObj).filter(([name, count]) => count > 0 && recipesObj[name]);
@@ -67,12 +65,25 @@
                     </div>
                 `;
 
+                // 事件绑定，带 try-catch 报警
                 contentEl.addEventListener('click', (e) => {
                     const btn = e.target.closest('[data-action]');
                     if (!btn) return;
                     const action = btn.dataset.action;
-                    if (action === 'nap' && s.energy < 100) G.rest(); 
-                    if (action === 'sleep') G.sleep();
+                    
+                    try {
+                        if (action === 'nap') {
+                            if (s.energy >= 100) return;
+                            if (typeof G.rest !== 'function') throw new Error('父页面没挂载 G.rest 方法');
+                            G.rest(); 
+                        }
+                        if (action === 'sleep') {
+                            if (typeof G.sleep !== 'function') throw new Error('父页面没挂载 G.sleep 方法');
+                            G.sleep();
+                        }
+                    } catch (err) {
+                        alert('❌ 操作报错：' + err.message);
+                    }
                 }, { once: true });
 
             } catch (err) {

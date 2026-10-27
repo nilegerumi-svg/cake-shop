@@ -5,7 +5,10 @@ window.Cake = window.Cake || {};
 (() => {
     const Cake = window.Cake;
     const { store } = Cake;
-    if (!store) return; // core/store.js 未加载则放弃，避免崩
+    if (!store) {
+        console.error('❌ [Shared] 致命错误：core/store.js 未加载！');
+        return;
+    }
 
     const getDefaultState = () => {
         if (typeof Cake.defaultState === 'function') return Cake.defaultState();
@@ -43,34 +46,26 @@ window.Cake = window.Cake || {};
     const Cake = window.Cake;
     const Game = (window.Game = window.Game || {});
 
+    // 🌟 核心接口优先级列表
     const LIVE_KEYS = [
-        // 基础数据
         'INGREDIENTS', 'RECIPES', 'BUNDLES', 'CHARACTERS', 'AFF_EVENTS',
         'CHAT_DIALOGUES', 'DATE_DIALOGUES', 'MEETINGS', 'RANDOM_EVENTS',
         'ACHIEVEMENTS', 'SHOP_UPGRADE_COSTS',
         
-        // 🌟 地图与事件模块
-        'LOCATIONS', 
-        'COMMON_WALK_EVENTS',
-        'TOWN_EVENTS', 
-        'Entertainment',
+        'LOCATIONS', 'COMMON_WALK_EVENTS', 'TOWN_EVENTS', 'Entertainment',
         
-        // 🕒 时间系统 & 🛌 休息系统
         'advanceTime', 'getTimeString', 'getPeriodString',
         'triggerRest', 'sleep', 'Actions', 'RestSys', 'RestMonitor',
         
-        // 存档与系统
         'SAVE_KEY', 'SAVE_VERSION',
         'defaultState', 'hasSave', 'saveState', 'loadStateFromStorage',
         'resetGame', 'saveGame', 'loadGame', 'showEnding',
         
-        // 工具与渲染
         '$', 'addLog', 'ingredientTags', 'affLevel', 'escapeHtml', 'fail',
         'showModal', 'closeModal',
         'renderHeader', 'renderNav', 'renderFooter', 'renderLog',
         'initPage', 'refreshPage',
         
-        // 动作模块
         'bakeCake', 'buyIngredient', 'buyBundle', 'researchRecipe',
         'upgradeShop', 'decorateShop', 'setPriceRate', 'openShop',
         'social', 'toggleGiftPanel', 'giveGift',
@@ -92,20 +87,18 @@ window.Cake = window.Cake || {};
         set: (v) => { Cake.store.state = v; },
     });
 
-    // ── 以下有参数处理或特殊逻辑的，保留包装函数（内部实时访问 Cake，不受加载顺序影响） ──
-    
-    Game.rest = () => {
-        if (typeof Cake.rest === 'function') return Cake.rest();
-    };
-
-    Game.sleep = () => {
-        if (typeof Cake.sleep === 'function') return Cake.sleep();
-    };
-
+    // 包装必须有参数的方法
+    Game.rest = () => { if (typeof Cake.rest === 'function') return Cake.rest(); };
+    Game.sleep = () => { if (typeof Cake.sleep === 'function') return Cake.sleep(); };
     Game.walk = (locName) => {
         const loc = typeof locName === 'string' ? locName : 'home';
         if (typeof Cake.walk === 'function') return Cake.walk(loc);
     };
+
+    // 🚨 自检：如果 Game.initPage 缺失，说明 core/render.js 没加载好
+    if (typeof Cake.initPage !== 'function') {
+        console.warn('⚠️ [Shared] 警告：Cake.initPage 未挂载！主页可能会白屏。请检查 core/render.js');
+    }
 })();
 
 // ── 3. bridge：就绪检测 + 延迟重试，避免加载顺序导致静默失效 ──
@@ -113,6 +106,7 @@ window.Cake = window.Cake || {};
     const Cake = window.Cake;
 
     const setup = () => {
+        // 如果没有 bridge 或者不在 iframe 里，直接跳过
         if (!Cake.bridge || !Cake.bridge.inIframe) return false;
         if (typeof Cake.bridge.onStateChanged !== 'function') return false;
 
@@ -126,12 +120,14 @@ window.Cake = window.Cake || {};
         return true;
     };
 
+    // 尝试立即初始化，如果失败，等 DOM 就绪后再试
     if (setup()) return;
 
-    // bridge.js 可能晚于 shared.js 加载：DOM 就绪后再试一次
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', setup);
     } else {
         setTimeout(setup, 0);
     }
 })();
+
+console.log('🧩 [Shared] Game 兼容层挂载完毕');

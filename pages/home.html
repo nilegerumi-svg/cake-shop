@@ -7,40 +7,32 @@
     <link rel="stylesheet" href="../css/styles.css">
     <style>
         body { background: transparent; padding: 16px; margin: 0; min-height: 100vh; box-sizing: border-box; display: block !important; }
-        .loading-text { text-align: center; color: #888; margin-top: 50px; }
-        .error-text { text-align: center; color: red; margin-top: 50px; font-weight: bold; }
+        .loading-text { text-align: center; color: #d6336c; margin-top: 50px; font-weight: bold; }
     </style>
 </head>
 <body>
     <div id="content">
-        <h2 class="loading-text">⏳ 正在连接引擎...</h2>
+        <h2 class="loading-text">⏳ 正在努力下载游戏引擎，请稍候...</h2>
     </div>
 
     <script>
     (() => {
         'use strict';
         
-        let retryCount = 0;
-
         const render = () => {
-            // 实时去父页面找 Game
             const G = window.parent.Game || window.Game;
             const contentEl = document.getElementById('content');
 
-            // 🚨 如果父页面没准备好，等 100 毫秒重试，最多等 3 秒（30次）
+            // 🚨 彻底去掉 retryCount 限制，只要没来，就一直等！
             if (!G || !G.state) {
-                retryCount++;
-                if (retryCount > 30) {
-                    contentEl.innerHTML = '<h2 class="error-text">❌ 引擎加载超时！<br>请检查 main.js 或 host 目录是否报错。</h2>';
-                    return;
-                }
-                setTimeout(render, 100);
+                setTimeout(render, 200);
                 return;
             }
 
-            // ✅ 引擎准备好了，直接开始画界面
+            // ✅ 引擎终于来了，瞬间渲染界面
             try {
                 const s = G.state;
+                // ... 下面的渲染代码保持你原来的样子 ...
                 const cakesObj = s.cakes || {};
                 const recipesObj = G.RECIPES || {};
                 const cakes = Object.entries(cakesObj).filter(([name, count]) => count > 0 && recipesObj[name]);
@@ -79,27 +71,19 @@
                     </div>
                 `;
 
-                // 绑定按钮事件
                 contentEl.addEventListener('click', (e) => {
                     const btn = e.target.closest('[data-action]');
                     if (!btn) return;
-                    
                     const action = btn.dataset.action;
-                    if (action === 'nap') {
-                        if (s.energy >= 100) return; 
-                        G.rest(); 
-                    }
-                    if (action === 'sleep') {
-                        G.sleep();
-                    }
-                }, { once: true }); // 只绑定一次
+                    if (action === 'nap' && s.energy < 100) G.rest(); 
+                    if (action === 'sleep') G.sleep();
+                }, { once: true });
 
             } catch (err) {
-                contentEl.innerHTML = `<h2 class="error-text">❌ 渲染异常：${err.message}</h2>`;
+                contentEl.innerHTML = `<h2 class="loading-text" style="color:red;">❌ 渲染异常：${err.message}</h2>`;
             }
         };
 
-        // 启动渲染
         render();
     })();
     </script>

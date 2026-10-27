@@ -3,7 +3,15 @@ export const renderHome = () => {
     const G = window.parent.Game || window.Game;
     const contentEl = document.getElementById('content');
     
-    if (!G || !G.state) return;
+    // 🚨 强制排查输出，绝不静默退出！
+    if (!G) {
+        contentEl.innerHTML = '<h2 style="color:red; text-align:center; margin-top:50px;">❌ 致命错误：找不到父页面的 G 对象</h2>';
+        return;
+    }
+    if (!G.state) {
+        contentEl.innerHTML = '<h2 style="color:red; text-align:center; margin-top:50px;">❌ 致命错误：G 对象存在，但没有 state 数据</h2>';
+        return;
+    }
 
     try {
         const s = G.state;
@@ -27,12 +35,12 @@ export const renderHome = () => {
         contentEl.innerHTML = `
             <div class="card">
                 <h2>🏠 欢迎回来，${G.escapeHtml(s.playerName || '店长')}！</h2>
-                <p class="muted">今天是经营的第 <b>${s.day}</b> 天，你的「${G.escapeHtml(s.shopName || '甜蜜小屋')}」正散发着甜蜜香气～</p>
+                <p class="muted">今天是经营的第 <b>${s.day || 1}</b> 天，你的「${G.escapeHtml(s.shopName || '甜蜜小屋')}」正散发着甜蜜香气～</p>
                 <div class="grid-2" style="margin-top:12px;">
-                    <div class="item-card"><span class="item-emoji">💰</span><span class="item-name">${s.money} 元</span><span class="item-desc">当前余额</span></div>
-                    <div class="item-card"><span class="item-emoji">⭐</span><span class="item-name">${s.reputation} 声望</span><span class="item-desc">店铺名气</span></div>
-                    <div class="item-card"><span class="item-emoji">🏪</span><span class="item-name">Lv.${s.shopLevel} · 装饰${s.decoration}</span><span class="item-desc">店铺等级与装饰度</span></div>
-                    <div class="item-card"><span class="item-emoji">⚡</span><span class="item-name">${s.energy}/100</span><span class="item-desc">今日剩余精力</span></div>
+                    <div class="item-card"><span class="item-emoji">💰</span><span class="item-name">${s.money || 500} 元</span><span class="item-desc">当前余额</span></div>
+                    <div class="item-card"><span class="item-emoji">⭐</span><span class="item-name">${s.reputation || 0} 声望</span><span class="item-desc">店铺名气</span></div>
+                    <div class="item-card"><span class="item-emoji">🏪</span><span class="item-name">Lv.${s.shopLevel || 1} · 装饰${s.decoration || 0}</span><span class="item-desc">店铺等级与装饰度</span></div>
+                    <div class="item-card"><span class="item-emoji">⚡</span><span class="item-name">${s.energy || 80}/100</span><span class="item-desc">今日剩余精力</span></div>
                 </div>
                 <h3>⚡ 快速行动</h3>
                 <div class="char-actions">
@@ -44,6 +52,6 @@ export const renderHome = () => {
                 ${cakesHtml}
             </div>`;
     } catch (err) {
-        contentEl.innerHTML = `<div style="color: red; padding: 20px; background: #fff;">❌ 主页渲染报错：${err.message}</div>`;
+        contentEl.innerHTML = `<div style="color: red; padding: 20px; background: #fff;">❌ 渲染发生异常：${err.message}</div>`;
     }
 };

@@ -19,69 +19,77 @@ import './town/index.js';
         town: Cake.TownRestConfig
     };
 
-    // 🌟 统一调度器（已补全真实逻辑，拒绝爆栈）
+    // 🌟 统一调度器
     Cake.triggerRest = (region, location, action) => {
         try {
-            // 1. 检查区域
-            const regConfig = Cake.Actions.Rest[region];
-            if (!regConfig) {
-                Cake.addLog?.(`❌ 未知的休息区域: ${region}`);
-                return;
-            }
+            const state = Cake.store.state;
 
-            // 2. 检查地点
-            const locConfig = regConfig[location];
-            if (!locConfig) {
-                Cake.addLog?.(`❌ 在 ${region} 找不到地点: ${location}`);
-                return;
-            }
-
-            // 3. 检查动作是否被允许（比如公园不能睡觉）
-            const baseConfig = locConfig[action];
-            if (!baseConfig) {
-                const actionName = action === 'nap' ? '小憩' : '睡觉';
-                Cake.addLog?.(`❌ 当前位置不支持【${actionName}】。`);
+            // 1. 查区域配置
+            const regionCfg = Cake.Actions && Cake.Actions.Rest && Cake.Actions.Rest[region];
+            if (!regionCfg) {
+                Cake.addLog?.('❌ 未知的休息区域。');
                 Cake.refreshPage?.();
                 return;
             }
 
-            // 4. 基础结算
-            let totalEnergy = baseConfig.energy || 0;
-            let totalTime = baseConfig.time || 0;
-            let logs = [`✨ 你开始了【${baseConfig.name}】。`];
-
-            // 5. 触发事件监视器（抽取额外事件）
-            const ev = Cake.RestMonitor?.check(region, location, action);
-            if (ev) {
-                logs.push(ev.text);
-                totalEnergy += (ev.energyBonus || 0);
+            // 2. 查地点配置
+            const locCfg = regionCfg[location];
+            if (!locCfg) {
+                Cake.addLog?.('❌ 这里无法休息。');
+                Cake.refreshPage?.();
+                return;
             }
 
-            // 6. 执行到底层核心 (调用 nap.js 或 sleep.js)
-            if (action === 'nap') {
-                Cake.RestSys.nap({ energy: totalEnergy, time: totalTime, logs });
-            } else if (action === 'sleep') {
-                // 处理跨天逻辑
-                let sleepTime = totalTime;
-                if (sleepTime === 'next_day') {
-                    const state = Cake.store.state;
-                    const currentHour = state.hour || 8;
-                    const currentMinute = state.minute || 0;
-                    sleepTime = currentHour < 8 
-                        ? (8 - currentHour) * 60 - currentMinute 
-                        : (24 - currentHour + 8) * 60 - currentMinute;
+            // 3. 查动作配置（例如 park 没有 sleep）
+            const actionCfg = locCfg[action];
+            if (!actionCfg) {
+                Cake.addLog?.(`❌ 这里无法进行「${action === 'sleep' ? '睡觉' : '小憩'}」。`);
+                Cake.refreshPage?.();
+                return;
+            }
+
+            // 4. 抽取休息事件（可能为 null）
+            let ev = null;
+            if (Cake.RestMonitor && typeof Cake.RestMonitor.check === 'function') {
+                try {
+                    ev = Cake.RestMonitor.check(region, location, action);
+                } catch (_) { /* 事件判定失败则按无事发生处理 */ }
+            }
+
+            const logs = [];
+            if (ev && ev.text) logs.push(ev.text);
+
+            // 5. 分流执行
+            if (action === 'sleep') {
+                // 睡觉：睡到第二天早上 8:00
+                let time = actionCfg.time;
+                if (time === 'next_day') {
+                    const cur = (state.hour ?? 8) * 60 + (state.minute ?? 0);
+                    time = 24 * 60 + 8 * 60 - cur;   // 距次日 08:00 的分钟数
                 }
-                Cake.RestSys.sleep({ time: sleepTime, logs });
+                if (Cake.RestSys && typeof Cake.RestSys.sleep === 'function') {
+                    Cake.RestSys.sleep({ time: Number(time) || 0, logs });
+                }
+            } else {
+                // 小憩：基础恢复 + 事件加成（如苍蝇 -5、甜梦 +15）
+                let energy = Number(actionCfg.energy) || 0;
+                if (ev && Number.isFinite(Number(ev.energyBonus))) {
+                    energy += Number(ev.energyBonus);
+                }
+                if (Cake.RestSys && typeof Cake.RestSys.nap === 'function') {
+                    Cake.RestSys.nap({ energy, time: Number(actionCfg.time) || 0, logs });
+                }
             }
-
         } catch (error) {
-            console.error('[RestSystem Error]', error);
-            Cake.addLog?.(`❌ 休息系统报错: ${error.message}`);
-            Cake.refreshPage?.();
+            console.error('❌ [Rest] 休息调度出错：', error);
+            try {
+                Cake.addLog?.('❌ 休息时出了点小状况，请稍后再试。');
+                Cake.refreshPage?.();
+            } catch (_) { /* ignore */ }
         }
     };
 
-    // 🌟 快捷接口，供主页直接调用
+    // 🌟 快捷接口
     Cake.rest = () => Cake.triggerRest('town', 'home', 'nap');
     Cake.sleep = () => Cake.triggerRest('town', 'home', 'sleep');
 

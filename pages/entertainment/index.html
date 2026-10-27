@@ -1,7 +1,6 @@
 <script>
 (() => {
     'use strict';
-    // 🌟 去掉顶部的 const G = ... 
     
     const $ = (id) => document.getElementById(id);
     const energyEl = $('energy');
@@ -9,31 +8,43 @@
     const btnGoMap = $('btnGoMap');
 
     const updateUI = () => {
-        const G = window.parent.Game || window.Game; // 🌟 实时获取
+        const G = window.parent.Game || window.Game; // 实时获取
         if (!G || !G.state) return;
         
         energyEl.innerText = G.state.energy;
         
+        // 满体力禁用休息
         if (G.state.energy >= 100) btnRest.classList.add('disabled');
         else btnRest.classList.remove('disabled');
 
+        // 体力不足 8 点禁用外出
         if (G.state.energy < 8) {
             btnGoMap.classList.add('disabled');
-            btnGoMap.removeAttribute('href');
         } else {
             btnGoMap.classList.remove('disabled');
-            btnGoMap.setAttribute('href', 'map.html');
         }
     };
 
+    // 1. 点击休息
     btnRest.addEventListener('click', () => {
-        const G = window.parent.Game || window.Game; // 🌟 实时获取
+        const G = window.parent.Game || window.Game;
         if (!G || !G.state || G.state.energy >= 100) return;
-        G.rest(); // 此时 G 绝对存在，一定能触发休息
+        G.rest(); 
         setTimeout(updateUI, 100);
     });
 
-    // 每 500 毫秒刷新一次界面，保证体力数值是最新的
+    // 2. 点击外出散步（🌟 核心修复：直接强制跳转，避开拦截器）
+    btnGoMap.addEventListener('click', (e) => {
+        e.preventDefault(); // 如果是 <a> 标签，阻止它的默认 href 跳转
+        
+        const G = window.parent.Game || window.Game;
+        if (!G || !G.state || G.state.energy < 8) return;
+        
+        // 强制在当前 iframe 内跳转，不再依赖父页面拦截器
+        window.location.href = 'map.html'; 
+    });
+
+    // 每 500 毫秒刷新一次界面，保证数值实时同步
     setInterval(updateUI, 500);
 })();
 </script>

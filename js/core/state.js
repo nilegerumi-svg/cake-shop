@@ -77,7 +77,19 @@
         giftPanelFor: null,
     });
 
-    const migrateSave = (saved) => saved;
+    const migrateSave = (saved) => {
+        let s = saved;
+        const version = Number(s && s.version) || 0;
+
+        // 逐级迁移：旧版本 -> 当前版本
+        if (version < 1) {
+            // 预留：v0 -> v1 的字段补齐逻辑
+            // 例：s.hour = Number.isFinite(Number(s.hour)) ? s.hour : 8;
+        }
+
+        // 后续有新版本时，按 if (version < 2) {...} 依次往上加
+        return s;
+    };
 
     /* ==================== 工具：能否转成有限数字 ==================== */
 

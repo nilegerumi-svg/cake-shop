@@ -8,24 +8,18 @@
     const btnGoMap = $('btnGoMap');
 
     const updateUI = () => {
-        const G = window.parent.Game || window.Game; // 实时获取
+        const G = window.parent.Game || window.Game;
         if (!G || !G.state) return;
         
         energyEl.innerText = G.state.energy;
         
-        // 满体力禁用休息
         if (G.state.energy >= 100) btnRest.classList.add('disabled');
         else btnRest.classList.remove('disabled');
 
-        // 体力不足 8 点禁用外出
-        if (G.state.energy < 8) {
-            btnGoMap.classList.add('disabled');
-        } else {
-            btnGoMap.classList.remove('disabled');
-        }
+        if (G.state.energy < 8) btnGoMap.classList.add('disabled');
+        else btnGoMap.classList.remove('disabled');
     };
 
-    // 1. 点击休息
     btnRest.addEventListener('click', () => {
         const G = window.parent.Game || window.Game;
         if (!G || !G.state || G.state.energy >= 100) return;
@@ -33,18 +27,21 @@
         setTimeout(updateUI, 100);
     });
 
-    // 2. 点击外出散步（🌟 核心修复：直接强制跳转，避开拦截器）
+    // 🌟 核心修复：调用父页面的统一路由，绝不使用 window.location.href
     btnGoMap.addEventListener('click', (e) => {
-        e.preventDefault(); // 如果是 <a> 标签，阻止它的默认 href 跳转
+        e.preventDefault();
         
         const G = window.parent.Game || window.Game;
         if (!G || !G.state || G.state.energy < 8) return;
         
-        // 强制在当前 iframe 内跳转，不再依赖父页面拦截器
-        window.location.href = 'map.html'; 
+        if (window.parent.HostRouter && window.parent.HostRouter.navigateTo) {
+            window.parent.HostRouter.navigateTo('pages/entertainment/map.html');
+        } else {
+            // 如果父页面没有提供，说明拦截器没写好，利用正常的 a 标签 href 跳转
+            window.location.href = 'map.html'; 
+        }
     });
 
-    // 每 500 毫秒刷新一次界面，保证数值实时同步
     setInterval(updateUI, 500);
 })();
 </script>

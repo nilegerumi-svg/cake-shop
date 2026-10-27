@@ -40,20 +40,30 @@
                 return { text: '你四处走了走，但什么也没有发生。' };
             }
 
-            // 3. 优先级概率抽取（处理带有 chance 的稀有事件）
-            for (const ev of validEvents) {
-                if (ev.chance !== undefined) {
-                    if (Math.random() < ev.chance) {
-                        return ev; 
-                    }
-                }
+            // 3. 统一权重抽取：
+            //    - 普通事件（无 chance）权重 = 1
+            //    - 稀有事件（有 chance）权重 = chance
+            //    所有事件共享一次随机判定，概率与数组顺序无关，不再先中先返。
+            const weighted = validEvents.map((ev) => ({
+                ev,
+                weight: ev.chance !== undefined ? Math.max(0, Number(ev.chance) || 0) : 1,
+            }));
+
+            const totalWeight = weighted.reduce((sum, w) => sum + w.weight, 0);
+
+            // 全部权重为 0（理论不会发生）时退回等概率
+            if (totalWeight <= 0) {
+                return validEvents[Math.floor(Math.random() * validEvents.length)];
             }
 
-            // 4. 普通等概率抽取（从剩余无 chance 的池子里抽）
-            const normalEvents = validEvents.filter(ev => ev.chance === undefined);
-            const pool = normalEvents.length > 0 ? normalEvents : validEvents;
-            
-            return pool[Math.floor(Math.random() * pool.length)];
+            let roll = Math.random() * totalWeight;
+            for (const { ev, weight } of weighted) {
+                roll -= weight;
+                if (roll < 0) return ev;
+            }
+
+            // 浮点误差兜底
+            return weighted[weighted.length - 1].ev;
         }
     };
 })();

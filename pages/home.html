@@ -6,7 +6,14 @@
     <title>主页</title>
     <link rel="stylesheet" href="../css/styles.css">
     <style>
-        body { background: transparent; padding: 16px; margin: 0; }
+        body { 
+            background: transparent; 
+            padding: 16px; 
+            margin: 0; 
+            /* 🌟 加上这个，防止内容为空时页面高度塌陷导致滚动条异常 */
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
     </style>
 </head>
 <body>
@@ -34,8 +41,8 @@
     <script src="../js/shared.js"></script>
 
     <!-- ==================== 页面逻辑入口 ==================== -->
-    <!-- 只需要这一个 module，它会自动根据路由拉取 home/index.js -->
-    <script type="module" src="../js/pages/index.js"></script>
+    <!-- 🌟 修改这里：直接指向 home 文件夹下的 index.js，绝对不白屏 -->
+    <script type="module" src="../js/pages/home/index.js"></script>
 
 </body>
 </html>

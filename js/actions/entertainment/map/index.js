@@ -1,29 +1,30 @@
 // js/actions/entertainment/map/index.js
 
-// 🌟 1. 引入地图事件监视器（它负责抽取通用事件和地点专属事件）
 import './monitor.js';
-
-// 🌟 2. 引入城镇区域（它内部会自动加载 town 下的所有地点）
 import './town/index.js';
-
-// 未来如果有别的区域，就在这里添加：
-// import './seaside/index.js';
 
 (() => {
     'use strict';
+    
+    window.Cake = window.Cake || {};
     const Cake = window.parent.Cake || window.Cake;
-    if (!Cake) return;
 
     // 🌟 全局地点大字典
     Cake.LOCATIONS = {};
 
-    // 汇总城镇区域
-    if (Cake.REGION_TOWN) {
-        Object.assign(Cake.LOCATIONS, Cake.REGION_TOWN);
+    if (!Cake.REGION_TOWN) {
+        console.error("❌ [Map] 严重错误：REGION_TOWN 不存在，城镇数据挂载失败！");
+        return; 
     }
 
-    // 未来汇总其他区域：
-    // if (Cake.REGION_SEASIDE) {
-    //     Object.assign(Cake.LOCATIONS, Cake.REGION_SEASIDE);
-    // }
+    // 汇总城镇区域（加上防崩过滤，防止 undefined 混入）
+    for (const [key, loc] of Object.entries(Cake.REGION_TOWN)) {
+        if (loc) {
+            Cake.LOCATIONS[key] = loc;
+        } else {
+            console.warn(`⚠️ [Map] 地点 [${key}] 数据为 undefined，已被过滤。`);
+        }
+    }
+
+    console.log("🗺️ [Map] 全局 LOCATIONS 最终装载结果:", Object.keys(Cake.LOCATIONS));
 })();

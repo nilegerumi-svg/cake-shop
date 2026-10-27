@@ -1,12 +1,14 @@
-// js/entertainment/map/town/index.js
+// js/actions/entertainment/map/town/index.js
 
-// 1. 引入城镇下的所有地点（注意必须带 .js 后缀）
+// 🌟 引入城镇监视器（装载城镇事件）
+import './monitor.js'; 
+
+// 引入城镇下的所有地点
 import './home/index.js';
 import './park/index.js';
 import './street/index.js';
 import './river/index.js';
 
-// 2. 执行注册逻辑
 (() => {
     'use strict';
     const Cake = window.parent.Cake || window.Cake;

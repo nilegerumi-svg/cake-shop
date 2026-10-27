@@ -69,18 +69,12 @@
 <script src="js/core/effects.js"></script>
 <script src="js/core/render.js"></script>
 
-<!-- ==================== 玩法逻辑层 ==================== -->
-<script src="js/actions/bakery.js"></script>
-<script src="js/actions/shop.js"></script>
-<script src="js/actions/social.js"></script>
-<script src="js/actions/system.js"></script>
-
 <!-- ==================== 🕒 时间系统 ==================== -->
 <script src="js/time/index.js"></script>
 
-<!-- ==================== 🎮 娱乐与外出系统 (ES Module) ==================== -->
-<!-- 注意：这里请确保路径是你最终的路径。如果你整个移到了 actions 下，请改为 js/actions/entertainment/index.js -->
-<script type="module" src="js/entertainment/index.js"></script>
+<!-- ==================== 🌟 玩法与娱乐逻辑 (ES Module 统一入口) ==================== -->
+<!-- 这一行会自动连锁加载：bakery, shop, social, system, 以及整个 entertainment (包含地图、事件、休息) -->
+<script type="module" src="js/actions/index.js"></script>
 
 <!-- ==================== 宿主协调层 ==================== -->
 <script src="js/shared.js"></script>

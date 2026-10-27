@@ -1,66 +1,321 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>小店日记</title>
-    <style>
-        body { background: #fffaf0; padding: 12px 16px; margin: 0; font-family: sans-serif; color: #666; font-size: 14px; }
-        .log-title { color: #ff6b81; font-weight: bold; font-size: 15px; margin-bottom: 8px; border-bottom: 1px solid #ffe4e1; padding-bottom: 6px; }
-        .log-list { height: calc(100% - 30px); overflow-y: auto; }
-    </style>
+<meta charset="UTF-8">
+<title>Log</title>
+<style>
+    html, body { height: 100%; }
+    body {
+        margin: 0; padding: 0;
+        font: 12px/1.6 monospace;
+        background: #fff; color: #333;
+        display: flex; flex-direction: column;
+        height: 100%;
+        overflow: hidden;
+    }
+    #log-header {
+        flex: 0 0 auto;
+        padding: 4px 8px;
+        border-bottom: 1px solid #e0e0e0;
+        background: #fafafa;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        user-select: none;
+    }
+    #log-count { color: #999; font-size: 11px; }
+    #log-view {
+        flex: 1 1 auto;
+        overflow-y: auto;
+        padding: 4px 8px;
+        white-space: pre-wrap;
+        word-break: break-word;
+        overflow-wrap: anywhere;
+        /* 关闭浏览器自动锚定：删除头部由 JS 手动补偿，避免双重补偿 */
+        overflow-anchor: none;
+    }
+    .log-line .t { color: #999; }
+    .log-line.log-warn  { color: #b8860b; }
+    .log-line.log-error { color: #c00; }
+    #log-jump {
+        position: fixed;
+        right: 12px; bottom: 12px;
+        display: none;
+        padding: 2px 10px;
+        font: inherit;
+        background: #333; color: #fff;
+        border: none; border-radius: 10px;
+        cursor: pointer; opacity: .85;
+    }
+    #log-jump.show { display: block; }
+</style>
+<script>
+(function () {
+    'use strict';
+
+    /* ============ 可配置项 ============ */
+    var ALLOWED_ORIGINS = window.LOG_ALLOWED_ORIGINS;
+    if (!Array.isArray(ALLOWED_ORIGINS)) ALLOWED_ORIGINS = ['*'];
+
+    // MAX_LINES：显式传 0 表示不限制；未设置/非法则默认 2000
+    var MAX_LINES;
+    (function () {
+        var raw = window.LOG_MAX_LINES;
+        if (raw === undefined || raw === null || raw === '') {
+            MAX_LINES = 2000;
+        } else {
+            MAX_LINES = Number(raw);
+            if (isNaN(MAX_LINES)) MAX_LINES = 2000;
+        }
+    })();
+
+    /* ============ 状态 ============ */
+    var queue = [];
+    var scheduled = false;
+    var viewEl = null;
+    var countEl = null;
+    var jumpBtn = null;
+
+    var lineCount = 0;
+    var autoScroll = true;
+    var generation = 0; // clear 防竞态
+
+    /* ============ 工具函数 ============ */
+    function isAllowedOrigin(origin) {
+        if (!ALLOWED_ORIGINS || ALLOWED_ORIGINS.length === 0) return true;
+        for (var i = 0; i < ALLOWED_ORIGINS.length; i++) {
+            if (ALLOWED_ORIGINS[i] === '*' || ALLOWED_ORIGINS[i] === origin) return true;
+        }
+        return false;
+    }
+
+    // 支持多层 parent / opener 链
+    function isTrustedSource(src) {
+        if (!src || src === window) return false;
+
+        // 自己是顶层窗口且无 opener：无法判定来源，放行
+        if (window.parent === window && !window.opener) return true;
+
+        var p = window.parent;
+        while (p && p !== window) {
+            if (p === src) return true;
+            try { p = p.parent; } catch (e) { break; }
+        }
+
+        var o = window.opener;
+        while (o && o !== window) {
+            if (o === src) return true;
+            try { o = o.opener; } catch (e) { break; }
+        }
+        return false;
+    }
+
+    function safeStringify(msg) {
+        if (typeof msg === 'string') return msg;
+        // 注意：跨 realm 的 Error 不满足 instanceof，会走 JSON 分支
+        if (msg instanceof Error) return msg.stack || String(msg);
+        if (msg === undefined) return 'undefined';
+        if (msg === null) return 'null';
+
+        try {
+            return JSON.stringify(msg, function (k, v) {
+                if (typeof v === 'function') return '[Function]';
+                if (typeof v === 'bigint') return v.toString() + 'n';
+                return v;
+            }, 2);
+        } catch (e) {
+            try {
+                return Object.prototype.toString.call(msg) + ' ' + String(msg);
+            } catch (_) {
+                return '[Unserializable object]';
+            }
+        }
+    }
+
+    // null / undefined / 非法值一律回退到当前时间，避免出现 1970 年
+    function formatTime(ts) {
+        var d;
+        if (ts === null || ts === undefined) {
+            d = new Date();
+        } else {
+            d = (ts instanceof Date) ? ts : new Date(ts);
+            if (isNaN(d.getTime())) d = new Date();
+        }
+        var p = function (n) { return n < 10 ? '0' + n : '' + n; };
+        return p(d.getHours()) + ':' + p(d.getMinutes()) + ':' + p(d.getSeconds());
+    }
+
+    function normalizeLevel(level) {
+        if (level === 'warn' || level === 'warning') return 'warn';
+        if (level === 'error') return 'error';
+        return '';
+    }
+
+    /* ============ message ============ */
+    window.addEventListener('message', function (e) {
+        var d = e.data;
+        if (!d || typeof d !== 'object') return;
+        if (!isAllowedOrigin(e.origin)) return;
+        if (!isTrustedSource(e.source)) return;
+
+        if (d.type === 'log') {
+            queue.push({
+                ts: d.time != null ? d.time : d.timestamp,
+                text: safeStringify(d.msg),
+                level: normalizeLevel(d.level),
+                gen: generation
+            });
+            scheduleFlush();
+        }
+
+        else if (d.type === 'clear') {
+            generation++;
+            queue.length = 0;
+            if (viewEl) {
+                viewEl.textContent = '';
+                lineCount = 0;
+                autoScroll = true;
+                updateCount();
+                hideJump();
+            }
+        }
+    }, false);
+
+    /* ============ 渲染调度 ============ */
+    var scheduleFlush = (function () {
+        if (typeof requestAnimationFrame === 'function') {
+            return function () {
+                if (scheduled) return;
+                scheduled = true;
+                requestAnimationFrame(function () {
+                    scheduled = false;
+                    flush();
+                });
+            };
+        }
+        return function () {
+            if (scheduled) return;
+            scheduled = true;
+            setTimeout(function () {
+                scheduled = false;
+                flush();
+            }, 16);
+        };
+    })();
+
+    function flush() {
+        if (!viewEl || queue.length === 0) return;
+
+        var stickBottom = autoScroll && isNearBottom();
+        var batch = queue;
+        queue = [];
+
+        var frag = document.createDocumentFragment();
+        for (var i = 0; i < batch.length; i++) {
+            var item = batch[i];
+            if (item.gen !== generation) continue; // clear 后丢弃
+
+            var line = document.createElement('div');
+            line.className = 'log-line' + (item.level ? ' log-' + item.level : '');
+
+            var t = document.createElement('span');
+            t.className = 't';
+            t.textContent = '[' + formatTime(item.ts) + '] ';
+            line.appendChild(t);
+            line.appendChild(document.createTextNode(item.text));
+
+            frag.appendChild(line);
+            lineCount++;
+        }
+
+        // 全部被 clear 竞态过滤掉：不追加、不显示“有新日志”
+        if (frag.childNodes.length === 0) {
+            updateCount();
+            return;
+        }
+
+        // 追加前记录 scrollTop，用于删除头部时补偿
+        var prevScrollTop = viewEl.scrollTop;
+
+        viewEl.appendChild(frag);
+
+        // 删除头部并累计其高度（必须先读 offsetHeight 再 remove）
+        var removedHeight = 0;
+        if (MAX_LINES && MAX_LINES > 0) {
+            while (lineCount > MAX_LINES && viewEl.firstElementChild) {
+                var first = viewEl.firstElementChild;
+                removedHeight += first.offsetHeight;
+                viewEl.removeChild(first);
+                lineCount--;
+            }
+        }
+
+        if (stickBottom) {
+            scrollToBottom();
+            hideJump();
+        } else {
+            // 只补偿“删除头部”造成的视口位移，追加尾部不影响上方内容
+            if (removedHeight > 0) {
+                viewEl.scrollTop = prevScrollTop - removedHeight;
+            }
+            showJump();
+        }
+
+        updateCount();
+    }
+
+    /* ============ 滚动 ============ */
+    function isNearBottom() {
+        if (!viewEl) return true;
+        return viewEl.scrollHeight - viewEl.scrollTop - viewEl.clientHeight <= 24;
+    }
+
+    function scrollToBottom() {
+        viewEl.scrollTop = viewEl.scrollHeight;
+    }
+
+    function showJump() { if (jumpBtn) jumpBtn.classList.add('show'); }
+    function hideJump() { if (jumpBtn) jumpBtn.classList.remove('show'); }
+
+    function updateCount() {
+        if (countEl) countEl.textContent = lineCount + ' 条';
+    }
+
+    /* ============ init ============ */
+    function init() {
+        viewEl = document.getElementById('log-view');
+        countEl = document.getElementById('log-count');
+        jumpBtn = document.getElementById('log-jump');
+
+        viewEl.addEventListener('scroll', function () {
+            autoScroll = isNearBottom();
+            if (autoScroll) hideJump();
+        }, { passive: true });
+
+        jumpBtn.addEventListener('click', function () {
+            autoScroll = true;
+            scrollToBottom();
+            hideJump();
+        });
+
+        updateCount();
+        flush(); // 补渲染 DOM 就绪前入队的日志
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init, { once: true });
+    } else {
+        init();
+    }
+})();
+</script>
 </head>
 <body>
-    <div class="log-title">📜 小店日记</div>
-    <div class="log-list" id="logList"></div>
-
-    <script>
-    (() => {
-        'use strict';
-
-        const SAVE_KEY = 'cakeShopSave_v1';
-        const logList = document.getElementById('logList');
-
-        /* ==================== 渲染日志 ==================== */
-
-        const renderEmpty = () => {
-            logList.innerHTML = '<div style="text-align:center; color:#aaa; margin-top:20px;">暂无记录，快去创造故事吧～</div>';
-        };
-
-        const renderLogs = (logs) => {
-            // 在函数内部安全地获取 parent.Cake，避免作用域 bug
-            const Cake = window.parent.Cake;
-            // 如果没有 Cake.escapeHtml，使用简单的备用函数防止崩溃
-            const escapeHtml = (Cake && typeof Cake.escapeHtml === 'function') 
-                ? Cake.escapeHtml 
-                : (s) => String(s ?? '');
-
-            logList.innerHTML = logs
-                .slice()
-                .reverse()
-                .map((l) => `<div style="margin-bottom:8px; line-height:1.5;">📝 第${l.day}天：${escapeHtml(l.text)}</div>`)
-                .join('');
-        };
-
-        const renderLogList = () => {
-            const Cake = window.parent.Cake;
-            if (!Cake) return;
-
-            const logs = Cake.store?.state?.log ?? [];
-            logs.length === 0 ? renderEmpty() : renderLogs(logs);
-        };
-
-        /* ==================== 生命周期 ==================== */
-
-        window.addEventListener('load', renderLogList);
-
-        // 跨 iframe 同步：其它窗口保存存档后，本窗口也刷新日志
-        window.addEventListener('storage', (e) => {
-            if (e.key && e.key !== SAVE_KEY) return;
-            if (e.storageArea && e.storageArea !== window.localStorage) return;
-            requestAnimationFrame(renderLogList);
-        });
-    })();
-    </script>
+    <div id="log-header">
+        <span>📋 日志窗口</span>
+        <span id="log-count">0 条</span>
+    </div>
+    <div id="log-view"></div>
+    <button id="log-jump" type="button">有新日志 ↓</button>
 </body>
 </html>

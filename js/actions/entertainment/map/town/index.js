@@ -1,9 +1,6 @@
 // js/actions/entertainment/map/town/index.js
 
-// 🌟 引入城镇监视器（装载城镇事件）
 import './monitor.js'; 
-
-// 引入城镇下的所有地点
 import './home/index.js';
 import './park/index.js';
 import './street/index.js';
@@ -11,15 +8,18 @@ import './river/index.js';
 
 (() => {
     'use strict';
+    
+    // 🌟 不再写 if (!Cake) return; 而是强制建一个
+    window.Cake = window.Cake || {};
+    // 如果在 iframe 里，尝试取父页面的；如果没有父页面，就用当前页面的
     const Cake = window.parent.Cake || window.Cake;
-    if (!Cake) return;
 
-    // 临时打个 log 看看底层数据到底有没有拿到！
-    // 如果这里打印出 undefined，说明你的 home/index.js 等文件没有挂载成功
-    console.log("🏘️ [Town] 检查底层数据:", {
-        home: Cake._MAP_DATA_HOME,
-        park: Cake._MAP_DATA_PARK
-    });
+    console.log("🏘️ [Town] 城镇模块开始执行，当前 Cake 是否就绪:", !!Cake);
+
+    // 如果发现底层数据没拿到，大概率是 home/index.js 报错了
+    if (!Cake._MAP_DATA_HOME) {
+        console.error("❌ [Town] 警告：未读取到 _MAP_DATA_HOME，请检查 home/index.js 是否加载或报错！");
+    }
 
     // 城镇地点字典
     Cake.REGION_TOWN = {

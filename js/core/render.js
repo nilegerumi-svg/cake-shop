@@ -50,11 +50,13 @@ window.Cake = window.Cake || {};
 
     /* ==================== 🎨 核心：导航按钮变色功能 ==================== */
     const renderNav = (active) => {
+        const renderNav = (active) => {
+        const key = active ?? currentActiveTab;   // ✅ 无参时回退到当前 tab，不再清空高亮
         const el = Cake.$('navBar');
         if (!el || isInIframe) return;
-        
+
         el.innerHTML = NAV_ITEMS.map((item) => {
-            const isActive = item.key === active;
+            const isActive = item.key === key;
             
             // 🌟 激活状态：粉色背景 + 白色文字 + 阴影
             // 🌟 未激活状态：保持原有的基础样式

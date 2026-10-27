@@ -1,4 +1,11 @@
 // js/entertainment/map/index.js
+
+// 引入城镇区域（它内部会自动加载自己的地点）
+import './town/index.js';
+
+// 未来如果有别的区域：
+// import './seaside/index.js';
+
 (() => {
     'use strict';
     const Cake = window.parent.Cake || window.Cake;
@@ -11,9 +18,4 @@
     if (Cake.REGION_TOWN) {
         Object.assign(Cake.LOCATIONS, Cake.REGION_TOWN);
     }
-
-    // 💡 未来扩展：如果你加了大海区域 (seaside)
-    // if (Cake.REGION_SEASIDE) {
-    //     Object.assign(Cake.LOCATIONS, Cake.REGION_SEASIDE);
-    // }
 })();

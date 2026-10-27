@@ -1,97 +1,192 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>主页</title>
-    <link rel="stylesheet" href="../css/styles.css">
+    <title>Home</title>
     <style>
-        body { background: transparent; padding: 16px; margin: 0; min-height: 100vh; box-sizing: border-box; display: block !important; }
+        body { margin:0; font-family:system-ui; background:#fafafa; }
+        .page { padding:20px; }
     </style>
 </head>
 <body>
-    <div id="content"></div>
+    <div class="page">
+        <h1>主页内容</h1>
+        <p>这是 mainFrame 里渲染的主页。</p>
+    </div>
 
     <script>
     (() => {
         'use strict';
-        
-        const render = () => {
-            const G = window.parent.Game || window.Game;
-            const contentEl = document.getElementById('content');
 
-            if (!G || !G.state) {
-                setTimeout(render, 100); // 死等父页面引擎
+        // —— 与父页面约定的协议：不可改，父页面已按此实现 ——
+        // 发送：{ type: 'home-ready', bubble: true }
+        // 回执：{ type: 'home-ready-ack' }（不带 id）
+        const MSG = { type: 'home-ready', bubble: true };
+        const ACK_TYPE = 'home-ready-ack';
+
+        // 子页面侧可监听的事件（供宿主/调试用，不影响父页面）
+        const EVT_ACKED  = 'home-ready-acked';
+        const EVT_FAILED = 'home-ready-failed';
+
+        // 是否额外通知 window.top。注意 postMessage 不冒泡，
+        // 这里只是"多发一个目标"，中间层要转发得自己实现。
+        const NOTIFY_TOP = false;
+
+        // 退避间隔：每次"等 ack 超时"后，隔多久再发下一次
+        const RETRY_DELAYS = [150, 400, 900, 1800, 3600];
+        // 每次发送后等待 ack 的最长时间。调大可减少重复发送，
+        // 但父页面真挂掉时整体失败耗时也会拉长。
+        const ACK_TIMEOUT = 1500;
+
+        // —— 每个文档生命周期独立的状态，不永久锁死 ——
+        let stopped = true;
+        let retryIndex = 0;
+        let timer = null;   // 同一时刻只有一个活跃定时器（等 ack 或等退避）
+        let generation = 0; // 仅用于调试/日志，不参与协议
+
+        const targets = new Set();
+
+        const opaque = (
+            location.origin === 'null' ||
+            location.protocol === 'file:' ||
+            location.protocol === 'data:' ||
+            location.protocol === 'blob:'
+        );
+
+        const isSameOrigin = (win) => {
+            try { void win.location.href; return true; }
+            catch (_) { return false; }
+        };
+
+        const originFor = (win) => {
+            if (!opaque && isSameOrigin(win)) return location.origin;
+            return '*';
+        };
+
+        function resolveTargets() {
+            targets.clear();
+            if (window.parent && window.parent !== window) targets.add(window.parent);
+            if (
+                NOTIFY_TOP &&
+                window.top &&
+                window.top !== window &&
+                window.top !== window.parent
+            ) {
+                targets.add(window.top);
+            }
+        }
+
+        resolveTargets();
+        if (targets.size === 0) return; // 非 iframe 直接打开
+
+        function clearTimer() {
+            if (timer) { clearTimeout(timer); timer = null; }
+        }
+
+        function send() {
+            if (stopped) return;
+
+            for (const win of Array.from(targets)) {
+                // 剔除已关闭的窗口，避免对死引用反复 postMessage
+                try {
+                    if (win.closed) { targets.delete(win); continue; }
+                } catch (_) { /* closed 访问异常忽略 */ }
+
+                try {
+                    win.postMessage(MSG, originFor(win));
+                } catch (e) {
+                    // 发送失败 → target 不可用，剔除，别继续消耗退避
+                    console.warn('[home-ready] postMessage failed, drop target', e);
+                    targets.delete(win);
+                }
+            }
+
+            if (targets.size === 0) {
+                fail('no-target');
                 return;
             }
 
-            try {
-                const s = G.state;
-                const cakesObj = s.cakes || {};
-                const recipesObj = G.RECIPES || {};
-                const cakes = Object.entries(cakesObj).filter(([name, count]) => count > 0 && recipesObj[name]);
+            // 发完等 ack；超时才进入下一次重试，避免"盲发"导致重复副作用
+            clearTimer();
+            timer = setTimeout(() => {
+                timer = null;
+                if (!stopped) scheduleRetry();
+            }, ACK_TIMEOUT);
+        }
 
-                let cakesHtml = '<p class="muted">还没有蛋糕库存，快去「烘焙」页面做几个吧！</p>';
-                if (cakes.length > 0) {
-                    cakesHtml = '<div class="grid-2">' + cakes.map(([name, count]) => {
-                        const recipe = recipesObj[name] || { emoji: '🍰', price: 50 };
-                        const price = Math.round(recipe.price * (s.priceRate || 1));
-                        return `<div class="item-card">
-                            <span class="item-emoji">${recipe.emoji}</span>
-                            <span class="item-name">${name} <span class="muted">×${count}</span></span>
-                            <span class="item-meta">售价 <span class="price-tag">${price}元</span></span>
-                        </div>`;
-                    }).join('') + '</div>';
-                }
-
-                contentEl.innerHTML = `
-                    <div class="card">
-                        <h2>🏠 欢迎回来，${G.escapeHtml(s.playerName || '店长')}！</h2>
-                        <p class="muted">今天是经营的第 <b>${s.day || 1}</b> 天，你的「${G.escapeHtml(s.shopName || '甜蜜小屋')}」正散发着甜蜜香气～</p>
-                        <div class="grid-2" style="margin-top:12px;">
-                            <div class="item-card"><span class="item-emoji">💰</span><span class="item-name">${s.money || 500} 元</span><span class="item-desc">当前余额</span></div>
-                            <div class="item-card"><span class="item-emoji">⭐</span><span class="item-name">${s.reputation || 0} 声望</span><span class="item-desc">店铺名气</span></div>
-                            <div class="item-card"><span class="item-emoji">🏪</span><span class="item-name">Lv.${s.shopLevel || 1} · 装饰${s.decoration || 0}</span><span class="item-desc">店铺等级与装饰度</span></div>
-                            <div class="item-card"><span class="item-emoji">⚡</span><span class="item-name">${s.energy || 80}/100</span><span class="item-desc">今日剩余精力</span></div>
-                        </div>
-                        <h3>⚡ 快速行动</h3>
-                        <div class="char-actions">
-                           <button type="button" class="small" data-action="nap" ${s.energy >= 100 ? 'disabled' : ''}>😴 家里小憩</button>
-                           <button type="button" class="small" data-action="sleep">🛌 睡觉</button>
-                           <a href="pages/entertainment/map.html" class="small secondary" style="text-decoration:none; text-align:center;">🚶‍♀️ 散步</a>
-                        </div>
-                        <h3>🧁 库存蛋糕</h3>
-                        ${cakesHtml}
-                    </div>
-                `;
-
-                // 事件绑定，带 try-catch 报警
-                contentEl.addEventListener('click', (e) => {
-                    const btn = e.target.closest('[data-action]');
-                    if (!btn) return;
-                    const action = btn.dataset.action;
-                    
-                    try {
-                        if (action === 'nap') {
-                            if (s.energy >= 100) return;
-                            if (typeof G.rest !== 'function') throw new Error('父页面没挂载 G.rest 方法');
-                            G.rest(); 
-                        }
-                        if (action === 'sleep') {
-                            if (typeof G.sleep !== 'function') throw new Error('父页面没挂载 G.sleep 方法');
-                            G.sleep();
-                        }
-                    } catch (err) {
-                        alert('❌ 操作报错：' + err.message);
-                    }
-                }, { once: true });
-
-            } catch (err) {
-                contentEl.innerHTML = `<div style="color: red; padding: 20px; background: #fff;">❌ 渲染发生异常：${err.message}</div>`;
+        function scheduleRetry() {
+            if (stopped) return;
+            if (retryIndex >= RETRY_DELAYS.length) {
+                fail('ack-timeout'); // 有明确终态，而不是静默 return
+                return;
             }
-        };
+            const delay = RETRY_DELAYS[retryIndex++];
+            clearTimer();
+            timer = setTimeout(() => {
+                timer = null;
+                if (!stopped) send();
+            }, delay);
+        }
 
-        render();
+        function isKnownSource(src) {
+            if (!src) return false;
+            for (const win of targets) if (win === src) return true;
+            return false;
+        }
+
+        // 父页面回执形如 { type: 'home-ready-ack' }。
+        // 只接受"我们发过消息的窗口"发来的 ack，
+        // 防止任意同域 iframe/opener 伪造一个 ack 把主页永久 stop。
+        function onMessage(e) {
+            if (!e.data || e.data.type !== ACK_TYPE) return;
+            if (!isKnownSource(e.source)) return;
+
+            // 注意：因为协议不带 id，无法区分"本次 ack"与"上一世代残留 ack"。
+            // 这是"父页面不可改"约束下的已知残余风险（见文末说明）。
+            stop();
+            try { window.dispatchEvent(new CustomEvent(EVT_ACKED)); } catch (_) {}
+        }
+
+        function fail(reason) {
+            stop();
+            try {
+                window.dispatchEvent(new CustomEvent(EVT_FAILED, { detail: { reason } }));
+            } catch (_) {}
+        }
+
+        function stop() {
+            stopped = true;
+            clearTimer();
+            window.removeEventListener('message', onMessage);
+        }
+
+        function start() {
+            // 幂等清理：即使之前 pagehide 未严格配对，也不会留下并行定时器链
+            clearTimer();
+
+            stopped = false;
+            retryIndex = 0;
+            generation += 1;
+
+            resolveTargets();
+            if (targets.size === 0) { stop(); return; }
+
+            window.removeEventListener('message', onMessage);
+            window.addEventListener('message', onMessage);
+            send();
+        }
+
+        // 页面卸载/离开：停止发送
+        window.addEventListener('pagehide', () => stop());
+
+        // bfcache 恢复：重置生命周期，重新握手
+        window.addEventListener('pageshow', (e) => {
+            if (!e.persisted) return;
+            start();
+        });
+
+        // 首次启动
+        start();
     })();
     </script>
 </body>

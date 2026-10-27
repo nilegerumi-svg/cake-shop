@@ -87,19 +87,12 @@
                 }
             });
 
-            // 第二重防御：重写子页面的 window.location.href (强制拦截脚本跳转)
-            // 这样即使子页面写 window.location.href = 'xxx'，也会被父页面接管
-            try {
-                const originalLoc = win.location;
-                Object.defineProperty(win, 'location', {
-                    get: () => originalLoc,
-                    set: (url) => {
-                        console.warn('🚨 [Router] 成功拦截子页面脚本强跳:', url);
-                        navigateTo(url);
-                    }
-                });
-            } catch (err) {
-                // 部分浏览器由于安全策略不支持覆盖 location，忽略即可
+            // 第二重：给子页面注入一个可靠的跳转接口。
+            // 说明：window.location 是浏览器保护的只读 accessor，
+            // 无法用 Object.defineProperty 覆盖（旧代码在这里静默失效），
+            // 所以改为让子页面主动调用 window.HostRouter.navigateTo()。
+            if (!win.HostRouter) {
+                win.HostRouter = { navigateTo };
             }
 
         } catch (err) {

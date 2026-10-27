@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>地图与外出</title>
+    <!-- CSS 路径加一层 ../ -->
+    <link rel="stylesheet" href="../../css/styles.css">
+    <style>
+        body { background: transparent; font-family: sans-serif; padding: 16px; display: flex; justify-content: center; color: #4a3b3f; margin: 0; }
+        .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(255,182,193,0.2); width: 100%; max-width: 400px; }
+        
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px dashed #ffd1dc; padding-bottom: 12px; }
+        .header h2 { color: #ff6b81; margin: 0; font-size: 18px; }
+        .back-btn { background: none; border: none; color: #888; font-size: 15px; cursor: pointer; padding: 4px 8px; font-weight: bold; }
+        .back-btn:active { color: #ff6b81; }
+        
+        .energy-badge { background: #fff9fa; padding: 4px 10px; border-radius: 20px; font-size: 13px; border: 1px solid #ffd1dc; font-weight: bold; }
+
+        /* 地点列表 */
+        .loc-list { display: flex; flex-direction: column; gap: 12px; }
+        .loc-item {
+            display: flex; align-items: center; justify-content: space-between;
+            background: #f0faf8; border: 1px solid #a8e6cf; border-radius: 12px;
+            padding: 16px; cursor: pointer; transition: all 0.2s;
+        }
+        .loc-item:active { transform: scale(0.98); background: #e0f5f0; }
+        .loc-item.disabled { background: #f5f5f5; border-color: #ddd; cursor: not-allowed; opacity: 0.7; }
+        
+        .loc-info { display: flex; align-items: center; gap: 12px; }
+        .loc-emoji { font-size: 28px; }
+        .loc-text { display: flex; flex-direction: column; text-align: left; }
+        .loc-name { font-size: 16px; font-weight: bold; color: #4a3b3f; }
+        .loc-desc { font-size: 12px; color: #888; margin-top: 4px; }
+        
+        .loc-cost { font-size: 14px; font-weight: bold; color: #ff8fa3; }
+        .loc-item.disabled .loc-cost { color: #aaa; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="header">
+            <!-- 返回主菜单 index.html -->
+            <button class="back-btn" id="btnBack">◀ 返回</button>
+            <h2>🗺️ 去哪里散步？</h2>
+            <div class="energy-badge">⚡<span id="energy">--</span></div>
+        </div>
+
+        <div class="loc-list" id="locList">
+            <!-- 动态生成的地点卡片 -->
+        </div>
+    </div>
+
+    <script>
+    (() => {
+        'use strict';
+
+        const G = window.parent.Game || window.Game;
+        const $ = (id) => document.getElementById(id);
+
+        const locListEl = $('locList');
+        const energyEl  = $('energy');
+
+        const renderList = () => {
+            if (!G || !G.state || !G.LOCATIONS) return;
+            
+            const state = G.state;
+            energyEl.innerText = state.energy;
+
+            let html = '';
+            for (const [key, loc] of Object.entries(G.LOCATIONS)) {
+                const disabled = state.energy < loc.cost;
+                const cls = disabled ? 'loc-item disabled' : 'loc-item';
+                
+                html += `
+                    <div class="${cls}" data-loc="${key}">
+                        <div class="loc-info">
+                            <span class="loc-emoji">${loc.emoji}</span>
+                            <div class="loc-text">
+                                <span class="loc-name">${loc.name}</span>
+                                <span class="loc-desc">${loc.desc || '未知的区域'}</span>
+                            </div>
+                        </div>
+                        <div class="loc-cost">⚡${loc.cost}</div>
+                    </div>
+                `;
+            }
+            locListEl.innerHTML = html;
+        };
+
+        // 点击返回主菜单
+        $('btnBack').addEventListener('click', () => {
+            window.location.href = 'index.html'; // 同目录下
+        });
+
+        // 点击地点去散步
+        locListEl.addEventListener('click', (e) => {
+            const item = e.target.closest('.loc-item');
+            if (!item || item.classList.contains('disabled')) return;
+
+            const locKey = item.dataset.loc;
+            item.style.pointerEvents = 'none';
+            item.querySelector('.loc-cost').innerText = '出发中...';
+
+            G.walk(locKey);
+
+            // 结算后退回主菜单
+            setTimeout(() => {
+                window.location.href = 'index.html';
+            }, 600);
+        });
+
+        window.addEventListener('load', () => {
+            if (!G || !G.state) {
+                document.body.innerHTML = `<h2 style="color:red; padding:20px;">⚠️ 数据加载失败</h2>`;
+                return;
+            }
+            renderList();
+        });
+    })();
+    </script>
+</body>
+</html>

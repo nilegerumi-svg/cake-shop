@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>地图与外出</title>
-    <!-- CSS 路径加一层 ../ -->
     <link rel="stylesheet" href="../../css/styles.css">
     <style>
         body { background: transparent; font-family: sans-serif; padding: 16px; display: flex; justify-content: center; color: #4a3b3f; margin: 0; }
@@ -40,7 +39,6 @@
 <body>
     <div class="card">
         <div class="header">
-            <!-- 返回主菜单 index.html -->
             <button class="back-btn" id="btnBack">◀ 返回</button>
             <h2>🗺️ 去哪里散步？</h2>
             <div class="energy-badge">⚡<span id="energy">--</span></div>
@@ -50,91 +48,88 @@
             <!-- 动态生成的地点卡片 -->
         </div>
     </div>
-<script>
-(() => {
-    'use strict';
 
-    // 强制获取最底层的 Cake 对象
-    const Cake = window.parent.Cake || window.Cake;
-    
-    const $ = (id) => document.getElementById(id);
-    const locListEl = $('locList');
-    const energyEl  = $('energy');
+    <script>
+    (() => {
+        'use strict';
 
-    const renderList = () => {
-        try {
-            // 1. 安全获取 state
-            const state = Cake && Cake.store && Cake.store.state;
-            if (!state) {
-                throw new Error("无法读取当前游戏状态，请刷新重试");
-            }
+        const Cake = window.parent.Cake || window.Cake;
+        const $ = (id) => document.getElementById(id);
 
-            // 2. 渲染体力
-            energyEl.innerText = state.energy;
+        const locListEl = $('locList');
+        const energyEl  = $('energy');
 
-            // 3. 安全获取地点数据
-            const locs = Cake.LOCATIONS;
-            if (!locs || Object.keys(locs).length === 0) {
-                throw new Error("LOCATIONS 数据为空！请检查 game.html 是否加载了 map 文件夹下的地点");
-            }
+        const renderList = () => {
+            try {
+                const state = Cake && Cake.store && Cake.store.state;
+                if (!state) throw new Error("无法读取当前游戏状态");
 
-            // 4. 生成列表
-            let html = '';
-            for (const [key, loc] of Object.entries(locs)) {
-                const disabled = state.energy < loc.cost;
-                const cls = disabled ? 'loc-item disabled' : 'loc-item';
-                
-                html += `
-                    <div class="${cls}" data-loc="${key}">
-                        <div class="loc-info">
-                            <span class="loc-emoji">${loc.emoji}</span>
-                            <div class="loc-text">
-                                <span class="loc-name">${loc.name}</span>
-                                <span class="loc-desc">${loc.desc || '未知的区域'}</span>
+                energyEl.innerText = state.energy;
+
+                const locs = Cake.LOCATIONS;
+                if (!locs || Object.keys(locs).length === 0) {
+                    throw new Error("LOCATIONS 数据为空！请检查地点文件的加载");
+                }
+
+                let html = '';
+                for (const [key, loc] of Object.entries(locs)) {
+                    // 🌟 核心防崩：跳过空数据
+                    if (!loc) continue; 
+
+                    const cost = loc.cost || 8; // 默认消耗 8 点
+                    const disabled = state.energy < cost;
+                    const cls = disabled ? 'loc-item disabled' : 'loc-item';
+                    
+                    html += `
+                        <div class="${cls}" data-loc="${key}">
+                            <div class="loc-info">
+                                <span class="loc-emoji">${loc.emoji || '📍'}</span>
+                                <div class="loc-text">
+                                    <span class="loc-name">${loc.name || key}</span>
+                                    <span class="loc-desc">${loc.desc || '未知的区域'}</span>
+                                </div>
                             </div>
+                            <div class="loc-cost">⚡${cost}</div>
                         </div>
-                        <div class="loc-cost">⚡${loc.cost}</div>
-                    </div>
-                `;
+                    `;
+                }
+                
+                if (html === '') {
+                    html = '<div style="color:#888; text-align:center;">当前没有可去的地点...</div>';
+                }
+                locListEl.innerHTML = html;
+
+            } catch (err) {
+                locListEl.innerHTML = `
+                    <div style="color: red; padding: 15px; background: #ffe4e1; border-radius: 10px;">
+                        <strong>⚠️ 渲染失败：</strong><br>${err.message}
+                    </div>`;
             }
-            locListEl.innerHTML = html;
-            
-        } catch (err) {
-            // 🚨 任何错误都会红字显示在这里！
-            locListEl.innerHTML = `
-                <div style="color: red; text-align: left; padding: 15px; font-size: 13px; background: #ffe4e1; border-radius: 10px;">
-                    <strong>⚠️ 渲染失败：</strong><br>
-                    ${err.message}
-                </div>`;
-        }
-    };
+        };
 
-    // 点击返回主菜单
-    $('btnBack').addEventListener('click', () => {
-        window.location.href = 'pages/entertainment/index.html'; 
-    });
+        $('btnBack').addEventListener('click', () => {
+            window.location.href = 'pages/entertainment/index.html'; 
+        });
 
-    // 点击地点去散步
-    locListEl.addEventListener('click', (e) => {
-        const item = e.target.closest('.loc-item');
-        if (!item || item.classList.contains('disabled')) return;
+        locListEl.addEventListener('click', (e) => {
+            const item = e.target.closest('.loc-item');
+            if (!item || item.classList.contains('disabled')) return;
 
-        const locKey = item.dataset.loc;
-        item.style.pointerEvents = 'none';
-        item.querySelector('.loc-cost').innerText = '出发中...';
+            const locKey = item.dataset.loc;
+            item.style.pointerEvents = 'none';
+            item.querySelector('.loc-cost').innerText = '出发中...';
 
-        if (Cake && typeof Cake.walk === 'function') {
-            Cake.walk(locKey);
-        }
+            if (Cake && typeof Cake.walk === 'function') {
+                Cake.walk(locKey);
+            }
 
-        // 结算后退回主菜单
-        setTimeout(() => {
-            window.location.href = 'pages/entertainment/index.html';
-        }, 600);
-    });
+            setTimeout(() => {
+                window.location.href = 'pages/entertainment/index.html';
+            }, 600);
+        });
 
-    window.addEventListener('load', renderList);
-})();
-</script>
+        window.addEventListener('load', renderList);
+    })();
+    </script>
 </body>
 </html>

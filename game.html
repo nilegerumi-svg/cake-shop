@@ -17,7 +17,7 @@
         .loading-text { font-size: 14px; color: #888; margin-bottom: 15px; font-weight: bold; }
         .loading-bar-wrap { width: 80%; max-width: 300px; height: 12px; background: #ffe4e1; border-radius: 6px; overflow: hidden; box-shadow: inset 0 1px 3px rgba(0,0,0,0.1); }
         .loading-bar-fill { width: 0%; height: 100%; background: #ff8fa3; transition: width 0.2s ease; }
-        
+
         .app-wrapper { display: flex; flex-direction: column; height: 100vh; height: 100dvh; }
         header, nav { flex: 0 0 auto; z-index: 10; }
         .split-container {
@@ -59,7 +59,7 @@
             <div id="loading-bar" class="loading-bar-fill"></div>
         </div>
     </div>
-    
+
     <div id="error-overlay"></div>
 
     <!-- 游戏外壳 -->
@@ -74,7 +74,51 @@
     </div>
 
     <!-- 🚀 根目录超级监视器入口 -->
-    <!-- 改成这样 -->
     <script src="monitor.js"></script>
+
+    <!-- 📋 日志桥接：把 console / sendLog 送进 #logFrame -->
+    <script>
+    (function () {
+        'use strict';
+        const targetOrigin = (location.origin === 'null' ? '*' : location.origin);
+
+        const toLogFrame = (payload) => {
+            const f = document.getElementById('logFrame');
+            if (!f || !f.contentWindow) return;
+            try { f.contentWindow.postMessage(payload, targetOrigin); } catch (_) {}
+        };
+
+        // 显式 API：main.js / home.html(经 parent) 可调
+        window.sendLog = (msg, level) => toLogFrame({ type: 'log', msg, level, time: Date.now() });
+        window.clearLog = () => toLogFrame({ type: 'clear' });
+
+        // 可选：把 console.log/warn/error 镜像进日志窗口
+        ['log', 'warn', 'error'].forEach((lvl) => {
+            const orig = console[lvl];
+            console[lvl] = (...args) => {
+                orig.apply(console, args);
+                try {
+                    toLogFrame({
+                        type: 'log',
+                        level: lvl === 'log' ? 'info' : lvl,
+                        time: Date.now(),
+                        msg: args.map(a => {
+                            if (typeof a === 'string') return a;
+                            try { return JSON.stringify(a); } catch { return String(a); }
+                        }).join(' ')
+                    });
+                } catch (_) {}
+            };
+        });
+
+        // home.html 经 parent 转发的日志
+        window.addEventListener('message', (e) => {
+            if (e.origin !== location.origin) return;
+            if (e.data && (e.data.type === 'log' || e.data.type === 'clear')) {
+                toLogFrame(e.data);
+            }
+        });
+    })();
+    </script>
 </body>
 </html>

@@ -1,48 +1,15 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>主页</title>
-    <link rel="stylesheet" href="../css/styles.css">
-    <style>
-        body { background: transparent; padding: 16px; margin: 0; }
-    </style>
-</head>
-<body>
-<div id="content"></div>
-
-<!-- 核心基础数据（渲染和基础状态需要） -->
-<script src="../js/core/store.js"></script>
-<script src="../js/data/ingredients.js"></script>
-<script src="../js/data/recipes.js"></script>
-<script src="../js/data/bundles.js"></script>
-<script src="../js/data/characters.js"></script>
-<script src="../js/data/events.js"></script>
-<script src="../js/data/shop-config.js"></script>
-<script src="../js/data/achievements.js"></script>
-<script src="../js/core/utils.js"></script>
-<script src="../js/core/state.js"></script>
-<script src="../js/core/modal.js"></script>
-<script src="../js/core/effects.js"></script>
-<script src="../js/core/render.js"></script>
-
-<!-- 动作模块（子页面按钮点击时需要调用的方法） -->
-<script src="../js/actions/bakery.js"></script>
-<script src="../js/actions/shop.js"></script>
-<script src="../js/actions/social.js"></script>
-<script src="../js/actions/system.js"></script>
-
-<!-- 兼容层 & 全局代理 (用于生成 G 对象) -->
-<script src="../js/shared.js"></script>
-
-<script>
+// js/pages/home.js
 (() => {
     'use strict';
 
-    // ⭐ 安全获取父页面的 Game 对象
+    // 安全获取父页面的 Game 对象
     const G = window.parent.Game || window.Game;
     const contentEl = document.getElementById('content');
+
+    if (!G) {
+        contentEl.innerHTML = '<div style="color:red; padding:20px;">页面初始化失败: 缺少 Game 对象</div>';
+        return;
+    }
 
     /* ==================== 库存蛋糕渲染 ==================== */
 
@@ -100,13 +67,13 @@
         
         const action = btn.dataset.action;
         
-        // 🟢 触发小憩
+        // 触发小憩
         if (action === 'nap') {
             if (G.state.energy >= 100) return; // 满体力不执行
             G.rest(); 
         }
         
-        // 🟢 触发睡觉
+        // 触发睡觉
         if (action === 'sleep') {
             G.sleep();
         }
@@ -114,12 +81,7 @@
 
     /* ==================== 页面初始化 ==================== */
 
-    if (G && typeof G.initPage === 'function') {
+    if (typeof G.initPage === 'function') {
         G.initPage('home', renderHome);
-    } else {
-        contentEl.innerHTML = '<div style="color:red; padding:20px;">页面初始化失败: 缺少 Game 对象</div>';
     }
 })();
-</script>
-</body>
-</html>

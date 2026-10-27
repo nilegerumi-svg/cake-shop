@@ -137,6 +137,8 @@
         s.energy      = isNum(s.energy)      ? Math.max(0, Math.min(100, Number(s.energy))) : def.energy;
         s.reputation  = isNum(s.reputation)  ? Math.max(0, Number(s.reputation)) : def.reputation;
         s.day         = isNum(s.day)         ? Math.max(1, Math.floor(Number(s.day))) : def.day;
+        s.hour        = isNum(s.hour)        ? Math.max(0, Math.min(23, Math.floor(Number(s.hour)))) : 8;
+        s.minute      = isNum(s.minute)      ? Math.max(0, Math.min(59, Math.floor(Number(s.minute)))) : 0;
         s.shopLevel   = isNum(s.shopLevel)   ? Math.max(1, Math.min(5, Math.floor(Number(s.shopLevel)))) : def.shopLevel;
         s.decoration  = isNum(s.decoration)  ? Math.max(0, Math.floor(Number(s.decoration))) : def.decoration;
         s.totalCakes  = isNum(s.totalCakes)  ? Math.max(0, Math.floor(Number(s.totalCakes))) : def.totalCakes;

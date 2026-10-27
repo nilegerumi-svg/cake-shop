@@ -55,6 +55,8 @@
         money: 500,
         energy: 80,
         day: 1,
+        hour:8,
+        minute:0,
         reputation: 0,
         shopLevel: 1,
         decoration: 0,

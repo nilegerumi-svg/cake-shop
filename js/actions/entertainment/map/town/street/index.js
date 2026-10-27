@@ -1,10 +1,13 @@
-// js/entertainment/map/street.js
+// js/actions/entertainment/map/town/street/index.js
 (() => {
     'use strict';
-    window.Cake = window.Cake || {};
-    window.Cake._MAP_REGISTRY = window.Cake._MAP_REGISTRY || {};
+    
+    // 获取全局 Cake 对象
+    const Cake = window.parent.Cake || window.Cake;
+    if (!Cake) return;
 
-    window.Cake._MAP_REGISTRY['street'] = {
+    // 🌟 正确的挂载方式：_MAP_DATA_STREET
+    Cake._MAP_DATA_STREET = {
         id: 'street',
         name: '商业街', emoji: '🛍️', cost: 8,
         desc: '人来人往，充满商机与偶遇。',

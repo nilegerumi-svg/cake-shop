@@ -9,7 +9,6 @@
         { path: './actions/index.js', name: '🎮 正在加载地图与娱乐动作' },
         { path: './shared.js', name: '🧩 正在加载跨页面兼容层' },
         { path: './host/index.js', name: '🖥️ 正在装配宿主控制台' },
-        { path: './monitor.js', name: '👁️ 正在启动全局监视器' }
     ];
 
     try {
@@ -27,6 +26,8 @@
         if (window.updateLoadingProgress) {
             window.updateLoadingProgress('🎉 引擎全部准备完毕！', 100);
         }
+        // 新增：告诉启动器“所有动态 import 已完成”
+        window.dispatchEvent(new CustomEvent('game-ready'));
         
     } catch (err) {
         if (window.updateLoadingProgress) {

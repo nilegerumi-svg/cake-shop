@@ -95,10 +95,11 @@
 
         const s = { ...def, ...saved };
 
-        /* --- 角色数据：逐个与默认角色合并并夹紧 --- */
-        s.characters = { ...(saved.characters || {}) };
+        /* --- 角色数据：只保留已知角色，逐个与默认值合并并校验 --- */
+        s.characters = {};
         for (const k of Object.keys(def.characters)) {
-            const char = { ...def.characters[k], ...(s.characters[k] || {}) };
+            const src = (saved.characters && saved.characters[k]) || {};
+            const char = { ...def.characters[k], ...src };
             if (!Array.isArray(char.eventsTriggered)) char.eventsTriggered = [];
             char.affection = Number.isFinite(Number(char.affection))
                 ? Math.max(0, Math.min(100, Number(char.affection)))

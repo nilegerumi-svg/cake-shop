@@ -84,9 +84,9 @@
                 </div>
                 <h3>⚡ 快速行动</h3>
                 <div class="char-actions">
-                    <button type="button" class="small" data-action="rest" ${s.energy >= 100 ? 'disabled' : ''}>😴 休息</button>
-                    <!-- 👇 散步按钮直接变成跳转链接，利用 game.html 的路由拦截 -->
-                    <a href="pages/entertainment/map.html" class="small secondary" style="text-decoration:none; text-align:center;">🚶‍♀️ 散步</a>
+                   <button type="button" class="small" data-action="nap" ${s.energy >= 100 ? 'disabled' : ''}>😴 家里小憩</button>
+                   <button type="button" class="small" data-action="sleep">🛌 睡觉</button>
+                   <a href="pages/entertainment/map.html" class="small secondary" style="text-decoration:none; text-align:center;">🚶‍♀️ 散步</a>
                 </div>
                 <h3>🧁 库存蛋糕</h3>
                 ${renderCakes(cakes, s.priceRate)}

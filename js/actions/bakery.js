@@ -98,15 +98,18 @@
         if (state.recipes[name]) return Cake.fail('✅ 已拥有此配方');
         if (state.energy < RESEARCH_ENERGY) return Cake.fail('⚡ 精力不足！');
 
-        // 注意：unlock 对象里是 money 字段，原代码取 unlock.cost 恒为 undefined，
-        // 实际扣款为 0。此处保持原行为未修正，如需按配方表扣钱应改为 r.unlock.money。
+        // 🌟 修复：unlock 对象里是 money 字段，不是 cost
+        const cost = recipe.unlock.money || 0;
+        if (state.money < cost) return Cake.fail(`💸 研发需要 ${cost} 元！`);
+
         state.energy -= RESEARCH_ENERGY;
-        state.money -= recipe.unlock.cost || 0;
+        state.money -= cost;
         state.recipes[name] = true;
 
         Cake.addLog(`🔬 研发成功：${recipe.emoji}${name}`);
         Cake.checkAchievements();
         Cake.refreshPage();
+    };
     };
 
     /* ==================== 挂载 ==================== */

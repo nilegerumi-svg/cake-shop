@@ -16,13 +16,13 @@
 
     const upgradeShop = () => {
         const state = Cake.store.state;
-        const costs = Cake.SHOP_UPGRADE_COSTS;
-        // 注：costs 为对象（{1: 800, 2: 2000, 3: 5000, 4: 10000}），
-        // 原写法 costs.length 为 undefined，实际上限依赖下方 !cost 分支兜底：
-        // Lv.5 时 costs[5] 不存在，会走「升级费用数据异常」分支。
-        const MAX_LEVEL = costs.length;
+        const costs = Cake.SHOP_UPGRADE_COSTS;   // {1:800, 2:2000, 3:5000, 4:10000}
 
-        if (state.shopLevel >= MAX_LEVEL) {
+        // 🌟 修复：costs 是对象，没有 length；最高可升级等级 = 最大 key
+        const MAX_LEVEL = Math.max(...Object.keys(costs).map(Number));
+
+        // 升到 costs[4] 之后 shopLevel 会变成 5，此时即为最高等级
+        if (state.shopLevel > MAX_LEVEL) {
             return Cake.fail('🏪 店铺已是最高等级！');
         }
 
@@ -46,7 +46,6 @@
         if (typeof Cake.checkAchievements === 'function') Cake.checkAchievements();
         Cake.refreshPage();
     };
-
     /* ==================== 店铺装饰 ==================== */
 
     const decorateShop = () => {

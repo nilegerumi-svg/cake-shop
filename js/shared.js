@@ -44,32 +44,35 @@ window.Cake = window.Cake || {};
     const Game = (window.Game = window.Game || {});
 
     const LIVE_KEYS = [
-        // 基础数据
-        'INGREDIENTS', 'RECIPES', 'BUNDLES', 'CHARACTERS', 'AFF_EVENTS',
-        'CHAT_DIALOGUES', 'DATE_DIALOGUES', 'MEETINGS', 'RANDOM_EVENTS',
-        'ACHIEVEMENTS', 'SHOP_UPGRADE_COSTS',
-        
-        // 🌟 最新重构后的地图与事件模块
-        'LOCATIONS', 
-        'COMMON_WALK_EVENTS',
-        'Entertainment', // 娱乐模块的聚合命名空间
-        
-        // 存档与系统
-        'SAVE_KEY', 'SAVE_VERSION',
-        'defaultState', 'hasSave', 'saveState', 'loadStateFromStorage',
-        'resetGame', 'saveGame', 'loadGame', 'showEnding',
-        
-        // 工具与渲染
-        '$', 'addLog', 'ingredientTags', 'affLevel', 'escapeHtml', 'fail',
-        'showModal', 'closeModal',
-        'renderHeader', 'renderNav', 'renderFooter', 'renderLog',
-        'initPage', 'refreshPage',
-        
-        // 动作模块
-        'bakeCake', 'buyIngredient', 'buyBundle', 'researchRecipe',
-        'upgradeShop', 'decorateShop', 'setPriceRate', 'openShop',
-        'social', 'toggleGiftPanel', 'giveGift',
-    ];
+    // 基础数据
+    'INGREDIENTS', 'RECIPES', 'BUNDLES', 'CHARACTERS', 'AFF_EVENTS',
+    'CHAT_DIALOGUES', 'DATE_DIALOGUES', 'MEETINGS', 'RANDOM_EVENTS',
+    'ACHIEVEMENTS', 'SHOP_UPGRADE_COSTS',
+    
+    // 🌟 地图与事件模块
+    'LOCATIONS', 
+    'COMMON_WALK_EVENTS',
+    'Entertainment',
+    
+    // 🕒 时间系统
+    'advanceTime', 'getTimeString', 'getPeriodString',
+    
+    // 存档与系统
+    'SAVE_KEY', 'SAVE_VERSION',
+    'defaultState', 'hasSave', 'saveState', 'loadStateFromStorage',
+    'resetGame', 'saveGame', 'loadGame', 'showEnding',
+    
+    // 工具与渲染
+    '$', 'addLog', 'ingredientTags', 'affLevel', 'escapeHtml', 'fail',
+    'showModal', 'closeModal',
+    'renderHeader', 'renderNav', 'renderFooter', 'renderLog',
+    'initPage', 'refreshPage',
+    
+    // 动作模块
+    'bakeCake', 'buyIngredient', 'buyBundle', 'researchRecipe',
+    'upgradeShop', 'decorateShop', 'setPriceRate', 'openShop',
+    'social', 'toggleGiftPanel', 'giveGift',
+];
 
     for (const key of LIVE_KEYS) {
         Object.defineProperty(Game, key, {

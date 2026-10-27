@@ -1,7 +1,8 @@
 (() => {
     'use strict';
-    window.Cake = window.Cake || {};
-    window.Cake._MAP_DATA_PARK = {
+    const Cake = window.parent.Cake || window.Cake;
+    if (!Cake) return;
+    Cake._MAP_DATA_PARK = {
         id: 'park',
         name: '街心公园', emoji: '🌳', cost: 8,
         desc: '绿树成荫，适合放松心情。',

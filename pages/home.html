@@ -10,7 +10,6 @@
             background: transparent; 
             padding: 16px; 
             margin: 0; 
-            /* 🌟 加上这个，防止内容为空时页面高度塌陷导致滚动条异常 */
             min-height: 100vh;
             box-sizing: border-box;
         }
@@ -20,28 +19,8 @@
     <!-- 渲染容器 -->
     <div id="content"></div>
 
-    <!-- ==================== 核心基础数据层 ==================== -->
-    <!-- 子页面必须有自己的数据底子，才能支撑渲染 -->
-    <script src="../js/core/store.js"></script>
-    <script src="../js/data/ingredients.js"></script>
-    <script src="../js/data/recipes.js"></script>
-    <script src="../js/data/bundles.js"></script>
-    <script src="../js/data/characters.js"></script>
-    <script src="../js/data/events.js"></script>
-    <script src="../js/data/shop-config.js"></script>
-    <script src="../js/data/achievements.js"></script>
-    <script src="../js/core/utils.js"></script>
-    <script src="../js/core/state.js"></script>
-    <script src="../js/core/modal.js"></script>
-    <script src="../js/core/effects.js"></script>
-    <script src="../js/core/render.js"></script>
-
-    <!-- ==================== 兼容层 ==================== -->
-    <!-- 生成 G 对象，让子页面能安全获取父页面的状态 -->
-    <script src="../js/shared.js"></script>
-
     <!-- ==================== 页面逻辑入口 ==================== -->
-    <!-- 🌟 修改这里：直接指向 home 文件夹下的 index.js，绝对不白屏 -->
+    <!-- 删除了所有冗余的数据引入和 shared.js，只留这一根引线！ -->
     <script type="module" src="../js/pages/home/index.js"></script>
 
 </body>

@@ -53,7 +53,7 @@
     <div class="action-footer" id="footer"></div>
 </div>
 
-<!-- 核心与数据 -->
+<!-- ==================== 核心与数据层 ==================== -->
 <script src="js/core/store.js"></script>
 <script src="js/core/bridge.js"></script>
 <script src="js/data/ingredients.js"></script>
@@ -69,208 +69,27 @@
 <script src="js/core/effects.js"></script>
 <script src="js/core/render.js"></script>
 
-<!-- 动作模块 -->
+<!-- ==================== 玩法逻辑层 ==================== -->
 <script src="js/actions/bakery.js"></script>
 <script src="js/actions/shop.js"></script>
 <script src="js/actions/social.js"></script>
 <script src="js/actions/system.js"></script>
 
-<!-- 👇 全新的娱乐与地图模块 👇 -->
-<!-- 1. 通用事件池 -->
 <script src="js/entertainment/common_events.js"></script>
-<!-- 2. 独立地图模块 (注意顺序，index.js 必须在最后) -->
 <script src="js/entertainment/map/home.js"></script>
 <script src="js/entertainment/map/park.js"></script>
 <script src="js/entertainment/map/street.js"></script>
 <script src="js/entertainment/map/river.js"></script>
 <script src="js/entertainment/map/index.js"></script>
-<!-- 3. 核心逻辑 -->
 <script src="js/entertainment/rest.js"></script>
 <script src="js/entertainment/walk.js"></script>
 
-<!-- 兼容层与状态同步 (只能引入一次) -->
+<!-- ==================== 宿主协调层 ==================== -->
 <script src="js/shared.js"></script>
+<script src="js/host/error.js"></script>
+<script src="js/host/router.js"></script>
+<script src="js/host/sync.js"></script>
+<script src="js/host/main.js"></script>
 
-
-<script>
-(() => {
-    'use strict';
-
-    /* ==================== 错误悬浮层 ==================== */
-
-    const errorOverlay = document.getElementById('error-overlay');
-    const MAX_ERRORS = 20;
-    let errorCount = 0;
-
-    const showError = (msg) => {
-        if (errorCount >= MAX_ERRORS) return;
-        errorCount += 1;
-        errorOverlay.style.display = 'block';
-
-        const line = document.createElement('div');
-        line.textContent = `🚨 ${msg}`;
-        errorOverlay.appendChild(line);
-
-        if (errorCount === MAX_ERRORS) {
-            const more = document.createElement('div');
-            more.textContent = '（错误过多，已停止显示）';
-            errorOverlay.appendChild(more);
-        }
-    };
-
-    const formatError = (e) => {
-        const file = e.filename ? e.filename.split('/').pop() : 'unknown';
-        return `${e.message} (${file}:${e.lineno})`;
-    };
-
-    window.addEventListener('error', (e) => {
-        showError(`主页面: ${formatError(e)}`);
-    });
-
-    /* ==================== iframe 引用 ==================== */
-
-    const mainFrame = document.getElementById('mainFrame');
-    const logFrame  = document.getElementById('logFrame');
-    const footer    = document.getElementById('footer');
-    const frames    = [mainFrame, logFrame];
-
-    /* ==================== iframe 内部错误捕获 ==================== */
-
-    const bindErrorCatcher = (iframe, name) => {
-        const attach = () => {
-            try {
-                const win = iframe.contentWindow;
-                if (!win || win.__errorBound) return;
-                win.__errorBound = true;
-                win.addEventListener('error', (e) => {
-                    showError(`${name}: ${formatError(e)}`);
-                });
-            } catch (_) { /* 跨域时忽略 */ }
-        };
-        iframe.addEventListener('load', attach);
-        attach();
-    };
-
-    bindErrorCatcher(mainFrame, '主页');
-    bindErrorCatcher(logFrame, '日志');
-
-    /* ==================== 页面路由（iframe 内跳转） ==================== */
-
-    const normalizePage = (href) => {
-        const t = (href || '').trim().replace(/^\.\//, '');
-        if (!t) return null;
-        if (/^(https?:)?\/\//.test(t) || /^javascript:/i.test(t)) return null;
-        if (t === 'game.html' || t === 'index.html') return 'pages/home.html';
-        if (t.startsWith('pages/')) return t;
-        return `pages/${t}`;
-    };
-
-    const navigateTo = (href) => {
-        const target = normalizePage(href);
-        if (!target) return false;
-        if (mainFrame.getAttribute('src') !== target) mainFrame.src = target;
-        return true;
-    };
-
-    const bindLinkInterceptor = (doc) => {
-        if (!doc || doc.__navBound) return;
-        doc.__navBound = true;
-
-        doc.addEventListener('click', (e) => {
-            const link = e.target && e.target.closest ? e.target.closest('a[href]') : null;
-            if (!link || link.target === '_blank') return;
-
-            const href = link.getAttribute('href');
-            if (!href || href === '#' || /^javascript:/i.test(href)) return;
-            if (!/^[\w./-]+\.html(#.*)?$/.test(href)) return;
-
-            if (navigateTo(href)) e.preventDefault();
-        });
-    };
-
-    bindLinkInterceptor(document);
-
-    for (const f of frames) {
-        f.addEventListener('load', () => {
-            try { bindLinkInterceptor(f.contentDocument); } catch (_) { /* ignore */ }
-        });
-    }
-
-    /* ==================== 跨 iframe 状态同步 ==================== */
-
-    const handleStateChanged = (sourceId) => {
-        const Cake = window.Cake;
-        if (!Cake || !Cake.store) return;
-
-        try {
-            if (typeof Cake.loadStateFromStorage === 'function') {
-                const loaded = Cake.loadStateFromStorage();
-                if (loaded) Cake.store.state = loaded;
-            }
-        } catch (err) {
-            console.warn('[host] load state failed', err);
-        }
-
-        try {
-            if (typeof Cake.renderHeader === 'function') Cake.renderHeader();
-            if (typeof Cake.renderNav === 'function') Cake.renderNav();
-            if (typeof Cake.renderFooter === 'function') Cake.renderFooter();
-        } catch (err) {
-            console.warn('[host] render failed', err);
-        }
-
-        const msg = { type: 'state-sync', sourceId };
-        for (const f of frames) {
-            try { f.contentWindow.postMessage(msg, '*'); } catch (_) { /* ignore */ }
-        }
-    };
-
-    const registerBroadcaster = () => {
-        const bridge = window.Cake && window.Cake.bridge;
-        if (bridge && typeof bridge.setHostBroadcaster === 'function') {
-            bridge.setHostBroadcaster(handleStateChanged);
-            return true;
-        }
-        return false;
-    };
-
-    if (!registerBroadcaster()) {
-        document.addEventListener('DOMContentLoaded', registerBroadcaster);
-    }
-
-    /* ==================== footer 高度 → CSS 变量 ==================== */
-
-    if (footer && window.ResizeObserver) {
-        const ro = new ResizeObserver(() => {
-            document.documentElement.style.setProperty(
-                '--footer-h', `${footer.offsetHeight}px`
-            );
-        });
-        ro.observe(footer);
-    }
-
-    /* ==================== 首屏渲染 ==================== */
-
-    try {
-        const Cake = window.Cake;
-        if (Cake && Cake.store && typeof Cake.loadStateFromStorage === 'function') {
-            const freshState = Cake.loadStateFromStorage();
-            if (freshState) Cake.store.state = freshState;
-        }
-
-        const initializer =
-            (window.Cake && window.Cake.initPage) ||
-            (window.Game && window.Game.initPage);
-
-        if (typeof initializer === 'function') {
-            initializer('home', () => {}, false);
-        } else {
-            showError('首屏渲染失败: 未找到 initPage 方法，请检查 render.js 或 shared.js 是否加载成功。');
-        }
-    } catch (err) {
-        showError(`首屏渲染失败: ${err.message}`);
-    }
-})();
-</script>
 </body>
 </html>

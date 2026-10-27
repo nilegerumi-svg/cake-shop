@@ -15,8 +15,8 @@ export const renderHome = () => {
 
     try {
         const s = G.state;
-        const cakesObj = s.cakes || {};
-        const recipesObj = G.RECIPES || {};
+        const cakesObj = s.cakes ?? {};
+        const recipesObj = G.RECIPES ?? {};
         const cakes = Object.entries(cakesObj).filter(([name, count]) => count > 0 && recipesObj[name]);
 
         let cakesHtml = '<p class="muted">还没有蛋糕库存，快去「烘焙」页面做几个吧！</p>';
@@ -38,8 +38,8 @@ export const renderHome = () => {
                 <p class="muted">今天是经营的第 <b>${s.day || 1}</b> 天，你的「${G.escapeHtml(s.shopName || '甜蜜小屋')}」正散发着甜蜜香气～</p>
                 <div class="grid-2" style="margin-top:12px;">
                     <div class="item-card"><span class="item-emoji">💰</span><span class="item-name">${s.money ?? 500} 元</span><span class="item-desc">当前余额</span></div>
-                    <div class="item-card"><span class="item-emoji">⭐</span><span class="item-name">${s.reputation || 0} 声望</span><span class="item-desc">店铺名气</span></div>
-                    <div class="item-card"><span class="item-emoji">🏪</span><span class="item-name">Lv.${s.shopLevel || 1} · 装饰${s.decoration || 0}</span><span class="item-desc">店铺等级与装饰度</span></div>
+                    <div class="item-card"><span class="item-emoji">⭐</span><span class="item-name">${s.reputation ?? 0} 声望</span><span class="item-desc">店铺名气</span></div>
+                    <div class="item-card"><span class="item-emoji">🏪</span><span class="item-name">Lv.${s.shopLevel ?? 1} · 装饰${s.decoration || 0}</span><span class="item-desc">店铺等级与装饰度</span></div>
                     <div class="item-card"><span class="item-emoji">⚡</span><span class="item-name">${s.energy ?? 80}/100</span><span class="item-desc">今日剩余精力</span></div>
                 </div>
                 <h3>⚡ 快速行动</h3>

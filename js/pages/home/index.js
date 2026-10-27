@@ -1,5 +1,4 @@
 // js/pages/home/index.js
-
 import { renderHome } from './view.js';
 import { bindEvents } from './events.js';
 
@@ -10,12 +9,11 @@ import { bindEvents } from './events.js';
     let retryCount = 0;
 
     const init = () => {
-        // 实时去父页面找 Game 对象
         const G = window.parent.Game || window.Game;
 
-        // 🚨 核心修改：不仅要有 G，还要等数据 (state) 和 渲染器 (initPage) 都就绪！
+        // 等待引擎、数据和渲染器彻底就绪
         if (!G || !G.state || typeof G.initPage !== 'function') {
-            if (retryCount < 50) { // 延长到 50 次（约 5 秒），防止手机网络慢
+            if (retryCount < 50) {
                 retryCount++;
                 setTimeout(init, 100);
             } else {
@@ -28,12 +26,10 @@ import { bindEvents } from './events.js';
             return;
         }
 
-        // 🌟 只有完全就绪了，才执行绑定和渲染
         console.log('✅ 引擎和数据完全就绪，开始渲染主页');
         bindEvents();
         G.initPage('home', renderHome);
     };
 
-    // 启动等待
     init();
 })();

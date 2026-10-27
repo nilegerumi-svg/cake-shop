@@ -8,18 +8,38 @@
 
     // 跨天处理逻辑（高内聚，以后跨天要扣租金、刷新商品都在这里加）
     const handleNextDay = (daysPassed) => {
-        const advanceTime = (minutes) => {
-        const m = Number(minutes);
+    const state = Cake.store.state;
+    state.energy = Math.min(100, state.energy + 30 * daysPassed);
+    Cake.addLog?.(`🌅 新的一天开始了！（第 ${state.day} 天），恢复了全部体力。`);
+    // 🟡 扩展点：跨天刷新货架、触发事件等
+};
+
+const advanceTime = (minutes) => {
+    const m = Number(minutes);
     if (!Number.isFinite(m) || m < 0) {
-        console.warn('[Time] 非法时间推进被拒绝:', m);
+        console.warn('[Time] 非法时间推进被拒绝:', minutes);
         return;
     }
-        const state = Cake.store.state;
-        state.energy = Math.min(100, state.energy + 30 * daysPassed); // 每天恢复 30 体力
-        Cake.addLog?.(`🌅 新的一天开始了（第 ${state.day} 天），恢复了部分体力。`);
-        
-        // 💡 扩展点：跨天时，你可以在这里触发好感事件、扣除店铺租金等
-    };
+
+    const state = Cake.store.state;
+    if (state.hour === undefined) state.hour = 8;
+    if (state.minute === undefined) state.minute = 0;
+
+    let totalMins = state.hour * 60 + state.minute + m;
+    let daysPassed = Math.floor(totalMins / MINUTES_PER_DAY);
+
+    if (daysPassed > 0) {
+        totalMins = totalMins % MINUTES_PER_DAY;
+        state.day += daysPassed;
+        handleNextDay(daysPassed);
+    }
+
+    state.hour = Math.floor(totalMins / 60);
+    state.minute = totalMins % 60;
+
+    Cake.saveState?.();
+    Cake.refreshPage?.();
+};
 
     /**
      * 推进时间（核心方法）

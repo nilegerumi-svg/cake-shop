@@ -7,13 +7,10 @@
     <link rel="stylesheet" href="../css/styles.css">
     <style>
         body { background: transparent; padding: 16px; margin: 0; min-height: 100vh; box-sizing: border-box; display: block !important; }
-        .loading-text { text-align: center; color: #d6336c; margin-top: 50px; font-weight: bold; }
     </style>
 </head>
 <body>
-    <div id="content">
-        <h2 class="loading-text">⏳ 正在努力下载游戏引擎，请稍候...</h2>
-    </div>
+    <div id="content"></div>
 
     <script>
     (() => {
@@ -23,16 +20,15 @@
             const G = window.parent.Game || window.Game;
             const contentEl = document.getElementById('content');
 
-            // 🚨 彻底去掉 retryCount 限制，只要没来，就一直等！
+            // 父页面没有准备好时，什么都不显示，就在后台等
             if (!G || !G.state) {
-                setTimeout(render, 200);
+                setTimeout(render, 100);
                 return;
             }
 
-            // ✅ 引擎终于来了，瞬间渲染界面
             try {
                 const s = G.state;
-                // ... 下面的渲染代码保持你原来的样子 ...
+                // ...（渲染你主页卡片的代码，直接用原来的即可）...
                 const cakesObj = s.cakes || {};
                 const recipesObj = G.RECIPES || {};
                 const cakes = Object.entries(cakesObj).filter(([name, count]) => count > 0 && recipesObj[name]);
@@ -80,7 +76,7 @@
                 }, { once: true });
 
             } catch (err) {
-                contentEl.innerHTML = `<h2 class="loading-text" style="color:red;">❌ 渲染异常：${err.message}</h2>`;
+                contentEl.innerHTML = `<div style="color: red; padding: 20px; background: #fff;">❌ 渲染发生异常：${err.message}</div>`;
             }
         };
 

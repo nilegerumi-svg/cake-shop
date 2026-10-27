@@ -1,10 +1,10 @@
-// 根目录的 monitor.js
+// js/monitor.js
 (() => {
     'use strict';
 
     console.log('%c🛡️ [Root Monitor] 根目录总监视器已启动', 'color: #ff6b81; font-weight: bold; font-size: 14px;');
 
-    // 0. 进度条更新（main.js 依赖它）
+    // 进度条更新（main.js 依赖）
     window.updateLoadingProgress = (text, percent) => {
         const textEl = document.getElementById('loading-text');
         const barEl = document.getElementById('loading-bar');
@@ -12,7 +12,7 @@
         if (barEl) barEl.style.width = (percent || 0) + '%';
     };
 
-    // 1. 动态构建外壳（幂等：已存在就不再重建）
+    // 1. 动态构建外壳（幂等：已存在就不重建）
     const root = document.getElementById('app-root');
     if (root && !document.getElementById('mainFrame')) {
         root.innerHTML = `
@@ -41,10 +41,19 @@
         });
     }
 
-    // 3. 等 main.js 的动态 import 链全部完成后再唤醒主页
+    // 3. 唤醒主页（只执行一次）
+    let booted = false;
     const boot = () => {
+        if (booted) return;
+        booted = true;
+
         const mainFrame = document.getElementById('mainFrame');
-        if (!mainFrame) return;
+        if (!mainFrame) {
+            console.error('❌ [Root Monitor] 找不到 #mainFrame！');
+            return;
+        }
+
+        console.log('%c✅ [Root Monitor] 核心引擎及所有模块加载完毕！', 'color: #4caf50; font-weight: bold;');
         console.log('🖼️ [Root Monitor] 正式加载主页 iframe...');
         mainFrame.src = 'pages/home.html';
 
@@ -57,21 +66,26 @@
         };
     };
 
-    // main.js 完成后会派发这个事件
-    window.addEventListener('game-ready', () => {
-        console.log('%c✅ [Root Monitor] 核心引擎及所有模块加载完毕！', 'color: #4caf50; font-weight: bold;');
-        boot();
-    });
+    // 主路径：main.js 完成后派发 game-ready
+    window.addEventListener('game-ready', boot);
+
+    // 兜底：如果 game-ready 没来，轮询 window.Game（最多 15 秒）
+    let tries = 0;
+    const fallback = setInterval(() => {
+        if (tries++ > 150) { clearInterval(fallback); return; }
+        if (typeof window.Game !== 'undefined') {
+            clearInterval(fallback);
+            boot();
+        }
+    }, 100);
 
     // 4. 加载主引擎
     console.log('⏳ [Root Monitor] 准备加载 js/main.js 引擎...');
     const script = document.createElement('script');
     script.type = 'module';
     script.src = './js/main.js';
-
     script.onerror = () => {
         console.error('❌ [Root Monitor] 致命错误：无法加载 js/main.js，请检查路径或网络！');
     };
-
     document.body.appendChild(script);
 })();

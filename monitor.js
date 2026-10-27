@@ -1,4 +1,4 @@
-//monitor.js
+// js/monitor.js
 (() => {
     'use strict';
 
@@ -180,12 +180,29 @@
     // 精确判断是否为 js/main.js（含 query / hash），不用 indexOf 做子串匹配
     const isMainJsUrl = (src) => /(^|\/)js\/main\.js(?:[?#]|$)/.test(src);
 
+    // 【新增】供外层 error 监听触发快速失败（fail 定义在 init 内部，需通过引用桥接）
+    let failEngine = null;
+
     window.addEventListener('error', (e) => {
         const t = e.target;
+
+        // 【新增】运行时错误来自 js/main.js（注意：不是资源加载失败，那种走 script.onerror）
+        const isRuntimeFromMain =
+            typeof e.filename === 'string' &&
+            isMainJsUrl(e.filename) &&
+            !(t && t !== window && (t.src || t.href));
+        if (isRuntimeFromMain) {
+            console.error('❌ [Root Monitor] main.js 运行异常:', e.message);
+            if (failEngine) failEngine('核心引擎运行异常: ' + (e.message || '未知错误'));
+            return;
+        }
+
         let msg;
         if (t && t !== window && (t.src || t.href)) {
             const src = t.src || t.href;
             if (isMainJsUrl(src)) return;
+            // 【可选】过滤第三方来源，只显示自己域名的
+            try { if (new URL(src).origin !== location.origin) return; } catch { /* ignore */ }
             msg = '资源加载失败: ' + src;
         } else if (e.message) {
             msg = e.message;
@@ -312,6 +329,9 @@
             if (mainFrame) { try { mainFrame.src = 'about:blank'; } catch { /* ignore */ } }
             finishLoading();
         };
+
+        // 【新增】让外层 error 监听能调用 fail
+        failEngine = fail;
 
         const tryBoot = () => {
             if (state.booted || state.fatal || !state.engineReady || !state.homeReady) return;

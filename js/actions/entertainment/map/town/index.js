@@ -1,10 +1,18 @@
 // js/entertainment/map/town/index.js
+
+// 1. 引入城镇下的所有地点（注意必须带 .js 后缀）
+import './home/index.js';
+import './park/index.js';
+import './street/index.js';
+import './river/index.js';
+
+// 2. 执行注册逻辑
 (() => {
     'use strict';
     const Cake = window.parent.Cake || window.Cake;
     if (!Cake) return;
 
-    // 🌟 城镇地点字典
+    // 城镇地点字典
     Cake.REGION_TOWN = {
         home: Cake._MAP_DATA_HOME,
         park: Cake._MAP_DATA_PARK,

@@ -1,4 +1,4 @@
-// js/monitor.js
+// monitor.js
 (() => {
     'use strict';
 
@@ -7,7 +7,6 @@
         console.warn('⚠️ [Root Monitor] 已加载，跳过重复初始化');
         return;
     }
-    // 立即置位：即使后续同步异常，也避免重复 <script> 再次执行导致状态机撕裂
     window.__rootMonitorLoaded = true;
 
     console.log('%c🛡️ [Root Monitor] 根目录总监视器已启动', 'color: #ff6b81; font-weight: bold; font-size: 14px;');
@@ -29,7 +28,7 @@
     let gameReadyFired = false;
     window.addEventListener('game-ready', () => { gameReadyFired = true; }, { once: true });
 
-    /* ================= 3. 内部状态（闭包私有） ================= */
+    /* ================= 3. 内部状态 ================= */
     const state = {
         booted: false,
         fatal: false,
@@ -59,12 +58,10 @@
     const MAX_PENDING = 100;
     const MAX_DISPLAY_COUNT = 999;
     const pendingErrors = [];
-    const errorCounts = new Map(); // msg -> { el, count }
+    const errorCounts = new Map();
     let overlayEl = null;
     let pendingDropWarned = false;
 
-    // 只裁剪本模块创建的运行时条目：直接走 errorCounts，
-    // 不依赖 class 选择器，避免误伤 HTML 模板或未来其它来源的同类条目。
     const trimRuntimeErrors = () => {
         while (errorCounts.size > MAX_ERRORS) {
             const [k, v] = errorCounts.entries().next().value;
@@ -82,7 +79,6 @@
             existing.count++;
             const n = existing.count > MAX_DISPLAY_COUNT ? MAX_DISPLAY_COUNT + '+' : existing.count;
             existing.el.textContent = `🚨 系统异常: ${msg} (×${n})`;
-            // 真正的 LRU：命中后移到 Map 尾部，避免高频错误被当作“最早插入项”淘汰
             errorCounts.delete(msg);
             errorCounts.set(msg, existing);
             return true;
@@ -107,26 +103,15 @@
         const el = document.createElement('div');
         el.id = 'error-overlay';
         el.style.cssText = [
-            'display:none',
-            'position:fixed',
-            'top:0', 'left:0', 'right:0',
-            'max-height:40vh',
-            'overflow:auto',
-            'z-index:9999',
-            'background:rgba(200,0,0,0.9)',
-            'color:#fff',
-            'font:12px/1.5 monospace',
-            'padding:8px 12px'
+            'display:none', 'position:fixed', 'top:0', 'left:0', 'right:0',
+            'max-height:40vh', 'overflow:auto', 'z-index:9999',
+            'background:rgba(200,0,0,0.9)', 'color:#fff',
+            'font:12px/1.5 monospace', 'padding:8px 12px'
         ].join(';');
         (document.body || document.documentElement).appendChild(el);
         return el;
     };
 
-    /**
-     * 确保 overlayEl 可用且已挂载。
-     * 复用时不动其子节点——模板静态内容与运行时条目均由各自所有者管理；
-     * 若旧运行时节点已随 overlay 一起被移出文档，下一次同名错误会自然重建。
-     */
     const ensureOverlay = () => {
         if (overlayEl && overlayEl.isConnected) return true;
 
@@ -137,7 +122,6 @@
                 document.body.appendChild(existing);
             }
             overlayEl = existing;
-            // 复用前清掉指向已脱离文档的旧条目，避免 trim/计数出现幽灵项
             for (const [k, v] of errorCounts) {
                 if (!v || !v.el || !v.el.isConnected) errorCounts.delete(k);
             }
@@ -145,7 +129,6 @@
         }
 
         overlayEl = createOverlay();
-        // overlay 全新重建，旧计数全部失效
         errorCounts.clear();
         return overlayEl.isConnected;
     };
@@ -154,8 +137,6 @@
         const text = (msg === undefined || msg === null || msg === '') ? '(未知错误)' : String(msg);
 
         if (renderError(text)) return;
-
-        // overlay 丢失或不可用：先自愈，再把历史积压与当前条补渲染
         ensureOverlay();
         flushErrors();
         if (renderError(text)) return;
@@ -177,16 +158,15 @@
         try { return JSON.stringify(reason); } catch { return String(reason); }
     };
 
-    // 精确判断是否为 js/main.js（含 query / hash），不用 indexOf 做子串匹配
     const isMainJsUrl = (src) => /(^|\/)js\/main\.js(?:[?#]|$)/.test(src);
 
-    // 【新增】供外层 error 监听触发快速失败（fail 定义在 init 内部，需通过引用桥接）
+    // 供外层 error 监听触发快速失败
     let failEngine = null;
 
     window.addEventListener('error', (e) => {
         const t = e.target;
 
-        // 【新增】运行时错误来自 js/main.js（注意：不是资源加载失败，那种走 script.onerror）
+        // 运行时错误来自 js/main.js：快速失败
         const isRuntimeFromMain =
             typeof e.filename === 'string' &&
             isMainJsUrl(e.filename) &&
@@ -201,7 +181,6 @@
         if (t && t !== window && (t.src || t.href)) {
             const src = t.src || t.href;
             if (isMainJsUrl(src)) return;
-            // 【可选】过滤第三方来源，只显示自己域名的
             try { if (new URL(src).origin !== location.origin) return; } catch { /* ignore */ }
             msg = '资源加载失败: ' + src;
         } else if (e.message) {
@@ -232,16 +211,13 @@
             try {
                 w = frame.contentWindow;
                 if (!w || w === window) return;
-                void w.location.href; // 同源检测
+                void w.location.href;
             } catch { return; }
 
             try {
                 if (w.location.href === 'about:blank') return;
             } catch { /* ignore */ }
 
-            // 校验通过后才移除旧 handler：
-            // 若中途 return（contentWindow 为 null / about:blank），
-            // WeakMap 里的旧记录仍保留，便于下次导航成功后清理。
             const prev = frameHandlers.get(frame);
             if (prev) {
                 try {
@@ -281,7 +257,6 @@
     const init = () => {
         state.initAt = Date.now() - state.startedAt;
 
-        /* --- 定时器与可变引用提到顶层，保证 catch / fail 都能清理 --- */
         let tries = 0;
         const MAX_TRIES = 150;
         let fallbackTimer = null;
@@ -323,14 +298,13 @@
             console.error(`❌ [Root Monitor] 启动失败 @${elapsed}ms:`, reason);
 
             ensureOverlay();
-            flushErrors();       // 先渲染积压的历史错误（时间更早）
-            showError(reason);   // fail 原因放最后（时间上最新）
+            flushErrors();
+            showError(reason);
 
             if (mainFrame) { try { mainFrame.src = 'about:blank'; } catch { /* ignore */ } }
             finishLoading();
         };
 
-        // 【新增】让外层 error 监听能调用 fail
         failEngine = fail;
 
         const tryBoot = () => {
@@ -348,7 +322,6 @@
 
         const markEngineReady = () => {
             if (softReadyTimer) { clearTimeout(softReadyTimer); softReadyTimer = null; }
-            // fatal 后迟到的 game-ready 不应污染状态（否则 __rootMonitorState 会自相矛盾）
             if (state.engineReady || state.fatal) return;
             state.engineReady = true;
             state.engineReadyAt = Date.now() - state.startedAt;
@@ -358,13 +331,11 @@
         try {
             const root = document.getElementById('app-root');
 
-            // --- 6a. 页面结构自检 ---
             if (!root) {
                 fail('未找到 #app-root，页面结构异常');
                 return;
             }
 
-            // --- 6b. 保护 loading 屏 ---
             loadingScreen = document.getElementById('app-loading');
             if (loadingScreen && root.contains(loadingScreen) && document.body) {
                 if (window.getComputedStyle(loadingScreen).position === 'static') {
@@ -378,11 +349,10 @@
                 document.body.appendChild(loadingScreen);
             }
 
-            // --- 6c. 错误 overlay ---
             ensureOverlay();
             flushErrors();
 
-            // --- 6d. 外壳（幂等） ---
+            // 外壳（幂等：game.html 已写好了外壳，这里跳过）
             if (!document.getElementById('mainFrame')) {
                 root.innerHTML = `
                     <div class="app-wrapper" style="display:flex; flex-direction:column; height:100vh; height:100dvh;">
@@ -419,7 +389,6 @@
                     if (!w) return;
                     try {
                         if (w.location.href === 'about:blank') return;
-                        // 同源时确认文档已 complete，避免二次导航中途被误判为 ready
                         const doc = mainFrame.contentDocument;
                         if (doc && doc.readyState !== 'complete') return;
                     } catch { /* 跨域，放过 */ }
@@ -434,8 +403,6 @@
             const alreadyNavigated = !!(currentSrc && currentSrc !== 'about:blank');
 
             mainFrame.addEventListener('load', () => {
-                // fail / tryBoot 之后再发生的 load（例如 fail 里切回 about:blank 触发的）
-                // 不应再挂新的 homeLoadTimer。
                 if (state.homeReady || state.fatal || state.booted) return;
                 if (homeLoadTimer) clearTimeout(homeLoadTimer);
                 homeLoadTimer = setTimeout(() => {
@@ -444,22 +411,17 @@
                 }, 300);
             });
 
-            // 契约（pages/home.html 需配合）：
-            //   try {
-            //       const targetOrigin = location.origin === 'null' ? '*' : location.origin;
-            //       window.parent.postMessage({ type: 'home-ready' }, targetOrigin);
-            //   } catch {}
             onHomeMessage = (e) => {
                 if (e.origin !== location.origin) return;
                 if (!mainFrame || e.source !== mainFrame.contentWindow) return;
                 if (e.data && e.data.type === 'home-ready') {
-                      markHomeReady(true);
+                    markHomeReady(true);
 
-                     // 回执
+                    // ✅ 回执：否则 home.html 会一直重试到 home-ready-failed
                     try {
-                              const targetOrigin = location.origin === 'null' ? '*' : location.origin;
-                              e.source.postMessage({ type: 'home-ready-ack' }, targetOrigin);
-                        } catch { /* ignore */ }
+                        const targetOrigin = location.origin === 'null' ? '*' : location.origin;
+                        e.source.postMessage({ type: 'home-ready-ack' }, targetOrigin);
+                    } catch { /* ignore */ }
                 }
             };
             window.addEventListener('message', onHomeMessage);
@@ -500,7 +462,6 @@
             window.addEventListener('game-ready', markEngineReady, { once: true });
             if (gameReadyFired) markEngineReady();
 
-            // 同步路径可能已 boot（外部脚本提前派发 game-ready），此时无需再轮询 / 加载引擎
             if (state.booted || state.fatal) return;
 
             // --- 6g. 兜底轮询 ---
@@ -547,7 +508,6 @@
             const reason = 'Monitor init 异常: ' + formatReason(err);
             console.error('❌ [Root Monitor] init 异常:', err);
             if (state.booted || state.fatal) {
-                // init 已完成后才抛出的异常：只记录，不改变启动状态
                 ensureOverlay();
                 flushErrors();
                 showError(reason);

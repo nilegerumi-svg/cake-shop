@@ -4,17 +4,16 @@
     const Cake = window.parent.Cake || window.Cake;
     if (!Cake) return;
 
-    // 🌟 构建地点地址表
-    Cake.LOCATIONS = {
-        home: Cake._MAP_DATA_HOME,
-        park: Cake._MAP_DATA_PARK,
-        street: Cake._MAP_DATA_STREET,
-        river: Cake._MAP_DATA_RIVER
-    };
+    // 🌟 全局地点大字典
+    Cake.LOCATIONS = {};
 
-    // 清理临时数据（保持内存干净）
-    delete Cake._MAP_DATA_HOME;
-    delete Cake._MAP_DATA_PARK;
-    delete Cake._MAP_DATA_STREET;
-    delete Cake._MAP_DATA_RIVER;
+    // 汇总城镇区域
+    if (Cake.REGION_TOWN) {
+        Object.assign(Cake.LOCATIONS, Cake.REGION_TOWN);
+    }
+
+    // 💡 未来扩展：如果你加了大海区域 (seaside)
+    // if (Cake.REGION_SEASIDE) {
+    //     Object.assign(Cake.LOCATIONS, Cake.REGION_SEASIDE);
+    // }
 })();

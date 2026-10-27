@@ -6,48 +6,28 @@
 
     const MINUTES_PER_DAY = 24 * 60; // 1440 分钟
 
-    // 跨天处理逻辑（高内聚，以后跨天要扣租金、刷新商品都在这里加）
+    // 跨天处理逻辑（高内聚，以后跨天要刷新货、刷新商品都在这加）
     const handleNextDay = (daysPassed) => {
-    const state = Cake.store.state;
-    state.energy = Math.min(100, state.energy + 30 * daysPassed);
-    Cake.addLog?.(`🌅 新的一天开始了！（第 ${state.day} 天），恢复了全部体力。`);
-    // 🟡 扩展点：跨天刷新货架、触发事件等
-};
+        const state = Cake.store.state;
+        state.energy = Math.min(100, state.energy + 30 * daysPassed); // 每天恢复 30 体力
+        Cake.addLog?.(`🌅 新的一天开始了！（第 ${state.day} 天），恢复了全部体力。`);
 
-const advanceTime = (minutes) => {
-    const m = Number(minutes);
-    if (!Number.isFinite(m) || m < 0) {
-        console.warn('[Time] 非法时间推进被拒绝:', minutes);
-        return;
-    }
-
-    const state = Cake.store.state;
-    if (state.hour === undefined) state.hour = 8;
-    if (state.minute === undefined) state.minute = 0;
-
-    let totalMins = state.hour * 60 + state.minute + m;
-    let daysPassed = Math.floor(totalMins / MINUTES_PER_DAY);
-
-    if (daysPassed > 0) {
-        totalMins = totalMins % MINUTES_PER_DAY;
-        state.day += daysPassed;
-        handleNextDay(daysPassed);
-    }
-
-    state.hour = Math.floor(totalMins / 60);
-    state.minute = totalMins % 60;
-
-    Cake.saveState?.();
-    Cake.refreshPage?.();
-};
+        // 🟡 扩展点：跨天时，你可以在这里触发好感事件、刷新店铺货架等
+    };
 
     /**
      * 推进时间（核心方法）
      * @param {number} minutes 要推进的分钟数
      */
-    const advanceTime = (m) => {
+    const advanceTime = (minutes) => {
+        const m = Number(minutes);
+        if (!Number.isFinite(m) || m < 0) {
+            console.warn('[Time] 非法时间推进被拒绝:', minutes);
+            return;
+        }
+
         const state = Cake.store.state;
-        
+
         // 兼容旧存档：如果没有时间字段，默认 08:00
         if (state.hour === undefined) state.hour = 8;
         if (state.minute === undefined) state.minute = 0;
@@ -82,20 +62,20 @@ const advanceTime = (minutes) => {
     };
 
     /**
-     * 获取当前时间段（早晨、中午、晚上等）
+     * 获取当前时间段（清晨、上午、中午等）
      */
     const getPeriodString = () => {
         const state = Cake.store.state;
         const h = state.hour ?? 8;
         if (h >= 5 && h < 9) return '🌅 清晨';
         if (h >= 9 && h < 12) return '☀️ 上午';
-        if (h >= 12 && h < 14) return '🍱 中午';
+        if (h >= 12 && h < 14) return '🍚 中午';
         if (h >= 14 && h < 18) return '🌤️ 下午';
         if (h >= 18 && h < 22) return '🌙 晚上';
         return '🌌 深夜';
     };
 
-    // 挂载到全局
+    // 加载到全局
     Cake.advanceTime = advanceTime;
     Cake.getTimeString = getTimeString;
     Cake.getPeriodString = getPeriodString;

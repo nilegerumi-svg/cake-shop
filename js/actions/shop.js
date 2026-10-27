@@ -70,10 +70,18 @@
     /* ==================== 定价调整 ==================== */
 
     const setPriceRate = (rate) => {
-        const state = Cake.store.state;
-        state.priceRate = rate;
-        Cake.addLog(`💰 定价调整为 ${rate.toFixed(1)}x`);
-        Cake.refreshPage();
+    const state = Cake.store.state;
+
+    const r = Number(rate);
+    if (!Number.isFinite(r) || r <= 0) {
+        return Cake.fail('⚠️ 定价系数不合法！');
+    }
+
+    // 限制在合理区间，防止 0 / 负数导致卖蛋糕倒扣钱
+    state.priceRate = Math.min(1.5, Math.max(0.8, r));
+
+    Cake.addLog(`💰 定价调整为 ${state.priceRate.toFixed(1)}x`);
+    Cake.refreshPage();
     };
 
     /* ==================== 开店营业 ==================== */

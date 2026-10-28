@@ -1,4 +1,6 @@
 // monitor.js — 根目录启动器（game.html 使用）
+// 定位：只负责「启动编排」——加载 js/main.js、等待 game-ready + home-ready、错误兜底、loading 收尾。
+// 它不参与任何模块注册（LIVE_KEYS/REQUIRED/folderRegistry 已废除），所以不受区块自治改造影响。
 (() => {
     'use strict';
 
@@ -407,6 +409,14 @@
             }
 
             window.addEventListener('game-ready', markEngineReady, { once: true });
+
+            // ⭐ 新增：引擎一旦标记失败（main.js 会置 __engineFailed 并发 game-error），
+            //        立刻失败，而不是等到 15s 超时。
+            window.addEventListener('game-error', (e) => {
+                const d = e.detail || {};
+                fail(d.message || '核心引擎初始化失败');
+            });
+
             if (gameReadyFired) markEngineReady();
 
             if (state.booted || state.fatal) return;
@@ -415,6 +425,14 @@
                 if (state.booted || state.fatal) { clearTimers(); return; }
                 if (state.engineReady) { clearInterval(fallbackTimer); fallbackTimer = null; return; }
                 if (window.__engineReady) { markEngineReady(); return; }
+
+                // ⭐ 引擎失败早退（main.js 通过 defGlobal 写入 __engineFailed / __engineError）
+                if (window.__engineFailed) {
+                    fail(window.__engineError || '核心引擎初始化失败');
+                    return;
+                }
+
+                // window.Game 现在是 Proxy（shared.js 挂载），typeof 仍为 object，软就绪照常工作
                 if (typeof window.Game !== 'undefined' && !softReadyTimer) {
                     softReadyTimer = setTimeout(() => {
                         softReadyTimer = null;

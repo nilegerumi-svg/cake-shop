@@ -2,9 +2,21 @@
 (() => {
     'use strict';
 
-    // 获取当前环境下的 Cake
-    const Cake = window.Cake;
-    if (!Cake) return;
+    // ⚠️ 不强制依赖 window.Cake：即使 core/store.js 未定义 Cake，
+    // 也能用 localStorage 兜底走完流程，并正常关闭 loading 屏。
+    const Cake = window.Cake || null;
+
+    const finish = () => {
+        if (typeof window.appLoadingComplete === 'function') {
+            window.appLoadingComplete();
+        }
+    };
+    const fail = (msg) => {
+        if (typeof window.appLoadingFail === 'function') {
+            window.appLoadingFail(msg);
+        }
+        console.error('❌ [Start]', msg);
+    };
 
     /* ---------------- 常量与 DOM ---------------- */
 
@@ -15,12 +27,22 @@
         cake:  '🧁',
     });
 
-    const group        = document.getElementById('avatarGroup');
-    const options      = [...group.querySelectorAll('.avatar-option')];
-    const btnStart     = document.getElementById('btnStart');
-    const btnContinue  = document.getElementById('btnContinue');
-    const nameInput    = document.getElementById('playerName');
-    const shopInput    = document.getElementById('shopName');
+    const group       = document.getElementById('avatarGroup');
+    const btnStart    = document.getElementById('btnStart');
+    const btnContinue = document.getElementById('btnContinue');
+    const nameInput   = document.getElementById('playerName');
+    const shopInput   = document.getElementById('shopName');
+
+    if (!group || !btnStart || !btnContinue || !nameInput || !shopInput) {
+        fail('开始页 DOM 结构缺失，请检查 index.html');
+        return;
+    }
+
+    const options = [...group.querySelectorAll('.avatar-option')];
+    if (options.length === 0) {
+        fail('未找到头像选项');
+        return;
+    }
 
     const DEFAULT_PLAYER_NAME = '小甜心';
     const DEFAULT_SHOP_NAME   = '甜蜜小屋';
@@ -37,7 +59,7 @@
             o.setAttribute('aria-checked', String(on));
             o.setAttribute('tabindex', on ? '0' : '-1');
         }
-        selectedKey = opt.dataset.avatar;
+        selectedKey = opt.dataset.avatar || 'girl1';
     };
 
     const moveFocus = (idx, delta) => {
@@ -77,7 +99,11 @@
 
     const hasSave = () => {
         try {
-            return typeof Cake.hasSave === 'function' && Cake.hasSave();
+            if (Cake && typeof Cake.hasSave === 'function') {
+                return !!Cake.hasSave();
+            }
+            // 兜底：Cake 不可用时，检查 localStorage 是否已有玩家名
+            return !!localStorage.getItem('playerName');
         } catch (err) {
             console.warn('检查存档失败:', err);
             return false;
@@ -108,18 +134,24 @@
         const avatar     = AVATAR_EMOJI[selectedKey] || AVATAR_EMOJI.girl1;
 
         try {
-            if (typeof Cake.defaultState === 'function' && typeof Cake.saveState === 'function') {
+            // 优先走 Cake 存档系统
+            if (
+                Cake &&
+                typeof Cake.defaultState === 'function' &&
+                typeof Cake.saveState === 'function'
+            ) {
                 const state = Cake.defaultState();
                 Object.assign(state, { playerName, shopName, avatar });
 
-                Cake.store.state = state;
+                if (Cake.store) Cake.store.state = state;
                 Cake.saveState();
             } else {
+                // 兜底：localStorage 三件套（shared.js 在 game.html 会读取）
                 localStorage.setItem('playerName', playerName);
                 localStorage.setItem('shopName', shopName);
                 localStorage.setItem('playerAvatar', selectedKey);
 
-                if (typeof Cake.SAVE_KEY === 'string') {
+                if (Cake && typeof Cake.SAVE_KEY === 'string') {
                     localStorage.removeItem(Cake.SAVE_KEY);
                 }
             }
@@ -133,4 +165,8 @@
     /* ---------------- 继续游戏 ---------------- */
 
     btnContinue.addEventListener('click', goToGame);
+
+    /* ---------------- 收尾：关闭 loading 屏 ---------------- */
+
+    finish();
 })();

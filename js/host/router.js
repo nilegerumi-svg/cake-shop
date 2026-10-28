@@ -10,13 +10,13 @@
         const t = (href || '').trim().replace(/^\.\//, '');
         if (!t) return null;
         if (/^(https?:)?\/\//.test(t) || /^javascript:/i.test(t)) return null;
-        
+
         if (t === 'game.html' || t === 'index.html' || t === '/') return 'pages/home.html';
         if (t.startsWith('pages/')) return t;
-        
-        // 如果带有奇怪的嵌套，强行拔出来
+
+        // 处理 ../pages/xxx 这类路径
         if (t.includes('pages/')) return t.substring(t.indexOf('pages/'));
-        
+
         return `pages/${t}`;
     };
 
@@ -29,7 +29,7 @@
         if (url.includes('love')) return 'love';
         if (url.includes('entertainment')) return 'fun';
         if (url.includes('profile')) return 'profile';
-        return 'home'; 
+        return 'home';
     };
 
     const highlightNav = (targetUrl) => {
@@ -47,14 +47,14 @@
                     link.style.cssText = 'background: #ffffff; color: #d6336c; box-shadow: none; transform: none;';
                 }
             });
-        } catch (e) {}
+        } catch (_) {}
     };
 
     // 3. 唯一的绝对跳转入口
     const navigateTo = (href) => {
         const target = normalizePage(href);
         if (!target) return false;
-        
+
         highlightNav(target);
 
         if (mainFrame.getAttribute('src') !== target) {
@@ -65,17 +65,19 @@
 
     window.HostRouter = { navigateTo };
 
-    // 4. 🚨 霸王条款：剥夺子页面的跳转权
+    // 4. 剥夺子页面的跳转权
     const enforceParentAuthority = (iframe) => {
         try {
             const win = iframe.contentWindow;
             const doc = iframe.contentDocument;
             if (!win || !doc) return;
 
-            if (win.__parentEnforced) return;
-            win.__parentEnforced = true;
+            // ⚠️ 关键修复：用 document 做幂等标记。
+            // iframe 导航后 contentWindow 是同一个 WindowProxy，
+            // 但 document 是新的；用 win 标记会导致第二次导航后监听失效。
+            if (doc.__parentEnforced) return;
+            doc.__parentEnforced = true;
 
-            // 第一重防御：拦截子页面里所有的 <a> 标签点击
             doc.addEventListener('click', (e) => {
                 const link = e.target && e.target.closest ? e.target.closest('a[href]') : null;
                 if (!link || link.target === '_blank') return;
@@ -83,21 +85,15 @@
                 if (!href || href === '#' || /^javascript:/i.test(href)) return;
 
                 if (navigateTo(href)) {
-                    e.preventDefault(); // 强行阻断浏览器默认跳转
+                    e.preventDefault();
                 }
             });
 
-            // 第二重：给子页面注入一个可靠的跳转接口。
-            // 说明：window.location 是浏览器保护的只读 accessor，
-            // 无法用 Object.defineProperty 覆盖（旧代码在这里静默失效），
-            // 所以改为让子页面主动调用 window.HostRouter.navigateTo()。
+            // 给子页面注入跳转接口（window.location 无法被覆盖）
             if (!win.HostRouter) {
                 win.HostRouter = { navigateTo };
             }
-
-        } catch (err) {
-            /* 跨域时忽略 */
-        }
+        } catch (_) { /* 跨域忽略 */ }
     };
 
     // 5. 绑定父页面自己的点击
@@ -109,12 +105,12 @@
             if (!link) return;
             const href = link.getAttribute('href');
             if (!href || href === '#' || /^javascript:/i.test(href)) return;
-            if (navigateTo(href)) e.preventDefault(); 
+            if (navigateTo(href)) e.preventDefault();
         });
     };
     bindParentLinks(document);
 
-    // 6. 每次 iframe 加载完成，立即执行“霸王条款”并锁定颜色
+    // 6. 每次 iframe 加载完成，重新执行“霸王条款”并刷新导航高亮
     mainFrame.addEventListener('load', () => {
         enforceParentAuthority(mainFrame);
         const currentSrc = mainFrame.getAttribute('src') || '';

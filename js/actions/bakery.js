@@ -98,7 +98,6 @@
         if (state.recipes[name]) return Cake.fail('✅ 已拥有此配方');
         if (state.energy < RESEARCH_ENERGY) return Cake.fail('⚡ 精力不足！');
 
-        // 🌟 修复：unlock 对象里是 money 字段，不是 cost
         const cost = recipe.unlock.money || 0;
         if (state.money < cost) return Cake.fail(`💸 研发需要 ${cost} 元！`);
 
@@ -109,7 +108,6 @@
         Cake.addLog(`🔬 研发成功：${recipe.emoji}${name}`);
         Cake.checkAchievements();
         Cake.refreshPage();
-    };
     };
 
     /* ==================== 挂载 ==================== */

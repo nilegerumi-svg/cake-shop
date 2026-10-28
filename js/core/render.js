@@ -20,23 +20,39 @@ window.Cake = window.Cake || {};
     let currentRender = null;
     let currentActiveTab = 'home';
 
+    // 数值守卫：undefined / NaN / 非数字 → fallback
+    const num = (v, fallback = 0) => {
+        const n = Number(v);
+        return Number.isFinite(n) ? n : fallback;
+    };
+
     const renderHeader = () => {
         const el = Cake.$('header');
         if (!el || isInIframe) return;
-        const state = Cake.store.state;
-        const pct = Math.max(0, Math.min(100, Math.round(state.energy)));
-        const esc = Cake.escapeHtml;
+
+        const state = Cake.store && Cake.store.state;
+        if (!state) return;
+
+        const energy = Math.max(0, Math.min(100, num(state.energy, 80)));
+        const pct = Math.round(energy);
+        const esc = typeof Cake.escapeHtml === 'function'
+            ? Cake.escapeHtml
+            : (v) => String(v ?? '');
+
+        const timeStr = typeof Cake.getTimeString === 'function'
+            ? Cake.getTimeString()
+            : '08:00';
 
         el.innerHTML = `
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                 <div class="header-left" style="display: flex; align-items: center; gap: 6px; font-weight: bold; font-size: 15px; color: #d6336c;">
-                    <span class="shop-emoji" style="font-size: 20px;">${esc(state.avatar)}</span>
-                    <span>${esc(state.shopName)}</span>
+                    <span class="shop-emoji" style="font-size: 20px;">${esc(state.avatar ?? '👩‍🍳')}</span>
+                    <span>${esc(state.shopName ?? '甜蜜小屋')}</span>
                 </div>
                 <div class="header-stats" style="display: flex; gap: 8px; font-size: 13px; color: #555; font-weight: bold;">
-                    <span>🍅 ${state.day}天 ${Cake.getTimeString ? Cake.getTimeString() : '08:00'}</span>
-                    <span>💰 ${state.money}</span>
-                    <span>⭐ ${state.reputation}</span>
+                    <span>🍅 ${num(state.day, 1)}天 ${timeStr}</span>
+                    <span>💰 ${num(state.money, 500)}</span>
+                    <span>⭐ ${num(state.reputation, 0)}</span>
                 </div>
             </div>
             <div class="energy-wrap" style="display: flex; align-items: center; gap: 8px; font-size: 12px;">
@@ -44,25 +60,20 @@ window.Cake = window.Cake || {};
                 <div class="energy-bar" style="flex: 1; height: 6px; background: #ffe4e1; border-radius: 4px; overflow: hidden;">
                     <div class="energy-bar-fill" style="height: 100%; width: ${pct}%; background: #ff8fa3;"></div>
                 </div>
-                <span style="color: #888; width: 45px; text-align: right;">${Math.round(state.energy)}/100</span>
+                <span style="color: #888; width: 45px; text-align: right;">${pct}/100</span>
             </div>`;
     };
 
-    /* ==================== 🎨 核心：导航高亮样式变化功能 ==================== */
     const renderNav = (active) => {
-        const key = active ?? currentActiveTab;   // 无参时回退到当前 tab，不再清空高亮
+        const key = active ?? currentActiveTab;
         const el = Cake.$('navBar');
         if (!el || isInIframe) return;
 
         el.innerHTML = NAV_ITEMS.map((item) => {
             const isActive = item.key === key;
-
-            // 🎯 激活状态：粉色填充 + 白色文字 + 阴影
-            // 🎯 未激活状态：保持原有的默认样式
             const activeStyle = isActive
                 ? 'background: #ff8fa3; color: #ffffff; box-shadow: 0 4px 10px rgba(255,143,163,0.4); transform: translateY(-1px);'
                 : '';
-
             return `<a class="nav-btn ${isActive ? 'active' : ''}"
                         style="${activeStyle}"
                         href="${item.href}">${item.label}</a>`;
@@ -78,13 +89,23 @@ window.Cake = window.Cake || {};
     const renderLog = () => {
         const list = Cake.$('logList');
         if (!list) return;
-        const state = Cake.store.state;
-        if (state.log.length === 0) {
+
+        const state = Cake.store && Cake.store.state;
+        if (!state) return;
+
+        const logs = Array.isArray(state.log) ? state.log : [];
+        if (logs.length === 0) {
             list.innerHTML = '<div class="muted">还没有记录，快去创造故事吧！</div>';
             return;
         }
-        const esc = Cake.escapeHtml;
-        list.innerHTML = state.log.slice().reverse().map((l) => `<div class="log-item"><span class="log-day">第${l.day}天</span>${esc(l.text)}</div>`).join('');
+
+        const esc = typeof Cake.escapeHtml === 'function'
+            ? Cake.escapeHtml
+            : (v) => String(v ?? '');
+
+        list.innerHTML = logs.slice().reverse().map((l) =>
+            `<div class="log-item"><span class="log-day">第${num(l && l.day, 1)}天</span>${esc(l && l.text ? l.text : '')}</div>`
+        ).join('');
         list.scrollTop = 0;
     };
 
@@ -98,7 +119,6 @@ window.Cake = window.Cake || {};
             console.error('[Render] 主页面渲染失败:', err);
         }
 
-        // 🟣 调用子页面渲染
         if (typeof currentRender === 'function') {
             try {
                 currentRender();
@@ -111,7 +131,7 @@ window.Cake = window.Cake || {};
                         innerContent.innerHTML = `
                             <div style="color: red; padding: 20px; background: #fff; border-radius: 10px; margin: 16px;">
                                 <strong>⚠️ 子页面渲染报错：</strong><br>
-                                ${err.message}
+                                ${Cake.escapeHtml ? Cake.escapeHtml(err.message) : err.message}
                             </div>`;
                     }
                 }
@@ -120,24 +140,32 @@ window.Cake = window.Cake || {};
     };
 
     const refreshPage = () => {
-        if (!Cake.__syncing) Cake.saveState();
+        if (!Cake.__syncing && typeof Cake.saveState === 'function') {
+            Cake.saveState();
+        }
         renderAll();
     };
 
     const initPage = (activeTab, renderFn, showLog = false) => {
-        currentActiveTab = activeTab;
-        currentRender = renderFn;
+        currentActiveTab = activeTab || 'home';
+        currentRender = typeof renderFn === 'function' ? renderFn : null;
         const logWrap = Cake.$('logPanelWrap');
         if (logWrap) logWrap.style.display = showLog ? 'block' : 'none';
         refreshPage();
     };
 
+    // storage 监听：父页面同步存档
     window.addEventListener('storage', (e) => {
+        if (!Cake.SAVE_KEY) return;
         if (e.key && e.key !== Cake.SAVE_KEY) return;
         if (e.storageArea && e.storageArea !== window.localStorage) return;
+
         try {
-            Cake.store.state = Cake.loadStateFromStorage();
+            if (typeof Cake.loadStateFromStorage === 'function') {
+                Cake.store.state = Cake.loadStateFromStorage();
+            }
         } catch (_) { return; }
+
         Cake.__syncing = true;
         try { renderAll(); } catch (_) {}
         Cake.__syncing = false;

@@ -1,4 +1,4 @@
-// js/actions/social.js
+// js/actions/social/index.js
 (() => {
     'use strict';
 

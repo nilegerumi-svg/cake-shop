@@ -32,7 +32,7 @@
         .loc-name { font-size: 16px; font-weight: bold; color: #4a3b3f; }
         .loc-desc { font-size: 12px; color: #888; margin-top: 4px; }
 
-        .loc-cost { font-size: 14px; font-weight: bold; color: #ff8fa3; }
+        .loc-cost { font-size: 13px; font-weight: bold; color: #ff8fa3; text-align: right; white-space: nowrap; }
         .loc-item.disabled .loc-cost { color: #aaa; }
     </style>
 </head>
@@ -96,6 +96,7 @@
                     if (!loc) continue; // 跳过空数据
 
                     const cost = num(loc.cost, 8);
+                    const walkTime = num(loc.time, 0);   // ⭐ 散步耗时
                     const disabled = energy < cost;
                     const cls = disabled ? 'loc-item disabled' : 'loc-item';
 
@@ -108,7 +109,7 @@
                                     <span class="loc-desc">${loc.desc || '未知的区域'}</span>
                                 </div>
                             </div>
-                            <div class="loc-cost">⚡${cost}</div>
+                            <div class="loc-cost">⚡${cost}<br>⏰${walkTime}分</div>
                         </div>
                     `;
                 }
@@ -186,10 +187,11 @@
                     if (!walked) {
                         // 失败时恢复 UI，避免用户卡在「出发中...」
                         item.style.pointerEvents = '';
-                        if (costEl) costEl.innerText = '⚡' + num(
-                            (engine.LOCATIONS && engine.LOCATIONS[locKey] && engine.LOCATIONS[locKey].cost),
-                            8
-                        );
+                        const loc = engine.LOCATIONS && engine.LOCATIONS[locKey];
+                        if (costEl) {
+                            costEl.innerHTML = '⚡' + num(loc && loc.cost, 8) +
+                                '<br>⏰' + num(loc && loc.time, 0) + '分';
+                        }
                         alert('❌ 无法外出：散步功能未定义（Cake.walk / Game.walk）');
                         return;
                     }

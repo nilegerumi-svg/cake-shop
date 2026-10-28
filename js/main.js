@@ -16,12 +16,14 @@ let isReadyFired = false;
 let initGeneration = 0;
 let activeTask = null;
 
+// js/main.js 中只改这一段
 const MODULES = [
     { path: './data/index.js',    name: '🚦 正在加载配方与色彩数据' },
     { path: './core/index.js',    name: '🟱 正在加载底层渲染引擎' },
     { path: './time/index.js',    name: '🕒 正在加载时间系统' },
     { path: './actions/index.js', name: '🎮 正在加载地图与音乐动作' },
     { path: './shared.js',        name: '🟩 正在加载跨页面共享层' },
+    { path: './monitor/index.js', name: '👁️ 正在加载全局监控中心' },  // ← 新增
     { path: './host/index.js',    name: '🏥 正在加载访客主体控制台' }
 ];
 

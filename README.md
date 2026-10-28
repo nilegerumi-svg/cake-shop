@@ -1,10 +1,12 @@
 # cake-shop
 为了客户
 
-
 游戏地址：
 https://nilegerumi-svg.github.io/cake-shop/
 
+///////工作逻辑///////
+////////////////////////
+///////////////////////
 index.html
   │  兜底脚本 + store.js + state.js
   │  js/pages/index.js (module) → router.js → start/index.js
@@ -25,8 +27,10 @@ index.html
         ├─ await import('./actions/index.js')
         │     └→ entertainment/index.js
         │           ├→ map/index.js → monitor + town/index.js
+        │           │     └→ town/index.js → monitor + home/park/street/river/index.js
         │           ├→ common_events.js
         │           ├→ rest/index.js → nap + sleep + monitor + town/index.js
+        │           │     └→ town/index.js → events/index.js → common + place/home + place/park
         │           └→ walk.js
         ├─ await import('./shared.js')          ← window.Game 兼容层
         ├─ await import('./monitor/index.js')   ← time / page 监视器 + 自检
@@ -51,6 +55,54 @@ index.html
         └─ 引擎 + 主页 + 握手 全部就绪
 
 
+//////////页面层级///////////
+////////////////////////////
+///////////////////////////
+娱乐首页（pages/entertainment/index.html）
+  └─ 🗺️ 外出地图 → 总地图（pages/entertainment/map/index.html）
+        │   显示「区域」列表（城镇 / 未来更多区域）
+        └─ 🏘️ 城镇（pages/entertainment/map/town.html）
+              │   显示「地点」列表（home/park/street/river）
+              └─ 点击地点 → 散步（walk，消耗精力 + 推进时间）
+
+
+//////////核心系统///////////
+////////////////////////////
+///////////////////////////
+
+【时间系统】js/time/index.js
+  - Cake.advanceTime(minutes)  推进时间，跨天自动 +30 精力并写日志
+  - Cake.getTimeString()       返回 HH:MM
+  - Cake.getPeriodString()     返回时段文案（清晨/上午/…/深夜）
+  - 监视器包装：js/monitor/time.js 在 advanceTime 外层监听「跨天」事件
+
+【休息系统】js/actions/entertainment/rest/
+  - Cake.triggerRest(region, location, action)  统一调度器
+  - Cake.rest()  = 小憩（town/home/nap）  恢复精力 + 推进 60 分钟
+  - Cake.sleep() = 睡觉（town/home/sleep） 精力回满 + 推进到次日 08:00
+  - Cake.RestSys.nap / Cake.RestSys.sleep  底层实现
+  - Cake.RestMonitor.check  抽取休息事件（地点专属 + 区域通用）
+
+【散步系统】js/actions/entertainment/walk.js
+  - Cake.walk(location)  扣精力 + 抽取事件 + 推进时间（locConfig.time 分钟）
+  - 地点 time 字段：home 30 / park 45 / street 30 / river 45（分钟）
+
+【区域地图】js/actions/entertainment/map/
+  - Cake.REGIONS           区域注册表（town / 未来区域）
+  - Cake.REGION_TOWN       城镇地点表
+  - Cake.LOCATIONS         所有地点汇总（walk 用）
+  - Cake.getRegionLocations(regionId)  按区域取地点
+
+【Game 兼容层】js/shared.js
+  - window.Game 代理 window.Cake
+  - ⚠️ rest / sleep / walk 用「普通属性」包装暴露，绝不放进 LIVE_KEYS
+    （否则 setter 会把真实 Cake.xxx 覆盖成自引用函数 → 无限递归）
+
+
+//////////目录树///////////
+////////////////////////////
+///////////////////////////
+
 index.html
   ├─ js/core/store.js
   ├─ js/core/state.js
@@ -70,12 +122,11 @@ game.html
         ├─ js/actions/index.js
         │     ├─ bakery.js / shop.js / social.js / system.js
         │     └─ entertainment/index.js
-        │           ├─ map/index.js → monitor.js + town/index.js
-        │           │     └─ town/index.js → monitor.js + home/park/street/river/index.js
+        │           ├─ map/index.js ──→ monitor.js + town/index.js
+        │           │     └─ town/index.js ──→ monitor.js + home/park/street/river/index.js
         │           ├─ common_events.js
-        │           ├─ rest/index.js
-        │           │     ├─ nap.js / sleep.js / monitor.js
-        │           │     └─ town/index.js → events/index.js → common + place/home + place/park
+        │           ├─ rest/index.js ──→ nap.js + sleep.js + monitor.js + town/index.js
+        │           │     └─ town/index.js ──→ events/index.js ──→ common + place/home + place/park
         │           └─ walk.js
         ├─ js/shared.js
         ├─ js/monitor/index.js
@@ -92,10 +143,16 @@ pages/home.html
         ├─ view.js（renderHome）
         └─ events.js（bindEvents）
 
-pages/xxx.html（bake / buy / love / profile / recipe / shop / entertainment/index / map）
+pages/entertainment/
+  ├─ index.html（娱乐首页）
+  └─ map/
+       ├─ index.html（🗺️ 总地图 · 区域列表）
+       └─ town.html（🏘️ 城镇 · 地点列表 → 散步）
+
+pages/xxx.html（bake / buy / love / profile / recipe / shop）
   ├─ js/core/*.js（store / state / utils / modal / effects / render）
   ├─ js/data/*.js
-  ├─ js/actions/*.js
+  ├─ js/actions/*.js（bakery / shop / social / system）
   ├─ js/shared.js
   └─ 内联 boot() → G.initPage('xxx', renderXxx)
 

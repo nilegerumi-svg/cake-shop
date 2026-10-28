@@ -1,4 +1,4 @@
-// js/actions/shop.js
+// js/actions/shop/index.js
 (() => {
     'use strict';
 

@@ -33,22 +33,26 @@
         'use strict';
 
         const contentEl = document.getElementById('content');
-
         const ENERGY_PER_BAKE = 20;
         const MAX_BATCH = 5;
+
+        let Game = null;
+        let tries = 0;
+        const MAX_TRIES = 100;
 
         /* ==================== 单个配方卡片 ==================== */
 
         const renderRecipeCard = (name, recipe, state) => {
-            const { ingredients = {}, cakes = {}, energy = 0 } = state;
+            const ingredients = state.ingredients || {};
+            const cakes = state.cakes || {};
+            const energy = Number(state.energy) || 0;
             const ing = recipe.ing || {};
             const ingKeys = Object.keys(ing);
 
-            const lackIng = !ingKeys.every((k) => (ingredients[k] || 0) >= ing[k]);
+            const lackIng = ingKeys.some((k) => (ingredients[k] || 0) < ing[k]);
             const lackEnergy = energy < ENERGY_PER_BAKE;
             const canBake = !lackIng && !lackEnergy;
 
-            // 批量计算：最多 5 个，受精力与食材库存双重限制
             const maxByEnergy = Math.floor(energy / ENERGY_PER_BAKE);
             const maxByIng = ingKeys.length > 0
                 ? Math.min(...ingKeys.map((k) => Math.floor((ingredients[k] || 0) / ing[k])))
@@ -70,9 +74,9 @@
                 : '';
 
             return `<div class="item-card">
-                <span class="item-emoji">${recipe.emoji}</span>
+                <span class="item-emoji">${recipe.emoji || '🍰'}</span>
                 <span class="item-name">${name} <span class="muted">（库存 ${stock}）</span></span>
-                <span class="item-desc">${recipe.desc}</span>
+                <span class="item-desc">${recipe.desc || ''}</span>
                 <div class="ing-row">${Game.ingredientTags(ing)}</div>
                 <span class="item-meta">基础价 ${recipe.price}元 · 声望+${recipe.rep}</span>
                 <div style="display:flex;gap:6px;flex-wrap:wrap;">
@@ -118,22 +122,47 @@
 
         /* ==================== 事件委托 ==================== */
 
-        contentEl.addEventListener('click', (e) => {
-            const btn = e.target.closest('button[data-bake]');
-            if (!btn || btn.disabled) return;
+        const bindClick = () => {
+            contentEl.addEventListener('click', (e) => {
+                const btn = e.target.closest('button[data-bake]');
+                if (!btn || btn.disabled) return;
 
-            const { bake: name, count } = btn.dataset;
-            // 有 count 就是批量，没有就是单个
-            if (count !== undefined) {
-                Game.bakeCake(name, Number(count));
-            } else {
-                Game.bakeCake(name);
+                const { bake: name, count } = btn.dataset;
+                if (count !== undefined) {
+                    Game.bakeCake(name, Number(count));
+                } else {
+                    Game.bakeCake(name);
+                }
+            });
+        };
+
+        /* ==================== 启动 ==================== */
+
+        const boot = () => {
+            let G = null;
+            try {
+                if (window.parent && window.parent !== window && window.parent.Game) {
+                    G = window.parent.Game;
+                }
+            } catch (_) { /* 跨域 */ }
+            if (!G) G = window.Game || null;
+
+            if (G && G.state && typeof G.initPage === 'function') {
+                Game = G;
+                window.Game = G;          // 内联 onclick 等场景可用
+                bindClick();
+                G.initPage('bake', renderBake);
+                return;
             }
-        });
 
-        /* ==================== 页面初始化 ==================== */
+            if (++tries >= MAX_TRIES) {
+                contentEl.innerHTML = '<div style="color:red;padding:20px;text-align:center;">❌ 游戏引擎加载超时，请刷新重试</div>';
+                return;
+            }
+            setTimeout(boot, 100);
+        };
 
-        Game.initPage('bake', renderBake);
+        boot();
     })();
     </script>
 </body>

@@ -1,12 +1,19 @@
 // js/data/ingredients/index.js
+import './grain/index.js';
+import './meat/index.js';
+import './seasoning/index.js';
+import './vegetable/index.js';
+import './important_shelf_life.js'; // 引入保质期规则
 
-// 1. 引入食材分类子目录
-import './grain/index.js';       // 谷物
-import './meat/index.js';        // 肉类
-import './seasoning/index.js';   // 调料
-import './vegetable/index.js';   // 蔬菜
+window.Cake = window.Cake || {};
 
-// 2. 引入保质期配置（如果是独立文件的话）
-import './important_shelf_life.js';
+// 把四大类合并成最终的总食材库
+window.Cake.INGREDIENTS = Object.assign(
+    {},
+    window.Cake.INGREDIENTS_MEAT,
+    window.Cake.INGREDIENTS_GRAIN,
+    window.Cake.INGREDIENTS_SEASONING,
+    window.Cake.INGREDIENTS_VEGETABLE
+);
 
-console.log('📦 [Data/Ingredients] 基础食材库装载完毕');
+console.log('🛒 [Ingredients] 所有食材总库及保质期系统合并完毕！');

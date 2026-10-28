@@ -1,20 +1,11 @@
 // js/actions/entertainment/index.js
 
-// 1. 引入整个地图系统（连带拉取城镇及所有地点）
-import './map/index.js';
-
-// 2. 引入底层逻辑
-// ⚠️ 如果 common_events.js 放在 js/entertainment/，把下面改成：
-//    import '../../entertainment/common_events.js';
+// 区块自治：这里只 import 自己区块内的文件，不做任何全局登记。
+import './map/index.js';        // → monitor + town + location-actions
 import './common_events.js';
-
-// 3. rest 文件夹系统
-import './rest/index.js';
-
-// 4. 散步动作
+import './rest/index.js';       // → nap + sleep + monitor + town/events
 import './walk.js';
 
-// 5. 自检与暴露
 (() => {
     'use strict';
 
@@ -33,57 +24,23 @@ import './walk.js';
         return;
     }
 
-    // 防重复挂载
     if (Cake.__entertainmentLoaded) {
         console.log('🎮 [娱乐系统] 已加载，跳过重复初始化');
         return;
     }
-
-    /* ---------------- 自检 ---------------- */
-    const REQUIRED = [
-        ['rest',         'Cake.rest'],
-        ['sleep',        'Cake.sleep'],
-        ['walk',         'Cake.walk'],
-        ['triggerRest',  'Cake.triggerRest'],
-        ['LOCATIONS',    'Cake.LOCATIONS'],
-    ];
-
-    const missing = [];
-    for (const [key, label] of REQUIRED) {
-        if (!Cake[key]) {
-            console.error(`❌ [娱乐系统] ${label} 未加载！`);
-            missing.push(key);
-        }
-    }
-    if (!Cake.MapMonitor) {
-        console.warn('⚠️ [娱乐系统] Cake.MapMonitor 未加载，walk 将使用兜底事件池');
-    }
-
-    /* ---------------- 命名空间 ---------------- */
-    // 用 getter 延迟取值，避免 import 顺序变化导致引用过期
-    const Entertainment = {};
-    for (const key of ['rest', 'sleep', 'walk', 'triggerRest']) {
-        Object.defineProperty(Entertainment, key, {
-            configurable: true,
-            enumerable: true,
-            get: () => Cake[key],
-        });
-    }
-    Object.defineProperty(Entertainment, 'locations', {
-        configurable: true,
-        enumerable: true,
-        get: () => Cake.LOCATIONS,
-    });
-    Object.defineProperty(Entertainment, 'events', {
-        configurable: true,
-        enumerable: true,
-        get: () => Cake.COMMON_WALK_EVENTS,
-    });
-
-    Cake.Entertainment = Object.freeze(Entertainment);
     Cake.__entertainmentLoaded = true;
 
-    const locCount = Cake.LOCATIONS ? Object.keys(Cake.LOCATIONS).length : 0;
-    console.log(`🎮 娱乐与外出系统已装载！地点数: ${locCount}` +
-        (missing.length ? `（缺失: ${missing.join(', ')}）` : ''));
+    // 可选：分组命名空间（纯糖，非必需，也不参与任何全局注册）
+    Cake.Entertainment = {
+        get rest()          { return Cake.rest; },
+        get sleep()         { return Cake.sleep; },
+        get walk()          { return Cake.walk; },
+        get triggerRest()   { return Cake.triggerRest; },
+        get locations()     { return Cake.LOCATIONS; },
+        get regions()       { return Cake.REGIONS; },
+        get actions()       { return Cake.ACTION_TYPES; },
+        get events()        { return Cake.COMMON_WALK_EVENTS; },
+    };
+
+    console.log('🎮 娱乐与外出系统已装载');
 })();

@@ -1,4 +1,4 @@
-// js/data/bundles.js
+// js/data/bundles/index.js
 (() => {
     'use strict';
 

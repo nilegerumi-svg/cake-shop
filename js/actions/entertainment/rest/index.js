@@ -133,8 +133,23 @@ import './town/index.js';
 
     /* ==================== 快捷接口 ==================== */
 
-    Cake.rest = () => Cake.triggerRest('town', 'home', 'nap');
-    Cake.sleep = () => Cake.triggerRest('town', 'home', 'sleep');
+    // 修改后（增加统一校验）：
+Cake.rest = () => {
+    const isValid = Cake.ACTION_TYPES?.nap?.isValid?.('town', 'home') ?? true; // nap 目前没限制，默认放行
+    if (!isValid) return;
+    return Cake.triggerRest('town', 'home', 'nap');
+};
+
+Cake.sleep = () => {
+    // 强制走 ACTION_TYPES 的白名单校验
+    const isValid = Cake.ACTION_TYPES?.sleep?.isValid?.('town', 'home') ?? false;
+    if (!isValid) {
+        Cake.addLog?.('❌ 这里无法睡觉。');
+        Cake.refreshPage?.();
+        return;
+    }
+    return Cake.triggerRest('town', 'home', 'sleep');
+};
 
     console.log('🛌 事件驱动型休息系统注册表已装载！');
 })();

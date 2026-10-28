@@ -48,47 +48,129 @@
     <script>
     (() => {
         'use strict';
-        const G = window.parent.Game || window.Game;
+
         const $ = (id) => document.getElementById(id);
 
-        const updateUI = () => {
-            if (!G || !G.state) return;
-            $('energy').innerText = G.state.energy;
-            
-            if (G.state.energy >= 100) $('btnRest').classList.add('disabled');
-            else $('btnRest').classList.remove('disabled');
+        let G = null;
+        let tries = 0;
+        const MAX_TRIES = 100;      // 100 × 100ms = 10s
+        const UI_INTERVAL = 500;
+        let uiTimer = null;
 
-            if (G.state.energy < 8) $('btnGoMap').classList.add('disabled');
-            else $('btnGoMap').classList.remove('disabled');
+        const num = (v, fallback = 0) => {
+            const n = Number(v);
+            return Number.isFinite(n) ? n : fallback;
         };
 
-        // 启动时尝试刷新一次
-        updateUI();
-        setInterval(updateUI, 500);
-
-        // 休息按钮
-        $('btnRest').addEventListener('click', () => {
-            if (!G || !G.state || G.state.energy >= 100) return;
+        const getEngine = () => {
             try {
-                if (typeof G.rest !== 'function') throw new Error('找不到 G.rest 方法');
-                G.rest(); 
-                setTimeout(updateUI, 100);
-            } catch (err) {
-                alert('❌ 休息报错：\n' + err.message);
-            }
-        });
+                if (window.parent && window.parent !== window && window.parent.Game) {
+                    return window.parent.Game;
+                }
+            } catch (_) { /* 跨域 */ }
+            return window.Game || null;
+        };
 
-        // 外出按钮
-        $('btnGoMap').addEventListener('click', (e) => {
-            e.preventDefault();
-            if (!G || !G.state || G.state.energy < 8) return;
-            
-            if (window.parent.HostRouter && window.parent.HostRouter.navigateTo) {
-                window.parent.HostRouter.navigateTo('pages/entertainment/map.html');
-            } else {
-                window.location.href = 'map.html';
+        /* ==================== UI 刷新 ==================== */
+
+        const updateUI = () => {
+            const s = G && G.state;
+            if (!s) return;
+
+            const energy = Math.max(0, Math.min(100, num(s.energy, 0)));
+            const energyEl = $('energy');
+            if (energyEl) energyEl.innerText = energy;
+
+            const btnRest = $('btnRest');
+            if (btnRest) btnRest.classList.toggle('disabled', energy >= 100);
+
+            const btnGoMap = $('btnGoMap');
+            if (btnGoMap) btnGoMap.classList.toggle('disabled', energy < 8);
+        };
+
+        const startUiLoop = () => {
+            if (uiTimer) return;
+            updateUI();
+            uiTimer = setInterval(updateUI, UI_INTERVAL);
+        };
+
+        const stopUiLoop = () => {
+            if (uiTimer) { clearInterval(uiTimer); uiTimer = null; }
+        };
+
+        /* ==================== 事件绑定 ==================== */
+
+        const bindClick = () => {
+            const btnRest = $('btnRest');
+            if (btnRest && !btnRest.dataset.bound) {
+                btnRest.dataset.bound = 'true';
+                btnRest.addEventListener('click', () => {
+                    // 动态取一次，防止 G 引用过期
+                    const engine = G || getEngine();
+                    if (!engine || !engine.state) return;
+                    if (num(engine.state.energy, 0) >= 100) return;
+
+                    try {
+                        if (typeof engine.rest !== 'function') throw new Error('找不到 G.rest 方法');
+                        engine.rest();
+                        setTimeout(updateUI, 100);
+                    } catch (err) {
+                        alert('❌ 休息报错：\n' + (err && err.message || err));
+                    }
+                });
             }
-        });
+
+            const btnGoMap = $('btnGoMap');
+            if (btnGoMap && !btnGoMap.dataset.bound) {
+                btnGoMap.dataset.bound = 'true';
+                btnGoMap.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const engine = G || getEngine();
+                    if (!engine || !engine.state) return;
+                    if (num(engine.state.energy, 0) < 8) return;
+
+                    // 优先走宿主路由，保证导航高亮与 iframe 内导航一致
+                    try {
+                        if (window.parent && window.parent !== window &&
+                            window.parent.HostRouter &&
+                            typeof window.parent.HostRouter.navigateTo === 'function') {
+                            window.parent.HostRouter.navigateTo('pages/entertainment/map.html');
+                            return;
+                        }
+                    } catch (_) { /* 跨域或未定义，走兜底 */ }
+
+                    window.location.href = 'map.html';
+                });
+            }
+        };
+
+        /* ==================== 启动 ==================== */
+
+        const boot = () => {
+            const engine = getEngine();
+
+            if (engine && engine.state) {
+                G = engine;
+                window.Game = engine;
+                bindClick();
+                startUiLoop();
+                return;
+            }
+
+            if (++tries >= MAX_TRIES) {
+                const box = $('energy');
+                if (box) box.innerText = '--';
+                console.error('❌ [娱乐页] 等待父页面 Game 超时');
+                return;
+            }
+
+            setTimeout(boot, 100);
+        };
+
+        // 页面隐藏时暂停轮询，避免 iframe 切走后空转
+        window.addEventListener('pagehide', stopUiLoop);
+
+        boot();
     })();
     </script>
 </body>

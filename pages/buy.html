@@ -34,10 +34,16 @@
 
         const contentEl = document.getElementById('content');
 
+        let Game = null;
+        let tries = 0;
+        const MAX_TRIES = 100;
+
         /* ==================== 购买按钮状态 ==================== */
 
         const buyLabel = (cost, energyCost) => {
-            const { money, energy } = Game.state;
+            const s = Game.state || {};
+            const money = Number(s.money) || 0;
+            const energy = Number(s.energy) || 0;
             const lackMoney = money < cost;
             const lackEnergy = energy < energyCost;
 
@@ -49,12 +55,12 @@
 
         /* ==================== 材料包渲染 ==================== */
 
-        const renderBundles = () => Game.BUNDLES.map((b) => {
+        const renderBundles = () => (Game.BUNDLES || []).map((b) => {
             const btn = buyLabel(b.cost, 5);
             return `<div class="item-card">
                 <span class="item-emoji">${b.emoji}</span>
                 <span class="item-name">${b.name}</span>
-                <span class="item-desc">${b.desc}</span>
+                <span class="item-desc">${b.desc || ''}</span>
                 <span class="item-meta">${b.cost}元</span>
                 <button type="button" class="small"
                     ${btn.disabled ? 'disabled' : ''}
@@ -64,9 +70,9 @@
 
         /* ==================== 单个食材渲染 ==================== */
 
-        const renderIngredients = (state) => Object.entries(Game.INGREDIENTS).map(([key, item]) => {
+        const renderIngredients = (state) => Object.entries(Game.INGREDIENTS || {}).map(([key, item]) => {
             const btn = buyLabel(item.price, 3);
-            const owned = state.ingredients[key] || 0;
+            const owned = (state.ingredients || {})[key] || 0;
             return `<div class="item-card">
                 <span class="item-emoji">${item.emoji}</span>
                 <span class="item-name">${item.name} <span class="muted">×${owned}</span></span>
@@ -80,8 +86,7 @@
         /* ==================== 采购页渲染 ==================== */
 
         const renderBuy = () => {
-            const state = Game.state;
-
+            const state = Game.state || {};
             contentEl.innerHTML = `
                 <div class="card">
                     <h2>🛒 采购食材</h2>
@@ -95,18 +100,44 @@
 
         /* ==================== 事件委托 ==================== */
 
-        contentEl.addEventListener('click', (e) => {
-            const btn = e.target.closest('button[data-bundle], button[data-ingredient]');
-            if (!btn || btn.disabled) return;
+        const bindClick = () => {
+            contentEl.addEventListener('click', (e) => {
+                const btn = e.target.closest('button[data-bundle], button[data-ingredient]');
+                if (!btn || btn.disabled) return;
 
-            const { bundle, ingredient } = btn.dataset;
-            if (bundle)     Game.buyBundle(bundle);
-            if (ingredient) Game.buyIngredient(ingredient);
-        });
+                const { bundle, ingredient } = btn.dataset;
+                if (bundle)     Game.buyBundle(bundle);
+                if (ingredient) Game.buyIngredient(ingredient);
+            });
+        };
 
-        /* ==================== 页面初始化 ==================== */
+        /* ==================== 启动 ==================== */
 
-        Game.initPage('buy', renderBuy);
+        const boot = () => {
+            let G = null;
+            try {
+                if (window.parent && window.parent !== window && window.parent.Game) {
+                    G = window.parent.Game;
+                }
+            } catch (_) {}
+            if (!G) G = window.Game || null;
+
+            if (G && G.state && typeof G.initPage === 'function') {
+                Game = G;
+                window.Game = G;
+                bindClick();
+                G.initPage('buy', renderBuy);
+                return;
+            }
+
+            if (++tries >= MAX_TRIES) {
+                contentEl.innerHTML = '<div style="color:red;padding:20px;text-align:center;">❌ 游戏引擎加载超时，请刷新重试</div>';
+                return;
+            }
+            setTimeout(boot, 100);
+        };
+
+        boot();
     })();
     </script>
 </body>

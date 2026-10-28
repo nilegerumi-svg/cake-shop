@@ -2,9 +2,8 @@
    甜蜜物语 - 专属全局样式表（现代化整理版）
    ================================================== */
 
-/* 1. 主题变量：所有硬编码颜色集中到这里，改一处全站生效 */
+/* 1. 主题变量 */
 :root {
-    /* 品牌粉 */
     --pink-50:  #fff0f5;
     --pink-100: #ffe4e1;
     --pink-200: #ffd1dc;
@@ -15,17 +14,21 @@
     --pink-700: #d85c74;
     --pink-deep: #ff4757;
 
-    /* 中性色 */
     --text-main:  #333;
     --text-mid:   #555;
     --text-muted: #888;
 
-    /* 金色按钮 */
     --gold:        #ffd700;
     --gold-shadow: #e6c200;
     --gold-text:   #8b4513;
 
-    /* 布局 */
+    --green-ok:    #2e7d32;
+    --green-bg:    #e8f5e9;
+    --green-line:  #a5d6a7;
+    --red-lack:    #c62828;
+    --red-bg:      #ffebee;
+    --red-line:    #ef9a9a;
+
     --app-max-width: 500px;
     --radius-card:   16px;
     --radius-item:   12px;
@@ -51,9 +54,10 @@ body {
     flex-direction: column;
     align-items: center;
     min-height: 100vh;
+    overflow-x: hidden;
 }
 
-/* 限制最大宽度，保证在电脑和手机上都不错乱 */
+/* 限制最大宽度 */
 #header,
 #navBar,
 .game-body,
@@ -89,13 +93,19 @@ body {
     font-size: 14px;
     font-weight: bold;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    transition: background 0.15s ease, color 0.15s ease, transform 0.15s ease;
+}
+
+#navBar a:active {
+    transform: scale(0.96);
 }
 
 /* 4. 主体内容排版 */
 .game-body {
     display: flex;
     flex-direction: column;
-    padding: 0 15px 80px;
+    /* iframe 内部不需要给 footer 留 80px，父页面已用 padding-bottom 避让 */
+    padding: 0 15px 20px;
     gap: 15px;
 }
 
@@ -103,7 +113,7 @@ body {
     width: 100%;
 }
 
-/* 5. 卡片与网格系统 */
+/* 5. 卡片 */
 .card {
     background: #fff;
     border-radius: var(--radius-card);
@@ -132,13 +142,27 @@ h3 {
     font-size: 13px;
 }
 
-/* 双列网格 */
-.grid-2 {
+/* 6. 网格系统 */
+.grid-2,
+.grid-3 {
     display: grid;
-    grid-template-columns: 1fr 1fr;
     gap: 10px;
 }
 
+.grid-2 { grid-template-columns: 1fr 1fr; }
+.grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+
+/* 防止长内容撑破网格 */
+.grid-2 > *,
+.grid-3 > * {
+    min-width: 0;
+}
+
+@media (max-width: 360px) {
+    .grid-3 { grid-template-columns: 1fr 1fr; }
+}
+
+/* 7. 物品卡 */
 .item-card {
     background: #fff8fa;
     border: 1px solid var(--pink-100);
@@ -148,6 +172,8 @@ h3 {
     flex-direction: column;
     align-items: center;
     text-align: center;
+    min-width: 0;
+    word-break: break-word;
 }
 
 .item-emoji { font-size: 24px; margin-bottom: 5px; }
@@ -156,12 +182,56 @@ h3 {
 .item-meta  { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
 .price-tag  { color: var(--pink-deep); font-weight: bold; }
 
-/* 6. 按钮系统 */
+/* 8. 食材标签（bake / recipe / buy） */
+.ing-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 6px;
+    justify-content: center;
+    margin-top: 6px;
+    width: 100%;
+}
+
+.ing-tag,
+.item-card .ok,
+.item-card .lack,
+.card .ok,
+.card .lack {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 12px;
+    line-height: 1.5;
+    border: 1px solid var(--pink-100);
+    background: #fff;
+    color: var(--text-mid);
+}
+
+/* 有料 / 够用 */
+.ing-tag.ok,
+.ok {
+    color: var(--green-ok);
+    background: var(--green-bg);
+    border-color: var(--green-line);
+}
+
+/* 缺料 / 不够 */
+.ing-tag.lack,
+.lack {
+    color: var(--red-lack);
+    background: var(--red-bg);
+    border-color: var(--red-line);
+}
+
+/* 9. 按钮系统 */
 .char-actions {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
     margin-top: 10px;
+    justify-content: center;
 }
 
 button.small,
@@ -177,10 +247,19 @@ button.small,
     text-decoration: none;
     display: inline-block;
     text-align: center;
-    transition: transform 0.1s;
+    transition: transform 0.1s, background 0.15s;
+    -webkit-tap-highlight-color: transparent;
 }
 
 button.small:active { transform: scale(0.95); }
+
+button.small:disabled,
+button.small[disabled] {
+    background: #e0e0e0;
+    color: #999;
+    cursor: not-allowed;
+    transform: none;
+}
 
 button.secondary,
 .btn-link.secondary {
@@ -189,13 +268,29 @@ button.secondary,
     border: 1px solid var(--pink-300);
 }
 
-/* 7. 底部大按钮（开店营业） */
+/* 金色按钮：查看结局 / 开店营业 */
+button.gold,
+.btn-link.gold,
+button.small.gold {
+    background: var(--gold);
+    color: var(--gold-text);
+    border: 1px solid var(--gold-shadow);
+    box-shadow: 0 2px 0 var(--gold-shadow);
+}
+
+button.gold:active,
+button.small.gold:active {
+    transform: translateY(1px);
+    box-shadow: 0 1px 0 var(--gold-shadow);
+}
+
+/* 10. 底部大按钮 */
 .action-footer {
     position: fixed;
     bottom: 0;
     left: 50%;
     transform: translateX(-50%);
-    padding: 10px 15px;
+    padding: 10px 15px calc(10px + env(safe-area-inset-bottom));
     background: linear-gradient(to top, var(--pink-50) 90%, transparent);
     display: flex;
     flex-direction: column;
@@ -234,7 +329,7 @@ button.secondary,
 }
 
 /* =========================================
-   8. 开始界面专属样式 (index.html)
+   11. 开始界面（旧版 .start-container，index.html 已自带内联样式，保留兼容）
    ========================================= */
 .start-container {
     max-width: 600px;
@@ -325,3 +420,259 @@ button.secondary,
     border: 2px solid var(--pink-400) !important;
 }
 .btn-continue:hover { background: var(--pink-50); }
+
+/* =========================================
+   12. 角色卡（love.html）
+   ========================================= */
+.char-card {
+    background: #fff;
+    border: 2px solid var(--pink-100);
+    border-radius: var(--radius-item);
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+    word-break: break-word;
+}
+
+.char-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.char-emoji {
+    font-size: 32px;
+    line-height: 1;
+    flex: 0 0 auto;
+}
+
+.char-name {
+    font-weight: bold;
+    font-size: 15px;
+    color: var(--text-main);
+}
+
+.char-desc {
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.5;
+}
+
+.aff-text {
+    font-size: 12px;
+    color: var(--pink-600);
+    font-weight: bold;
+    margin-top: 2px;
+}
+
+/* 好感条 / 成就进度条共用 */
+.aff-bar {
+    width: 100%;
+    height: 8px;
+    background: var(--pink-100);
+    border-radius: 999px;
+    overflow: hidden;
+    margin: 6px 0 2px;
+}
+
+.aff-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--pink-300), var(--pink-500));
+    border-radius: 999px;
+    transition: width 0.3s ease;
+}
+
+/* 送礼面板 */
+.gift-panel {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+    padding: 8px;
+    background: var(--pink-50);
+    border-radius: 10px;
+    border: 1px dashed var(--pink-200);
+    width: 100%;
+}
+
+.gift-panel .small {
+    font-size: 12px;
+    padding: 6px 10px;
+}
+
+/* =========================================
+   13. 成就（profile.html）
+   ========================================= */
+.achievement-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 6px;
+}
+
+.achievement {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 12px;
+    border: 1px solid var(--pink-100);
+    border-radius: var(--radius-item);
+    background: #fafafa;
+    opacity: 0.75;
+}
+
+.achievement.earned {
+    background: #fffde7;
+    border-color: #ffd54f;
+    opacity: 1;
+}
+
+.achievement .a-icon {
+    font-size: 18px;
+    line-height: 1.4;
+    flex: 0 0 auto;
+}
+
+/* =========================================
+   14. 弹窗（core/modal.js）
+   ========================================= */
+.hidden {
+    display: none !important;
+}
+
+.modal {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(74, 59, 63, 0.45);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+}
+
+.modal.hidden {
+    display: none !important;
+}
+
+.modal-card {
+    background: #fff;
+    border-radius: 20px;
+    padding: 22px 20px 18px;
+    width: 100%;
+    max-width: 360px;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 50px rgba(214, 51, 108, 0.25);
+    animation: modal-pop 0.22s ease-out;
+    text-align: center;
+}
+
+.modal-card h2 {
+    font-size: 18px;
+    color: var(--pink-600);
+    margin-bottom: 12px;
+    text-align: center;
+}
+
+.modal-card #gameModalBody {
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--text-mid);
+    text-align: left;
+    word-break: break-word;
+}
+
+.modal-card #gameModalBody p {
+    margin: 0 0 10px;
+}
+
+.modal-btn {
+    margin-top: 16px;
+    padding: 10px 28px;
+    border: none;
+    border-radius: 999px;
+    background: var(--pink-400);
+    color: #fff;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(255, 143, 163, 0.4);
+    transition: transform 0.1s, background 0.15s;
+}
+
+.modal-btn:active {
+    transform: scale(0.96);
+    background: var(--pink-500);
+}
+
+@keyframes modal-pop {
+    from { opacity: 0; transform: translateY(12px) scale(0.96); }
+    to   { opacity: 1; transform: translateY(0)    scale(1); }
+}
+
+/* 弹窗打开时锁滚动（core/modal.js 会给 body 加 .modal-open） */
+body.modal-open {
+    overflow: hidden;
+}
+
+/* =========================================
+   15. 日志列表（core/render.js 的 renderLog，若启用 #logList）
+   ========================================= */
+#logPanelWrap {
+    width: 100%;
+}
+
+#logList,
+.log-list {
+    max-height: 240px;
+    overflow-y: auto;
+    padding: 4px 2px;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--text-mid);
+}
+
+.log-item {
+    padding: 6px 0;
+    border-bottom: 1px dashed var(--pink-100);
+    word-break: break-word;
+}
+
+.log-item:last-child {
+    border-bottom: none;
+}
+
+.log-day {
+    display: inline-block;
+    margin-right: 6px;
+    padding: 1px 8px;
+    border-radius: 999px;
+    background: var(--pink-50);
+    color: var(--pink-600);
+    font-size: 11px;
+    font-weight: bold;
+}
+
+/* =========================================
+   16. 小工具类
+   ========================================= */
+.text-center { text-align: center; }
+.text-left   { text-align: left; }
+.mt-8  { margin-top: 8px; }
+.mt-12 { margin-top: 12px; }
+.mb-8  { margin-bottom: 8px; }
+
+/* 减少动效偏好 */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}

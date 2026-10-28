@@ -6,18 +6,25 @@ import { bindEvents } from './events.js';
     'use strict';
     console.log('🏠 主页脚本开始运行...');
 
+    const contentEl = document.getElementById('content');
+    if (!contentEl) {
+        console.error('❌ [Home] 未找到 #content');
+        return;
+    }
+
     let retryCount = 0;
+    const MAX_RETRY = 100; // 100 × 100ms = 10s
 
     const init = () => {
         const G = window.parent.Game || window.Game;
 
         // 等待引擎、数据和渲染器彻底就绪
         if (!G || !G.state || typeof G.initPage !== 'function') {
-            if (retryCount < 50) {
+            if (retryCount < MAX_RETRY) {
                 retryCount++;
                 setTimeout(init, 100);
             } else {
-                document.getElementById('content').innerHTML = `
+                contentEl.innerHTML = `
                     <div style="color:red; padding:20px; text-align:center;">
                         ❌ 游戏引擎加载超时！<br>
                         请检查父页面的 main.js 或 render.js 是否报错。

@@ -119,8 +119,17 @@
 
         try { Cake.checkAchievements?.(); } catch (_) { /* ignore */ }
 
-        Cake.saveState?.();
-        Cake.refreshPage?.();
+        // ⭐ 散步也要推进时间（每处地点在配置里声明 time，单位：分钟）
+        const walkTime = num(locConfig.time, 0);
+
+        if (typeof Cake.advanceTime === 'function' && walkTime > 0) {
+            Cake.addLog?.(`⏰ 这次散步花了 ${walkTime} 分钟。`);
+            // advanceTime 内部会 saveState + refreshPage
+            Cake.advanceTime(walkTime);
+        } else {
+            Cake.saveState?.();
+            Cake.refreshPage?.();
+        }
     };
 
     Cake.walk = walk;

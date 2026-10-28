@@ -1,3 +1,4 @@
+// js/main.js
 'use strict';
 
 console.log('🚀 [Engine] main.js 引擎模块加载');
@@ -19,10 +20,18 @@ let initGeneration = 0;
 // 当前初始化任务
 let activeTask = null;
 
+// ==================== 业务模块清单 ====================
+// ⚠️ 不要 import './monitor.js'，那是启动器，会循环导入
+const MODULES = [
+    { path: './data/index.js',    name: '🚦 正在加载配方与色彩数据' },
+    { path: './core/index.js',    name: '🟱 正在加载底层渲染引擎' },
+    { path: './time/index.js',    name: '🕒 正在加载时间系统' },
+    { path: './actions/index.js', name: '🎮 正在加载地图与音乐动作' },
+    { path: './shared.js',        name: '🟩 正在加载跨页面共享层' },
+    { path: './host/index.js',    name: '🏥 正在加载访客主体控制台' }
+];
+
 // ==================== 合法状态转移表 ====================
-// 补全：
-//  - INITIALIZING -> INITIALIZING（重复 init 合法自转移，不再报错）
-//  - INITIALIZING/FAILED/CANCELLED -> IDLE（resetEngine 真正可回到 IDLE）
 const TRANSITIONS = Object.freeze({
     [ENGINE_STATES.IDLE]: [ENGINE_STATES.INITIALIZING],
     [ENGINE_STATES.INITIALIZING]: [
@@ -48,15 +57,20 @@ function makeCancelError(reason = 'INIT_CANCELLED') {
 }
 
 // ==================== 安全序列化 ====================
+// 函数 replacer：支持嵌套对象、Error、BigInt、Symbol、Function
 function safeStringify(obj) {
     try {
-        return JSON.stringify(obj, Object.getOwnPropertyNames(obj));
+        return JSON.stringify(obj, (_k, v) => {
+            if (v instanceof Error) {
+                return { name: v.name, message: v.message };
+            }
+            if (typeof v === 'bigint') return v.toString();
+            if (typeof v === 'symbol') return v.toString();
+            if (typeof v === 'function') return '[function]';
+            return v;
+        });
     } catch {
-        try {
-            return String(obj);
-        } catch {
-            return '[unserializable]';
-        }
+        try { return String(obj); } catch { return '[unserializable]'; }
     }
 }
 
@@ -97,7 +111,14 @@ function transition(nextState, payload = null) {
     }
 
     currentState = nextState;
-    syncGlobalState(nextState === ENGINE_STATES.FAILED ? payload : null);
+
+    // FAILED / CANCELLED 都保留原因，方便外部排查
+    syncGlobalState(
+        (nextState === ENGINE_STATES.FAILED ||
+         nextState === ENGINE_STATES.CANCELLED)
+            ? payload
+            : null
+    );
     return true;
 }
 
@@ -329,6 +350,9 @@ function createInitTask(generation) {
 }
 
 // ==================== init ====================
+// 返回值语义：
+//   true  —— 初始化流程已启动（真正"就绪"以 game-ready 事件为准）
+//   false —— 已被拒绝 / 被取消 / 失败，或已处于 READY
 async function init() {
     if (currentState === ENGINE_STATES.READY) {
         console.warn('⚠️ [Engine] 已 READY，禁止重新 init，请刷新页面');
@@ -337,64 +361,50 @@ async function init() {
 
     const generation = ++initGeneration;
 
-    // 真取消上一个任务：cancel 会 reject 其挂起 await，
-    // 旧 init 的 catch 因 generation 不匹配而直接退出，不碰状态
+    // 真取消上一个任务
     if (activeTask) {
         const prev = activeTask;
         activeTask = null;
         prev.cancel('INIT_SUPERSEDED');
     }
 
-    // 检查 transition 结果，失败则不篡改 isReadyFired
+    // 先清 isReadyFired，再尝试转移，避免失败路径遗留脏值
+    isReadyFired = false;
+
     if (!transition(ENGINE_STATES.INITIALIZING)) {
         console.error(`❌ [Engine] 无法进入 INITIALIZING: ${currentState}`);
         return false;
     }
 
-    isReadyFired = false;
-
     const task = createInitTask(generation);
     activeTask = task;
 
+    // 外部可通过 window.dispatchEvent(new CustomEvent('game-cancel-init'))
+    // 或 window.cancelEngineInit() 取消
+    const onCancelEvent = () => task.cancel('CANCEL_BY_EVENT');
+    window.addEventListener('game-cancel-init', onCancelEvent, { once: true });
+    task.addCleanup(() =>
+        window.removeEventListener('game-cancel-init', onCancelEvent)
+    );
+
     try {
-        window.updateLoadingProgress?.('初始化引擎…', 20);
+        window.updateLoadingProgress?.('初始化引擎…', 5);
 
-        // 真·可取消异步阶段
-        await new Promise((resolve, reject) => {
-            let settled = false;
-            const settle = (fn, value) => {
-                if (settled) return;
-                settled = true;
-                fn(value);
-            };
+        for (let i = 0; i < MODULES.length; i++) {
+            // 每轮检查取消；动态 import 本身不可打断，取消最多延迟一个模块
+            if (task.isCancelled()) return false;
 
-            const timer = setTimeout(() => {
-                if (task.isCancelled()) {
-                    settle(reject, makeCancelError('INIT_CANCELLED'));
-                } else {
-                    settle(resolve);
-                }
-            }, 500);
+            const mod = MODULES[i];
+            const percent = 5 + Math.round((i / MODULES.length) * 85);
 
-            const onCancel = () => {
-                settle(reject, makeCancelError('INIT_CANCELLED_BY_EVENT'));
-            };
+            window.updateLoadingProgress?.(`${mod.name} (${mod.path})…`, percent);
 
-            window.addEventListener('game-cancel-init', onCancel, { once: true });
-
-            task.addCleanup(() => {
-                clearTimeout(timer);
-                window.removeEventListener('game-cancel-init', onCancel);
-            });
-
-            task.addCancelHook((err) => {
-                settle(reject, err);
-            });
-        });
+            await import(mod.path);
+        }
 
         if (task.isCancelled()) return false;
 
-        window.updateLoadingProgress?.('引擎就绪…', 60);
+        window.updateLoadingProgress?.('引擎就绪…', 95);
         safeReady(task);
         return true;
 
@@ -404,7 +414,7 @@ async function init() {
             if (task.generation !== initGeneration) return false;
 
             if (currentState === ENGINE_STATES.INITIALIZING) {
-                if (transition(ENGINE_STATES.CANCELLED)) {
+                if (transition(ENGINE_STATES.CANCELLED, err)) {
                     emit('game-cancelled', {
                         generation: task.generation,
                         reason: err.message
@@ -437,6 +447,11 @@ window.resetEngine = () => {
         return false;
     }
 
+    // 幂等：已经 IDLE 直接成功
+    if (currentState === ENGINE_STATES.IDLE) {
+        return true;
+    }
+
     const prev = activeTask;
     activeTask = null;
     prev?.cancel('RESET');
@@ -448,6 +463,7 @@ window.resetEngine = () => {
         return false;
     }
 
+    emit('game-reset', { timestamp: Date.now() });
     return true;
 };
 
@@ -456,9 +472,11 @@ window.cancelEngineInit = () => {
 
     const task = activeTask;
     activeTask = null;
+
+    const err = makeCancelError('MANUAL_CANCEL');
     task?.cancel('MANUAL_CANCEL');
 
-    if (!transition(ENGINE_STATES.CANCELLED)) return false;
+    if (!transition(ENGINE_STATES.CANCELLED, err)) return false;
 
     emit('game-cancelled', {
         generation: initGeneration,

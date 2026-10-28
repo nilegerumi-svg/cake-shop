@@ -1,15 +1,13 @@
 // js/actions/index.js
 
-// 1. 引入基础玩法动作
-import './bakery.js';
-import './shop.js';
-import './social.js';
+// 1. 引入系统级基础操作（比如日志、刷新页面等）
 import './system.js';
 
-// 2. 引入娱乐与休息模块（区块自治：娱乐系统内部自己管理 map / rest / walk）
+// 2. 引入各个独立的行为模块
+import './bakerly/index.js';       // ⚠️ 注意：你截图里的文件夹叫 bakerly，这里保持一致
+import './craft/index.js';
 import './entertainment/index.js';
+import './shop/index.js';
+import './social/index.js';
 
-(() => {
-    'use strict';
-    console.log('⚙️ 所有动作系统(actions)装载完毕！');
-})();
+console.log('📦 [Actions] 行为操作层装载完毕');

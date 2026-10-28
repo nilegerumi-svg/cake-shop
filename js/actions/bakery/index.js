@@ -1,4 +1,4 @@
-// js/actions/bakery.js
+// js/actions/bakery/index.js
 (() => {
     'use strict';
 

@@ -1,4 +1,4 @@
-//js/data/usually_events.js
+//js/data/usually_shop_events/index.js
 window.Cake = window.Cake || {};
 
 (() => {

@@ -10,8 +10,8 @@ window.Cake = window.Cake || {};
 
     const computeEnding = () => {
         const state = Cake.store.state;
-        const RECIPES = Cake.RECIPES;
-        const CHARACTERS = Cake.CHARACTERS;
+        const RECIPES = Cake.RECIPES || {};
+        const CHARACTERS = Cake.CHARACTERS || {};
 
         // 是否解锁全部配方
         const allRecipes =
@@ -93,7 +93,21 @@ window.Cake = window.Cake || {};
     };
 
     const loadGame = () => {
-        const loaded = Cake.loadStateFromStorage();
+        // ⚠️ loadStateFromStorage 总是返回对象（无存档时返回 defaultState），
+        // 必须先用 hasSave() 判断是否存在存档，否则永远走「读取成功」。
+        if (typeof Cake.hasSave === 'function' && !Cake.hasSave()) {
+            Cake.showModal('❌ 读取失败', '<p>没有找到可用的存档。</p>');
+            return;
+        }
+
+        let loaded = null;
+        try {
+            loaded = Cake.loadStateFromStorage();
+        } catch (e) {
+            Cake.showModal('❌ 读取失败', '<p>存档读取异常：' + (e && e.message || e) + '</p>');
+            return;
+        }
+
         if (loaded) {
             Cake.store.state = loaded;
             Cake.refreshPage();
@@ -107,19 +121,17 @@ window.Cake = window.Cake || {};
         if (!confirm('⚠️ 确定要重新开始吗？当前所有进度将被清空，且无法恢复。')) {
             return;
         }
-        
+
         try {
             localStorage.removeItem(Cake.SAVE_KEY);
         } catch (e) { /* ignore */ }
 
         // 重置内存中的状态
         Cake.store.state = Cake.defaultState();
-        
-        // 保存空状态并刷新页面
-        Cake.saveState();
+
+        // 保存空状态并刷新页面（refreshPage 内部会 saveState）
         Cake.refreshPage();
-        
-        // 如果是在主页，可以顺便跳转，如果想留在当前页面也可以
+
         Cake.showModal('🔄 重新开始', '<p>一切已重新开始，祝你玩得开心！</p>');
     };
 

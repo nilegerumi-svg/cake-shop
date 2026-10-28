@@ -1,3 +1,4 @@
+//js/data/characters/index.js
 (() => {
     'use strict';
 

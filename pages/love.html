@@ -34,18 +34,24 @@
 
         const contentEl = document.getElementById('content');
 
+        let Game = null;
+        let tries = 0;
+        const MAX_TRIES = 100;
+
+        const safeLikes = (character) => Array.isArray(character && character.likes) ? character.likes : [];
+
         /* ==================== 渲染：未相遇角色 ==================== */
 
         const renderUnmetCard = (character) => `
-            <div class="char-card" style="border-color:${character.color}33;opacity:0.82;">
+            <div class="char-card" style="border-color:${character.color || '#ffe4e1'}33;opacity:0.82;">
                 <div class="char-head">
-                    <span class="char-emoji">${character.emoji}</span>
+                    <span class="char-emoji">${character.emoji || '❓'}</span>
                     <div>
-                        <div class="char-name">${character.name}</div>
+                        <div class="char-name">${character.name || '???'}</div>
                         <div class="aff-text">🔒 尚未相遇</div>
                     </div>
                 </div>
-                <span class="char-desc">${character.desc}</span>
+                <span class="char-desc">${character.desc || ''}</span>
                 <p class="muted">继续经营蛋糕店，也许某天会在这里遇到对方……</p>
             </div>`;
 
@@ -53,9 +59,12 @@
 
         const buildDateHint = (characterState, state) => {
             const lacks = [];
-            if (characterState.affection < 40) lacks.push('💭 好感 40');
-            if (state.money < 50)              lacks.push('💸 50 元');
-            if (state.energy < 12)             lacks.push('⚡ 12 精力');
+            const aff = Number(characterState.affection) || 0;
+            const money = Number(state.money) || 0;
+            const energy = Number(state.energy) || 0;
+            if (aff < 40)      lacks.push('💭 好感 40');
+            if (money < 50)    lacks.push('💸 50 元');
+            if (energy < 12)   lacks.push('⚡ 12 精力');
             return lacks.length === 0 ? '' : `邀约需 ${lacks.join(' · ')}`;
         };
 
@@ -66,9 +75,11 @@
                 return '<div class="gift-panel"><span class="muted">没有蛋糕可送，先去烘焙吧～</span></div>';
             }
 
+            const likes = safeLikes(character);
+
             const buttons = cakes.map(([cakeName, count]) => {
-                const recipe = Game.RECIPES[cakeName];
-                const liked = character.likes.includes(cakeName) ? '💕' : '';
+                const recipe = Game.RECIPES[cakeName] || { emoji: '🍰' };
+                const liked = likes.includes(cakeName) ? '💕' : '';
                 return `<button type="button" class="small" data-cid="${cid}" data-cake="${cakeName}" data-action="gift">${recipe.emoji}${cakeName} ×${count} ${liked}</button>`;
             }).join('');
 
@@ -78,23 +89,24 @@
         /* ==================== 渲染：已相遇角色 ==================== */
 
         const renderMetCard = (cid, character, characterState, state, cakes) => {
-            const { affection } = characterState;
+            const affection = Math.max(0, Math.min(100, Number(characterState.affection) || 0));
             const giftOpen = state.giftPanelFor === cid;
             const dateHint = buildDateHint(characterState, state);
             const giftPanelHtml = giftOpen ? renderGiftPanel(cid, character, cakes) : '';
+            const likes = safeLikes(character);
 
             return `
-                <div class="char-card" style="border-color:${character.color}66;">
+                <div class="char-card" style="border-color:${character.color || '#ffe4e1'}66;">
                     <div class="char-head">
-                        <span class="char-emoji">${character.emoji}</span>
+                        <span class="char-emoji">${character.emoji || '❓'}</span>
                         <div>
-                            <div class="char-name">${character.name}</div>
+                            <div class="char-name">${character.name || '???'}</div>
                             <div class="aff-text">${Game.affLevel(affection)} ${affection}/100</div>
                         </div>
                     </div>
                     <div class="aff-bar"><div class="aff-fill" style="width:${affection}%;"></div></div>
-                    <span class="char-desc">${character.desc}</span>
-                    <span class="char-desc">💝 喜欢的蛋糕：${character.likes.join('、')}</span>
+                    <span class="char-desc">${character.desc || ''}</span>
+                    <span class="char-desc">💝 喜欢的蛋糕：${likes.length ? likes.join('、') : '暂未发现'}</span>
                     <div class="char-actions">
                         <button type="button" class="small" data-cid="${cid}" data-action="chat">💬 聊天</button>
                         <button type="button" class="small" data-cid="${cid}" data-action="date">🌹 邀约</button>
@@ -108,13 +120,16 @@
         /* ==================== 渲染主逻辑 ==================== */
 
         const renderLove = () => {
-            const state = Game.state;
+            const state = Game.state || {};
+            const characters = Game.CHARACTERS || {};
+            const recipes = Game.RECIPES || {};
+            const cakesObj = state.cakes || {};
 
-            const cakes = Object.entries(state.cakes)
-                .filter(([name, count]) => count > 0 && Game.RECIPES[name]);
+            const cakes = Object.entries(cakesObj)
+                .filter(([name, count]) => count > 0 && recipes[name]);
 
-            const cards = Object.entries(Game.CHARACTERS).map(([cid, character]) => {
-                const characterState = state.characters[cid] || { met: false, affection: 0 };
+            const cards = Object.entries(characters).map(([cid, character]) => {
+                const characterState = (state.characters && state.characters[cid]) || { met: false, affection: 0 };
                 if (!characterState.met) return renderUnmetCard(character);
                 return renderMetCard(cid, character, characterState, state, cakes);
             }).join('');
@@ -129,23 +144,49 @@
 
         /* ==================== 事件委托 ==================== */
 
-        const ACTIONS = {
-            chat:       (btn) => Game.social(btn.dataset.cid, 'chat'),
-            date:       (btn) => Game.social(btn.dataset.cid, 'date'),
-            toggleGift: (btn) => Game.toggleGiftPanel(btn.dataset.cid),
-            gift:       (btn) => Game.giveGift(btn.dataset.cid, btn.dataset.cake),
+        const bindClick = () => {
+            const ACTIONS = {
+                chat:       (btn) => Game.social(btn.dataset.cid, 'chat'),
+                date:       (btn) => Game.social(btn.dataset.cid, 'date'),
+                toggleGift: (btn) => Game.toggleGiftPanel(btn.dataset.cid),
+                gift:       (btn) => Game.giveGift(btn.dataset.cid, btn.dataset.cake),
+            };
+
+            contentEl.addEventListener('click', (e) => {
+                const btn = e.target.closest('[data-action]');
+                if (!btn) return;
+                const handler = ACTIONS[btn.dataset.action];
+                if (typeof handler === 'function') handler(btn);
+            });
         };
 
-        contentEl.addEventListener('click', (e) => {
-            const btn = e.target.closest('[data-action]');
-            if (!btn) return;
-            const handler = ACTIONS[btn.dataset.action];
-            if (typeof handler === 'function') handler(btn);
-        });
+        /* ==================== 启动 ==================== */
 
-        /* ==================== 页面初始化 ==================== */
+        const boot = () => {
+            let G = null;
+            try {
+                if (window.parent && window.parent !== window && window.parent.Game) {
+                    G = window.parent.Game;
+                }
+            } catch (_) {}
+            if (!G) G = window.Game || null;
 
-        Game.initPage('love', renderLove);
+            if (G && G.state && typeof G.initPage === 'function') {
+                Game = G;
+                window.Game = G;
+                bindClick();
+                G.initPage('love', renderLove);
+                return;
+            }
+
+            if (++tries >= MAX_TRIES) {
+                contentEl.innerHTML = '<div style="color:red;padding:20px;text-align:center;">❌ 游戏引擎加载超时，请刷新重试</div>';
+                return;
+            }
+            setTimeout(boot, 100);
+        };
+
+        boot();
     })();
     </script>
 </body>

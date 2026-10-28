@@ -1,14 +1,12 @@
-// js/actions/entertainment/map/town/index.js
+// js/actions/entertainment/map/index.js
 
 import './monitor.js';
-import './home/index.js';
-import './park/index.js';
-import './street/index.js';
-import './river/index.js';
+import './town/index.js';
 
 (() => {
     'use strict';
 
+    // 跨域守卫：iframe 中访问 parent 可能抛错
     const getCake = () => {
         try {
             if (window.parent && window.parent !== window && window.parent.Cake) {
@@ -20,46 +18,34 @@ import './river/index.js';
 
     const Cake = getCake();
     if (!Cake) {
-        console.warn('⚠️ [Town] 未找到 Cake，跳过 REGION_TOWN 汇总');
+        console.warn('⚠️ [Map] 未找到 Cake，跳过 LOCATIONS 汇总');
         return;
     }
 
     // 防重复挂载
-    if (Cake.__townRegionLoaded) {
-        console.log('🏘️ [Town] REGION_TOWN 已汇总，跳过重复初始化');
+    if (Cake.__mapLocationsLoaded) {
+        console.log('🗺️ [Map] LOCATIONS 已汇总，跳过重复初始化');
         return;
     }
-    Cake.__townRegionLoaded = true;
+    Cake.__mapLocationsLoaded = true;
 
-    console.log('🏘️ [Town] 城镇模块开始执行，当前 Cake 是否就绪:', !!Cake);
+    // ⚠️ 不直接覆盖：保留已挂载的地点，合并新地点
+    Cake.LOCATIONS = Cake.LOCATIONS || {};
 
-    // ⚠️ 不直接覆盖：保留已有区域，合并新地点
-    Cake.REGION_TOWN = Cake.REGION_TOWN || {};
-
-    // 地点数据来源表
-    const SOURCES = [
-        ['home',   '_MAP_DATA_HOME',   '🏡 家园周围'],
-        ['park',   '_MAP_DATA_PARK',   '🌳 街心公园'],
-        ['street', '_MAP_DATA_STREET', '🛍️ 商业街'],
-        ['river',  '_MAP_DATA_RIVER',  '🌊 河边'],
-    ];
-
-    const missing = [];
-
-    for (const [key, dataKey, label] of SOURCES) {
-        const data = Cake[dataKey];
-        if (!data || typeof data !== 'object') {
-            console.error(`❌ [Town] 未读取到 ${dataKey}（${label}），请检查对应文件是否加载或报错！`);
-            missing.push(dataKey);
-            continue;
-        }
-        // 只在数据合法时覆盖，避免 undefined 混入
-        Cake.REGION_TOWN[key] = data;
+    if (!Cake.REGION_TOWN) {
+        console.error('❌ [Map] 严重错误：REGION_TOWN 不存在，城镇数据挂载失败！');
+        // 不清空已有 LOCATIONS，避免地图页直接空掉
+        return;
     }
 
-    console.log(
-        '🏘️ [Town] 城镇字典装载完毕:',
-        Object.keys(Cake.REGION_TOWN),
-        missing.length ? `（缺失: ${missing.join(', ')}）` : ''
-    );
+    // 汇总城镇区域（加上防崩过滤，防止 undefined 混入）
+    for (const [key, loc] of Object.entries(Cake.REGION_TOWN)) {
+        if (loc) {
+            Cake.LOCATIONS[key] = loc;
+        } else {
+            console.warn(`⚠️ [Map] 地点 [${key}] 数据为 undefined，已被过滤。`);
+        }
+    }
+
+    console.log('🗺️ [Map] 全局 LOCATIONS 最终装载结果:', Object.keys(Cake.LOCATIONS));
 })();

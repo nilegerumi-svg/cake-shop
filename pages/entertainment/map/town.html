@@ -24,7 +24,6 @@
             padding: 16px; cursor: pointer; transition: all 0.2s;
         }
         .loc-item:active { transform: scale(0.98); background: #e0f5f0; }
-        .loc-item.disabled { background: #f5f5f5; border-color: #ddd; cursor: not-allowed; opacity: 0.7; }
 
         .loc-info { display: flex; align-items: center; gap: 12px; }
         .loc-emoji { font-size: 28px; }
@@ -32,8 +31,7 @@
         .loc-name { font-size: 16px; font-weight: bold; color: #4a3b3f; }
         .loc-desc { font-size: 12px; color: #888; margin-top: 4px; }
 
-        .loc-cost { font-size: 13px; font-weight: bold; color: #ff8fa3; text-align: right; white-space: nowrap; }
-        .loc-item.disabled .loc-cost { color: #aaa; }
+        .loc-meta { font-size: 12px; color: #ff8fa3; font-weight: bold; text-align: right; white-space: nowrap; }
     </style>
 </head>
 <body>
@@ -60,7 +58,6 @@
         let Cake = null;
         let tries = 0;
         const MAX_TRIES = 100;      // 100 × 100ms = 10s
-        const GO_DELAY = 600;
 
         const REGION_ID = 'town';   // 本页对应的区域 id
 
@@ -106,7 +103,6 @@
                 const energy = Math.max(0, Math.min(100, num(state.energy, 0)));
                 if (energyEl) energyEl.innerText = energy;
 
-                // 只读取当前区域（城镇）的地点，而不是全局 LOCATIONS
                 const locs = (typeof Cake.getRegionLocations === 'function')
                     ? Cake.getRegionLocations(REGION_ID)
                     : Cake.REGION_TOWN;
@@ -117,15 +113,10 @@
 
                 let html = '';
                 for (const [key, loc] of Object.entries(locs)) {
-                    if (!loc) continue; // 跳过空数据
-
-                    const cost = num(loc.cost, 8);
-                    const walkTime = num(loc.time, 0);   // 散步耗时
-                    const disabled = energy < cost;
-                    const cls = disabled ? 'loc-item disabled' : 'loc-item';
+                    if (!loc) continue;
 
                     html += `
-                        <div class="${cls}" data-loc="${key}">
+                        <div class="loc-item" data-loc="${key}">
                             <div class="loc-info">
                                 <span class="loc-emoji">${loc.emoji || '📍'}</span>
                                 <div class="loc-text">
@@ -133,7 +124,7 @@
                                     <span class="loc-desc">${loc.desc || '未知的区域'}</span>
                                 </div>
                             </div>
-                            <div class="loc-cost">⚡${cost}<br>⏰${walkTime}分</div>
+                            <span class="loc-meta">进入 ▶</span>
                         </div>
                     `;
                 }
@@ -164,47 +155,15 @@
                 locListEl.dataset.bound = 'true';
                 locListEl.addEventListener('click', (e) => {
                     const item = e.target.closest('.loc-item');
-                    if (!item || item.classList.contains('disabled')) return;
-
-                    const engine = Cake || getCake();
-                    if (!engine || !engine.store || !engine.store.state) return;
+                    if (!item) return;
 
                     const locKey = item.dataset.loc;
-                    item.style.pointerEvents = 'none';
-                    const costEl = item.querySelector('.loc-cost');
-                    if (costEl) costEl.innerText = '出发中...';
 
-                    // 触发散步：优先 Cake.walk，其次 Game.walk
-                    let walked = false;
-                    try {
-                        if (typeof engine.walk === 'function') {
-                            engine.walk(locKey);
-                            walked = true;
-                        } else if (
-                            window.parent && window.parent !== window &&
-                            window.parent.Game &&
-                            typeof window.parent.Game.walk === 'function'
-                        ) {
-                            window.parent.Game.walk(locKey);
-                            walked = true;
-                        }
-                    } catch (err) {
-                        console.error('[town] walk 执行失败:', err);
-                    }
-
-                    if (!walked) {
-                        // 失败时恢复 UI，避免用户卡在「出发中...」
-                        item.style.pointerEvents = '';
-                        const loc = engine.LOCATIONS && engine.LOCATIONS[locKey];
-                        if (costEl) {
-                            costEl.innerHTML = '⚡' + num(loc && loc.cost, 8) +
-                                '<br>⏰' + num(loc && loc.time, 0) + '分';
-                        }
-                        alert('❌ 无法外出：散步功能未定义（Cake.walk / Game.walk）');
-                        return;
-                    }
-
-                    setTimeout(goBack, GO_DELAY);
+                    // ⭐ 进入「地点详情页」，而不是直接散步
+                    navigateTo(
+                        `pages/entertainment/map/location.html?region=${REGION_ID}&loc=${locKey}`,
+                        `location.html?region=${REGION_ID}&loc=${locKey}`
+                    );
                 });
             }
         };

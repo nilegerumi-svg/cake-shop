@@ -55,8 +55,16 @@
         state.hour = Math.floor(totalMins / 60);
         state.minute = totalMins % 60;
 
-        Cake.saveState?.();
-        Cake.refreshPage?.();
+        // 🌟 修复核心：加锁，防止 saveState 和 refreshPage 连续触发两次广播
+        Cake.__syncing = true;
+        try {
+            Cake.saveState?.();
+            Cake.refreshPage?.();
+        } catch (e) {
+            console.error('[Time] 时间推进后保存失败:', e);
+        } finally {
+            Cake.__syncing = false;
+        }
     };
 
     const getTimeString = () => {

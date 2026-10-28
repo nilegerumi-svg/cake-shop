@@ -9,13 +9,7 @@
     }
     window.__rootMonitorLoaded = true;
 
-    console.log('%c🛡️ [Root Monitor] 根目录总监视器已启动', 'color: #ff6b81; font-weight: bold; font-size: 14px;');
-
-    /* ================= 资源 URL（处理 <base>） ================= */
-    const BASE_URI = document.baseURI || location.href;
-    const url = (p) => new URL(p, BASE_URI).href;
-
-    /* ================= 1. 进度条 API ================= */
+    /* ================= 0.1 基础 API（即使跳过初始化也暴露） ================= */
     window.updateLoadingProgress = (text, percent) => {
         const textEl = document.getElementById('loading-text');
         const barEl = document.getElementById('loading-bar');
@@ -23,6 +17,31 @@
         if (textEl) textEl.innerText = text;
         if (barEl) barEl.style.width = p + '%';
     };
+
+    /* ================= 0.2 开始页防御 =================
+       正常情况下 index.html 不应加载本文件；
+       这里做双保险：若检测到开始页，直接跳过游戏外壳初始化，
+       不注册全局错误监听、不创建 overlay、不加载 js/main.js。 */
+    const IS_START_PAGE = (() => {
+        try {
+            return !!document.querySelector('.start-card')
+                || !!document.getElementById('btnStart');
+        } catch (_) { return false; }
+    })();
+
+    if (IS_START_PAGE) {
+        console.log(
+            '%c📄 [Root Monitor] 检测到开始页，跳过游戏外壳初始化',
+            'color: #ff6b81; font-weight: bold;'
+        );
+        return;
+    }
+
+    console.log('%c🛡️ [Root Monitor] 根目录总监视器已启动', 'color: #ff6b81; font-weight: bold; font-size: 14px;');
+
+    /* ================= 1. 资源 URL（处理 <base>） ================= */
+    const BASE_URI = document.baseURI || location.href;
+    const url = (p) => new URL(p, BASE_URI).href;
 
     /* ================= 2. 早期 game-ready 缓冲 ================= */
     let gameReadyFired = false;
@@ -160,13 +179,11 @@
 
     const isMainJsUrl = (src) => /(^|\/)js\/main\.js(?:[?#]|$)/.test(src);
 
-    // 供外层 error 监听触发快速失败
     let failEngine = null;
 
     window.addEventListener('error', (e) => {
         const t = e.target;
 
-        // 运行时错误来自 js/main.js：快速失败
         const isRuntimeFromMain =
             typeof e.filename === 'string' &&
             isMainJsUrl(e.filename) &&
@@ -181,7 +198,7 @@
         if (t && t !== window && (t.src || t.href)) {
             const src = t.src || t.href;
             if (isMainJsUrl(src)) return;
-            try { if (new URL(src).origin !== location.origin) return; } catch { /* ignore */ }
+            try { if (new URL(src).origin !== location.origin) return; } catch (_) { /* ignore */ }
             msg = '资源加载失败: ' + src;
         } else if (e.message) {
             msg = e.message;
@@ -212,18 +229,18 @@
                 w = frame.contentWindow;
                 if (!w || w === window) return;
                 void w.location.href;
-            } catch { return; }
+            } catch (_) { return; }
 
             try {
                 if (w.location.href === 'about:blank') return;
-            } catch { /* ignore */ }
+            } catch (_) { /* ignore */ }
 
             const prev = frameHandlers.get(frame);
             if (prev) {
                 try {
                     prev.win.removeEventListener('error', prev.onError, true);
                     prev.win.removeEventListener('unhandledrejection', prev.onRejection);
-                } catch { /* ignore */ }
+                } catch (_) { /* ignore */ }
             }
 
             const onError = (e) => {
@@ -282,10 +299,35 @@
             }
         };
 
+        // 实时查 DOM，避免 loadingScreen 未初始化时卡死
         const finishLoading = () => {
-            if (!loadingScreen) return;
-            loadingScreen.style.opacity = '0';
-            setTimeout(() => { loadingScreen.style.display = 'none'; }, 300);
+            const el = loadingScreen || document.getElementById('app-loading');
+            if (!el) return;
+            el.style.opacity = '0';
+            setTimeout(() => {
+                if (el && el.parentNode) {
+                    el.style.display = 'none';
+                    el.setAttribute('aria-hidden', 'true');
+                }
+            }, 300);
+        };
+
+        // 动态设置 --footer-h，避免 footer 遮挡 mainFrame
+        const setupFooterHeight = () => {
+            const footer = document.getElementById('footer');
+            if (!footer) return;
+            const update = () => {
+                const h = footer.offsetHeight || 0;
+                if (h > 0) {
+                    document.documentElement.style.setProperty('--footer-h', h + 'px');
+                }
+            };
+            update();
+            if (window.ResizeObserver) {
+                try { new ResizeObserver(update).observe(footer); } catch (_) { /* ignore */ }
+            } else {
+                setInterval(update, 500);
+            }
         };
 
         const fail = (reason) => {
@@ -301,7 +343,7 @@
             flushErrors();
             showError(reason);
 
-            if (mainFrame) { try { mainFrame.src = 'about:blank'; } catch { /* ignore */ } }
+            if (mainFrame) { try { mainFrame.src = 'about:blank'; } catch (_) { /* ignore */ } }
             finishLoading();
         };
 
@@ -352,7 +394,7 @@
             ensureOverlay();
             flushErrors();
 
-            // 外壳（幂等：game.html 已写好了外壳，这里跳过）
+            // 外壳（game.html 已写好了外壳，这里跳过）
             if (!document.getElementById('mainFrame')) {
                 root.innerHTML = `
                     <div class="app-wrapper" style="display:flex; flex-direction:column; height:100vh; height:100dvh;">
@@ -378,6 +420,9 @@
             attachFrameMonitor(mainFrame);
             attachFrameMonitor(logFrame);
 
+            // ✅ 动态设置 --footer-h
+            setupFooterHeight();
+
             /* ---------------- 6e. 主页 iframe 预加载 ---------------- */
 
             const markHomeReady = (force = false) => {
@@ -385,13 +430,13 @@
                 if (homeLoadTimer) { clearTimeout(homeLoadTimer); homeLoadTimer = null; }
                 if (!force) {
                     let w = null;
-                    try { w = mainFrame.contentWindow; } catch { w = null; }
+                    try { w = mainFrame.contentWindow; } catch (_) { w = null; }
                     if (!w) return;
                     try {
                         if (w.location.href === 'about:blank') return;
                         const doc = mainFrame.contentDocument;
                         if (doc && doc.readyState !== 'complete') return;
-                    } catch { /* 跨域，放过 */ }
+                    } catch (_) { /* 跨域，放过 */ }
                 }
                 state.homeReady = true;
                 if (homeFallbackTimer) { clearTimeout(homeFallbackTimer); homeFallbackTimer = null; }
@@ -417,11 +462,11 @@
                 if (e.data && e.data.type === 'home-ready') {
                     markHomeReady(true);
 
-                    // ✅ 回执：否则 home.html 会一直重试到 home-ready-failed
+                    // 回执：否则 home.html 会一直重试到 home-ready-failed
                     try {
                         const targetOrigin = location.origin === 'null' ? '*' : location.origin;
                         e.source.postMessage({ type: 'home-ready-ack' }, targetOrigin);
-                    } catch { /* ignore */ }
+                    } catch (_) { /* ignore */ }
                 }
             };
             window.addEventListener('message', onHomeMessage);
@@ -431,7 +476,7 @@
                 try {
                     const doc = mainFrame.contentDocument;
                     if (doc && doc.readyState === 'complete') markHomeReady(false);
-                } catch { /* 跨域，交给 load / 10s 兜底 */ }
+                } catch (_) { /* 跨域，交给 load / 10s 兜底 */ }
             } else {
                 console.log('🖼️ [Root Monitor] 预加载主页 iframe...');
                 mainFrame.src = url('pages/home.html');
@@ -453,7 +498,7 @@
                                 : '⚠️ 主页加载超时（10s）。pages/home.html 可能仍在加载或存在错误。';
                             doc.body.appendChild(p);
                         }
-                    } catch { /* 跨域或异常，跳过 */ }
+                    } catch (_) { /* 跨域或异常，跳过 */ }
                     markHomeReady(true);
                 }, 10000);
             }

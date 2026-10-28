@@ -55,16 +55,21 @@ if (window.self !== window.top) {
             'INGREDIENTS', 'RECIPES', 'BUNDLES', 'CHARACTERS', 'AFF_EVENTS',
             'CHAT_DIALOGUES', 'DATE_DIALOGUES', 'MEETINGS', 'RANDOM_EVENTS',
             'ACHIEVEMENTS', 'SHOP_UPGRADE_COSTS',
+
             'LOCATIONS', 'COMMON_WALK_EVENTS', 'TOWN_EVENTS', 'WALK_EVENTS', 'Entertainment',
+
             'advanceTime', 'getTimeString', 'getPeriodString',
             'triggerRest', 'sleep', 'Actions', 'RestSys', 'RestMonitor',
+
             'SAVE_KEY', 'SAVE_VERSION',
             'defaultState', 'hasSave', 'saveState', 'loadStateFromStorage',
             'resetGame', 'saveGame', 'loadGame', 'showEnding',
+
             '$', 'addLog', 'ingredientTags', 'affLevel', 'escapeHtml', 'fail',
             'showModal', 'closeModal',
             'renderHeader', 'renderNav', 'renderFooter', 'renderLog',
             'initPage', 'refreshPage',
+
             'bakeCake', 'buyIngredient', 'buyBundle', 'researchRecipe',
             'upgradeShop', 'decorateShop', 'setPriceRate', 'openShop',
             'social', 'toggleGiftPanel', 'giveGift',
@@ -87,12 +92,17 @@ if (window.self !== window.top) {
             set: (v) => { if (Cake.store) Cake.store.state = v; },
         });
 
+        // ⚠️ rest / walk 不在 LIVE_KEYS 里，必须手动暴露。
+        //    它们做的是「普通属性赋值」，不会触发 setter，因此 Cake.rest / Cake.walk 保持不变。
         Game.rest = () => { if (typeof Cake.rest === 'function') return Cake.rest(); };
-        Game.sleep = () => { if (typeof Cake.sleep === 'function') return Cake.sleep(); };
         Game.walk = (locName) => {
             const loc = typeof locName === 'string' ? locName : 'home';
             if (typeof Cake.walk === 'function') return Cake.walk(loc);
         };
+
+        // ⚠️ 注意：sleep 已经在 LIVE_KEYS 里了（通过 getter 暴露 Game.sleep → Cake.sleep），
+        //    绝不能在这里再写「Game.sleep = ...」。
+        //    否则会触发上面的 setter，把真正的 Cake.sleep 覆盖成自引用函数 → 无限递归栈溢出。
     })();
 
     // ── 3. bridge：跨 iframe 状态同步 ──
@@ -106,20 +116,10 @@ if (window.self !== window.top) {
                 if (typeof Cake.loadStateFromStorage === 'function') {
                     Cake.store.state = Cake.loadStateFromStorage();
                 }
-
-                // 🌟 修复核心：加锁，防止 refreshPage 内部再次 saveState 导致死循环
-                Cake.__syncing = true;
-                try {
-                    if (typeof Cake.refreshPage === 'function') {
-                        Cake.refreshPage();
-                    } else {
-                        window.location.reload();
-                    }
-                } catch (_) {
-                    // ignore
-                } finally {
-                    Cake.__syncing = false;
+                if (typeof Cake.refreshPage === 'function') {
+                    try { Cake.refreshPage(); return; } catch (_) {}
                 }
+                try { window.location.reload(); } catch (_) {}
             });
             return true;
         };

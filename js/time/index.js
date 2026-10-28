@@ -1,24 +1,36 @@
 // js/time/index.js
 (() => {
     'use strict';
-    const Cake = window.parent.Cake || window.Cake;
-    if (!Cake) return;
 
-    const MINUTES_PER_DAY = 24 * 60; // 1440 分钟
-
-    // 跨天处理逻辑（高内聚，以后跨天要刷新货、刷新商品都在这加）
-    const handleNextDay = (daysPassed) => {
-        const state = Cake.store.state;
-        state.energy = Math.min(100, state.energy + 30 * daysPassed); // 每天恢复 30 体力
-        Cake.addLog?.(`🌅 新的一天开始了！（第 ${state.day} 天），恢复了全部体力。`);
-
-        // 🟡 扩展点：跨天时，你可以在这里触发好感事件、刷新店铺货架等
+    // 跨域守卫
+    const getCake = () => {
+        try {
+            if (window.parent && window.parent !== window && window.parent.Cake) {
+                return window.parent.Cake;
+            }
+        } catch (_) { /* 跨域忽略 */ }
+        return window.Cake || null;
     };
 
-    /**
-     * 推进时间（核心方法）
-     * @param {number} minutes 要推进的分钟数
-     */
+    const Cake = getCake();
+    if (!Cake) return;
+
+    // 防重复挂载
+    if (Cake.__timeModuleLoaded) {
+        console.log('🕒 [Time] 时间模块已加载，跳过重复初始化');
+        return;
+    }
+    Cake.__timeModuleLoaded = true;
+
+    const MINUTES_PER_DAY = 24 * 60;
+
+    const handleNextDay = (daysPassed) => {
+        const state = Cake.store.state;
+        state.energy = Math.min(100, state.energy + 30 * daysPassed);
+        Cake.addLog?.(`🌅 新的一天开始了！（第 ${state.day} 天），恢复了全部体力。`);
+        // 🟡 扩展点：跨天时触发好感事件、刷新货架等
+    };
+
     const advanceTime = (minutes) => {
         const m = Number(minutes);
         if (!Number.isFinite(m) || m < 0) {
@@ -28,32 +40,25 @@
 
         const state = Cake.store.state;
 
-        // 兼容旧存档：如果没有时间字段，默认 08:00
         if (state.hour === undefined) state.hour = 8;
         if (state.minute === undefined) state.minute = 0;
 
         let totalMins = state.hour * 60 + state.minute + m;
         let daysPassed = Math.floor(totalMins / MINUTES_PER_DAY);
 
-        // 处理跨天
         if (daysPassed > 0) {
             totalMins = totalMins % MINUTES_PER_DAY;
             state.day += daysPassed;
             handleNextDay(daysPassed);
         }
 
-        // 重新计算小时和分钟
         state.hour = Math.floor(totalMins / 60);
         state.minute = totalMins % 60;
 
-        // 触发保存和页面刷新
         Cake.saveState?.();
         Cake.refreshPage?.();
     };
 
-    /**
-     * 获取格式化时间字符串 (例如 "08:05")
-     */
     const getTimeString = () => {
         const state = Cake.store.state;
         const h = String(state.hour ?? 8).padStart(2, '0');
@@ -61,12 +66,8 @@
         return `${h}:${m}`;
     };
 
-    /**
-     * 获取当前时间段（清晨、上午、中午等）
-     */
     const getPeriodString = () => {
-        const state = Cake.store.state;
-        const h = state.hour ?? 8;
+        const h = Cake.store.state.hour ?? 8;
         if (h >= 5 && h < 9) return '🌅 清晨';
         if (h >= 9 && h < 12) return '☀️ 上午';
         if (h >= 12 && h < 14) return '🍚 中午';
@@ -75,7 +76,6 @@
         return '🌌 深夜';
     };
 
-    // 加载到全局
     Cake.advanceTime = advanceTime;
     Cake.getTimeString = getTimeString;
     Cake.getPeriodString = getPeriodString;

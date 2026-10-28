@@ -1,4 +1,4 @@
-// js/actions/entertainment/map/location-actions.js
+// js/actions/entertainment/map/location_actions.js
 (() => {
     'use strict';
 

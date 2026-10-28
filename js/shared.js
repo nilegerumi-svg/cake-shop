@@ -46,64 +46,37 @@ if (window.self !== window.top) {
         }
     })();
 
-    // ── 2. Game 兼容层 ──
+    // ── 2. Game 兼容层：动态 Proxy（替代原来的 LIVE_KEYS 静态清单） ──
     (() => {
         const Cake = window.Cake;
-        const Game = (window.Game = window.Game || {});
 
-        // ⚠️ 铁律：rest / sleep / walk 不放进 LIVE_KEYS。
-        // LIVE_KEYS 里的 key 自带 setter；如果某个 key 既在 LIVE_KEYS、
-        // 又被「Game.xxx = ...」手动赋值，setter 会把真正的 Cake.xxx
-        // 覆盖成自引用函数 → 点击时无限递归栈溢出。
-        const LIVE_KEYS = [
-            'INGREDIENTS', 'RECIPES', 'BUNDLES', 'CHARACTERS', 'AFF_EVENTS',
-            'CHAT_DIALOGUES', 'DATE_DIALOGUES', 'MEETINGS', 'RANDOM_EVENTS',
-            'ACHIEVEMENTS', 'SHOP_UPGRADE_COSTS',
-
-            'LOCATIONS', 'COMMON_WALK_EVENTS', 'TOWN_EVENTS', 'WALK_EVENTS', 'Entertainment',
-
-            'advanceTime', 'getTimeString', 'getPeriodString',
-            'triggerRest', 'Actions', 'RestSys', 'RestMonitor',
-
-            'SAVE_KEY', 'SAVE_VERSION',
-            'defaultState', 'hasSave', 'saveState', 'loadStateFromStorage',
-            'resetGame', 'saveGame', 'loadGame', 'showEnding',
-
-            '$', 'addLog', 'ingredientTags', 'affLevel', 'escapeHtml', 'fail',
-            'showModal', 'closeModal',
-            'renderHeader', 'renderNav', 'renderFooter', 'renderLog',
-            'initPage', 'refreshPage',
-
-            'bakeCake', 'buyIngredient', 'buyBundle', 'researchRecipe',
-            'upgradeShop', 'decorateShop', 'setPriceRate', 'openShop',
-            'social', 'toggleGiftPanel', 'giveGift',
-        ];
-
-        for (const key of LIVE_KEYS) {
-            Object.defineProperty(Game, key, {
-                configurable: true,
-                enumerable: true,
-                get: () => Cake[key],
-                set: (v) => { Cake[key] = v; },
-            });
-        }
-
-        // Game.state = 游戏存档（不是引擎状态）
-        Object.defineProperty(Game, 'state', {
-            configurable: true,
-            enumerable: true,
-            get: () => (Cake.store ? Cake.store.state : undefined),
-            set: (v) => { if (Cake.store) Cake.store.state = v; },
+        // Game 只是 Cake 的一个「实时视图」：
+        //  - 读 Game.xxx  → 转发到 Cake.xxx（任何新方法自动生效，无需登记）
+        //  - 写 Game.xxx  → 落在 Game 自身，绝不污染 Cake（彻底避免 setter 覆盖事故）
+        //  - Game.state  → 特殊映射到 Cake.store.state（游戏存档）
+        const Game = new Proxy({}, {
+            get(target, prop) {
+                if (prop === 'state') {
+                    return Cake.store ? Cake.store.state : undefined;
+                }
+                if (prop in target) return target[prop];   // 允许 Game 上的临时覆盖（如 main.js 的 meta）
+                return Cake[prop];                          // 默认动态转发到 Cake
+            },
+            set(target, prop, value) {
+                if (prop === 'state') {
+                    if (Cake.store) Cake.store.state = value;
+                    return true;
+                }
+                target[prop] = value;                       // 只写 Game 自身，不污染 Cake
+                return true;
+            },
+            has(target, prop) {
+                return prop === 'state' || prop in target || prop in Cake;
+            },
         });
 
-        // ✅ 三个动作统一用「普通属性」包装：不触发任何 setter，
-        //    Cake.rest / Cake.sleep / Cake.walk 始终保持原样
-        Game.rest = () => { if (typeof Cake.rest === 'function') return Cake.rest(); };
-        Game.sleep = () => { if (typeof Cake.sleep === 'function') return Cake.sleep(); };
-        Game.walk = (locName) => {
-            const loc = typeof locName === 'string' ? locName : 'home';
-            if (typeof Cake.walk === 'function') return Cake.walk(loc);
-        };
+        window.Game = Game;
+        console.log('🧩 [Shared] 父页面 Game 动态代理已挂载（无需维护 LIVE_KEYS）');
     })();
 
     // ── 3. bridge：跨 iframe 状态同步 ──
@@ -132,5 +105,5 @@ if (window.self !== window.top) {
         }
     })();
 
-    console.log('🧩 [Shared] 父页面 Game 兼容层挂载完毕');
+    console.log('🧩 [Shared] 父页面共享层装载完毕');
 }

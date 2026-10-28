@@ -38,8 +38,8 @@
         <h2 style="margin-top: 24px;">🛴 外出区</h2>
         <button id="btnGoMap" class="menu-btn" type="button">
             <div style="text-align: left;">
-                <div class="menu-icon">🗺️ 外出散步</div>
-                <div class="menu-sub">去不同的地方邂逅不同的人和事</div>
+                <div class="menu-icon">🗺️ 外出地图</div>
+                <div class="menu-sub">打开总地图，选择区域去散步</div>
             </div>
             <span style="color: #a8e6cf;">▶</span>
         </button>
@@ -105,7 +105,6 @@
             if (btnRest && !btnRest.dataset.bound) {
                 btnRest.dataset.bound = 'true';
                 btnRest.addEventListener('click', () => {
-                    // 动态取一次，防止 G 引用过期
                     const engine = G || getEngine();
                     if (!engine || !engine.state) return;
                     if (num(engine.state.energy, 0) >= 100) return;
@@ -129,17 +128,17 @@
                     if (!engine || !engine.state) return;
                     if (num(engine.state.energy, 0) < 8) return;
 
-                    // 优先走宿主路由，保证导航高亮与 iframe 内导航一致
+                    // 进入「总地图」（选择区域）
                     try {
                         if (window.parent && window.parent !== window &&
                             window.parent.HostRouter &&
                             typeof window.parent.HostRouter.navigateTo === 'function') {
-                            window.parent.HostRouter.navigateTo('pages/entertainment/map.html');
+                            window.parent.HostRouter.navigateTo('pages/entertainment/map/index.html');
                             return;
                         }
                     } catch (_) { /* 跨域或未定义，走兜底 */ }
 
-                    window.location.href = 'map.html';
+                    window.location.href = 'map/index.html';
                 });
             }
         };
@@ -167,7 +166,6 @@
             setTimeout(boot, 100);
         };
 
-        // 页面隐藏时暂停轮询，避免 iframe 切走后空转
         window.addEventListener('pagehide', stopUiLoop);
 
         boot();

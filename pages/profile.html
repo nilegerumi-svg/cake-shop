@@ -34,22 +34,36 @@
 
         const contentEl = document.getElementById('content');
 
-        const renderAchievements = (s) => Game.ACHIEVEMENTS.map((a) => {
-            const earned = Boolean(s.achievements[a.id]);
+        let Game = null;
+        let tries = 0;
+        const MAX_TRIES = 100;
+
+        const esc = (v) => (Game && typeof Game.escapeHtml === 'function')
+            ? Game.escapeHtml(v)
+            : String(v == null ? '' : v);
+
+        const num = (v, fallback = 0) => {
+            const n = Number(v);
+            return Number.isFinite(n) ? n : fallback;
+        };
+
+        const renderAchievements = (s, achievements) => (achievements || []).map((a) => {
+            const earned = Boolean(s.achievements && s.achievements[a.id]);
             return `<div class="achievement ${earned ? 'earned' : ''}">
                 <span class="a-icon">${earned ? '✅' : '🔒'}</span>
                 <div>
-                    <div style="font-weight:700;">${a.icon} ${a.name}</div>
-                    <div class="muted">${a.desc}</div>
+                    <div style="font-weight:700;">${a.icon || ''} ${a.name || a.id}</div>
+                    <div class="muted">${a.desc || ''}</div>
                 </div>
             </div>`;
         }).join('');
 
         const renderProfile = () => {
-            const s = Game.state;
+            const s = Game.state || {};
+            const achievements = Game.ACHIEVEMENTS || [];
 
-            const earnedCount = Game.ACHIEVEMENTS.filter((a) => s.achievements[a.id]).length;
-            const total = Game.ACHIEVEMENTS.length;
+            const earnedCount = achievements.filter((a) => s.achievements && s.achievements[a.id]).length;
+            const total = achievements.length;
             const pct = total > 0 ? Math.round((earnedCount / total) * 100) : 0;
 
             contentEl.innerHTML = `
@@ -57,22 +71,22 @@
                     <h2>📊 我的档案</h2>
                     <div class="grid-2">
                         <div class="item-card">
-                            <span class="item-emoji">${Game.escapeHtml(s.avatar)}</span>
-                            <span class="item-name">${Game.escapeHtml(s.playerName)}</span>
-                            <span class="item-desc">「${Game.escapeHtml(s.shopName)}」的店长</span>
-                            <span class="item-meta">经营第 ${s.day} 天 · Lv.${s.shopLevel} · 装饰度 ${s.decoration}</span>
+                            <span class="item-emoji">${esc(s.avatar || '👩‍🍳')}</span>
+                            <span class="item-name">${esc(s.playerName || '店长')}</span>
+                            <span class="item-desc">「${esc(s.shopName || '甜蜜小屋')}」的店长</span>
+                            <span class="item-meta">经营第 ${num(s.day, 1)} 天 · Lv.${num(s.shopLevel, 1)} · 装饰度 ${num(s.decoration, 0)}</span>
                         </div>
                         <div class="item-card">
                             <span class="item-emoji">📈</span>
                             <span class="item-name">经营数据</span>
-                            <span class="item-desc">余额：${s.money}元<br>累计卖出：${s.totalCakes}个<br>累计收入：${s.totalEarned}元<br>当前声望：${s.reputation}</span>
+                            <span class="item-desc">余额：${num(s.money, 0)}元<br>累计卖出：${num(s.totalCakes, 0)}个<br>累计收入：${num(s.totalEarned, 0)}元<br>当前声望：${num(s.reputation, 0)}</span>
                         </div>
                     </div>
                     <h3>🏅 成就（${earnedCount}/${total}，${pct}%）</h3>
                     <div class="aff-bar" style="height:8px;margin:0 0 10px;" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}">
                         <div class="aff-fill" style="width:${pct}%;"></div>
                     </div>
-                    <div class="achievement-list">${renderAchievements(s)}</div>
+                    <div class="achievement-list">${renderAchievements(s, achievements)}</div>
                     <h3>💾 存档 & 结局</h3>
                     <div class="char-actions" style="gap:10px;margin-top:8px;">
                         <button type="button" class="small" data-action="save">💾 保存游戏</button>
@@ -83,29 +97,55 @@
                 </div>`;
         };
 
-        /* ---------------- 事件委托 ---------------- */
+        /* ==================== 事件委托 ==================== */
 
-        const ACTIONS = {
-            save:   () => Game.saveGame(),
-            load:   () => {
-                if (confirm('读取存档会回到上次保存的进度，当前未保存的改动会丢失，确定吗？')) {
-                    Game.loadGame();
-                }
-            },
-            ending: () => Game.showEnding(),
-            reset:  () => Game.resetGame(),
+        const bindClick = () => {
+            const ACTIONS = {
+                save:   () => typeof Game.saveGame === 'function' && Game.saveGame(),
+                load:   () => {
+                    if (confirm('读取存档会回到上次保存的进度，当前未保存的改动会丢失，确定吗？')) {
+                        if (typeof Game.loadGame === 'function') Game.loadGame();
+                    }
+                },
+                ending: () => typeof Game.showEnding === 'function' && Game.showEnding(),
+                reset:  () => typeof Game.resetGame === 'function' && Game.resetGame(),
+            };
+
+            contentEl.addEventListener('click', (e) => {
+                const btn = e.target.closest('[data-action]');
+                if (!btn) return;
+                const handler = ACTIONS[btn.dataset.action];
+                if (typeof handler === 'function') handler();
+            });
         };
 
-        contentEl.addEventListener('click', (e) => {
-            const btn = e.target.closest('[data-action]');
-            if (!btn) return;
-            const handler = ACTIONS[btn.dataset.action];
-            if (typeof handler === 'function') handler();
-        });
+        /* ==================== 启动 ==================== */
 
-        /* ---------------- 页面初始化 ---------------- */
+        const boot = () => {
+            let G = null;
+            try {
+                if (window.parent && window.parent !== window && window.parent.Game) {
+                    G = window.parent.Game;
+                }
+            } catch (_) {}
+            if (!G) G = window.Game || null;
 
-        Game.initPage('profile', renderProfile);
+            if (G && G.state && typeof G.initPage === 'function') {
+                Game = G;
+                window.Game = G;
+                bindClick();
+                G.initPage('profile', renderProfile);
+                return;
+            }
+
+            if (++tries >= MAX_TRIES) {
+                contentEl.innerHTML = '<div style="color:red;padding:20px;text-align:center;">❌ 游戏引擎加载超时，请刷新重试</div>';
+                return;
+            }
+            setTimeout(boot, 100);
+        };
+
+        boot();
     })();
     </script>
 </body>

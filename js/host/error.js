@@ -1,5 +1,14 @@
 // js/host/error.js
 (() => {
+    'use strict';
+
+    // 根 monitor.js 已接管全局错误捕获与 iframe 错误转发，
+    // 这里直接退出，避免同一条错误在 overlay 上重复显示两次。
+    if (window.__rootMonitorLoaded) {
+        console.log('🛡️ [HostError] 根监视器已接管错误捕获，跳过重复绑定');
+        return;
+    }
+
     const errorOverlay = document.getElementById('error-overlay');
     if (!errorOverlay) return;
 
@@ -33,15 +42,17 @@
         const attach = () => {
             try {
                 const win = iframe.contentWindow;
-                if (!win || win.__errorBound) return;
-                win.__errorBound = true;
+                const doc = iframe.contentDocument;
+                if (!win || !doc) return;
+                // 用 document 做幂等标记：iframe 导航后是新 document
+                if (doc.__hostErrorBound) return;
+                doc.__hostErrorBound = true;
                 win.addEventListener('error', (e) => showError(`${name}: ${formatError(e)}`));
-            } catch (_) { /* 跨域时忽略 */ }
+            } catch (_) { /* 跨域忽略 */ }
         };
         iframe.addEventListener('load', attach);
         attach();
     };
 
-    // 挂载到全局
     window.HostError = { showError, bindErrorCatcher };
 })();

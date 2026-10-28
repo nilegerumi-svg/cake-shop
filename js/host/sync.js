@@ -1,9 +1,13 @@
 // js/host/sync.js
 (() => {
+    'use strict';
+
     const frames = [
         document.getElementById('mainFrame'),
         document.getElementById('logFrame')
     ].filter(Boolean);
+
+    const targetOrigin = (location.origin === 'null' ? '*' : location.origin);
 
     const handleStateChanged = (sourceId) => {
         const Cake = window.Cake;
@@ -28,7 +32,7 @@
 
         const msg = { type: 'state-sync', sourceId };
         for (const f of frames) {
-            try { f.contentWindow.postMessage(msg, '*'); } catch (_) { /* ignore */ }
+            try { f.contentWindow.postMessage(msg, targetOrigin); } catch (_) {}
         }
     };
 
@@ -42,6 +46,10 @@
     };
 
     if (!registerBroadcaster()) {
-        document.addEventListener('DOMContentLoaded', registerBroadcaster);
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', registerBroadcaster, { once: true });
+        } else {
+            setTimeout(registerBroadcaster, 0);
+        }
     }
 })();

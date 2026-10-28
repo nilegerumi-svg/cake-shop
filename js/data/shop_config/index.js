@@ -1,3 +1,4 @@
+//js/data/shop_config/index.js
 window.Cake = window.Cake || {};
 
 window.Cake.SHOP_UPGRADE_COSTS = Object.freeze({

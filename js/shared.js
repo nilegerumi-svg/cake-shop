@@ -51,6 +51,10 @@ if (window.self !== window.top) {
         const Cake = window.Cake;
         const Game = (window.Game = window.Game || {});
 
+        // ⚠️ 铁律：rest / sleep / walk 不放进 LIVE_KEYS。
+        // LIVE_KEYS 里的 key 自带 setter；如果某个 key 既在 LIVE_KEYS、
+        // 又被「Game.xxx = ...」手动赋值，setter 会把真正的 Cake.xxx
+        // 覆盖成自引用函数 → 点击时无限递归栈溢出。
         const LIVE_KEYS = [
             'INGREDIENTS', 'RECIPES', 'BUNDLES', 'CHARACTERS', 'AFF_EVENTS',
             'CHAT_DIALOGUES', 'DATE_DIALOGUES', 'MEETINGS', 'RANDOM_EVENTS',
@@ -59,7 +63,7 @@ if (window.self !== window.top) {
             'LOCATIONS', 'COMMON_WALK_EVENTS', 'TOWN_EVENTS', 'WALK_EVENTS', 'Entertainment',
 
             'advanceTime', 'getTimeString', 'getPeriodString',
-            'triggerRest', 'sleep', 'Actions', 'RestSys', 'RestMonitor',
+            'triggerRest', 'Actions', 'RestSys', 'RestMonitor',
 
             'SAVE_KEY', 'SAVE_VERSION',
             'defaultState', 'hasSave', 'saveState', 'loadStateFromStorage',
@@ -92,17 +96,14 @@ if (window.self !== window.top) {
             set: (v) => { if (Cake.store) Cake.store.state = v; },
         });
 
-        // ⚠️ rest / walk 不在 LIVE_KEYS 里，必须手动暴露。
-        //    它们做的是「普通属性赋值」，不会触发 setter，因此 Cake.rest / Cake.walk 保持不变。
+        // ✅ 三个动作统一用「普通属性」包装：不触发任何 setter，
+        //    Cake.rest / Cake.sleep / Cake.walk 始终保持原样
         Game.rest = () => { if (typeof Cake.rest === 'function') return Cake.rest(); };
+        Game.sleep = () => { if (typeof Cake.sleep === 'function') return Cake.sleep(); };
         Game.walk = (locName) => {
             const loc = typeof locName === 'string' ? locName : 'home';
             if (typeof Cake.walk === 'function') return Cake.walk(loc);
         };
-
-        // ⚠️ 注意：sleep 已经在 LIVE_KEYS 里了（通过 getter 暴露 Game.sleep → Cake.sleep），
-        //    绝不能在这里再写「Game.sleep = ...」。
-        //    否则会触发上面的 setter，把真正的 Cake.sleep 覆盖成自引用函数 → 无限递归栈溢出。
     })();
 
     // ── 3. bridge：跨 iframe 状态同步 ──

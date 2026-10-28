@@ -31,9 +31,26 @@ import './river/index.js';
     }
     Cake.__townRegionLoaded = true;
 
+    const deepFreeze = (obj) => {
+        if (obj === null || typeof obj !== 'object' || Object.isFrozen(obj)) return obj;
+        for (const key of Object.keys(obj)) deepFreeze(obj[key]);
+        return Object.freeze(obj);
+    };
+
     console.log('🏘️ [Town] 城镇模块开始执行，当前 Cake 是否就绪:', !!Cake);
 
-    // ⚠️ 不直接覆盖：保留已有区域，合并新地点
+    /* ==================== 1. 注册区域元数据（供「总地图」页展示） ==================== */
+    Cake.REGIONS = Cake.REGIONS || {};
+    Cake.REGIONS.town = deepFreeze({
+        id: 'town',
+        name: '城镇',
+        emoji: '🏘️',
+        desc: '商店、公园与河流交织的温馨城镇。',
+        locationsKey: 'REGION_TOWN',   // 该区域的地点数据挂载点
+    });
+
+    /* ==================== 2. 汇总区域地点 ==================== */
+    // ⚠️ 不直接覆盖：保留已有地点，合并新地点
     Cake.REGION_TOWN = Cake.REGION_TOWN || {};
 
     // 地点数据来源表

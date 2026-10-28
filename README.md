@@ -5,62 +5,52 @@
 游戏地址：
 https://nilegerumi-svg.github.io/cake-shop/
 
-时间轴 ──────────────────────────────────────────────────────────→
-
 index.html
-  ├─ 兜底脚本
-  ├─ store.js / state.js
-  ├─ js/pages/index.js → router.js → start/index.js
-  └─ appLoadingComplete()
-
-点击「开始新游戏」
-  ↓
-game.html
-  ├─ monitor.js（根目录）
-  │     └─ 动态加载 js/main.js
+  │  兜底脚本 + store.js + state.js
+  │  js/pages/index.js (module) → router.js → start/index.js
+  │  appLoadingComplete() 关闭 loading
+  ▼
+「开始新游戏」→ 写存档 → game.html
   │
-  └─ main.js
-        ├─ data → core → time → actions（含 entertainment）
-        ├─ shared.js → window.Game
-        ├─ monitor/index.js → time / page 监视器
-        └─ host/index.js → error / router / sync / main
+  ├─ monitor.js（根目录）
+  │     ├─ 错误监听 + iframe 监控
+  │     └─ 动态 <script type="module" src="js/main.js">
+  │
+  └─ js/main.js 状态机
+        IDLE → INITIALIZING
+        │
+        ├─ await import('./data/index.js')
+        ├─ await import('./core/index.js')
+        ├─ await import('./time/index.js')
+        ├─ await import('./actions/index.js')
+        │     └→ entertainment/index.js
+        │           ├→ map/index.js → monitor + town/index.js
+        │           ├→ common_events.js
+        │           ├→ rest/index.js → nap + sleep + monitor + town/index.js
+        │           └→ walk.js
+        ├─ await import('./shared.js')          ← window.Game 兼容层
+        ├─ await import('./monitor/index.js')   ← time / page 监视器 + 自检
+        └─ await import('./host/index.js')      ← error / router / sync / main
               │
               └─ safeReady() → game-ready
-                    │
-                    ├─ monitor.js: markEngineReady()
-                    │
-                    └─ monitor.js: mainFrame.src = pages/home.html
-                          │
-                          └─ pages/home.html
-                                └─ js/pages/index.js → router.js → home/index.js
-                                      ├─ startHandshake() → postMessage('home-ready')
-                                      └─ waitEngine() → 轮询 window.parent.Game
-                                            │
-                                            ├─ monitor.js 收到 home-ready → 回 ack
-                                            │     └─ markHomeReady(true)
-                                            │
-                                            └─ Game 就绪 → bindEvents + initPage('home', renderHome)
-                                                  └─ refreshPage → renderAll
-                                                        ├─ 父页面 header / nav / footer
-                                                        └─ renderHome() → iframe #content
-
-tryBoot()（engineReady && homeReady）
-  └─ finishLoading() → loading 屏隐藏
-
-──────────── 进入游戏运行期 ────────────
-
-用户点击 navBar → HostRouter.navigateTo → mainFrame.src
-iframe 加载新页面 → boot() 轮询 Game → initPage('xxx', renderXxx)
-用户操作 → Game.xxx → Cake.xxx → 修改 state → saveState + refreshPage
-  → 父页面 renderAll → 子页面 renderXxx
-  → bridge 广播 state-sync → 其它 iframe 同步
+  │
+  ├─ monitor.js 收到 game-ready → markEngineReady()
+  │
+  ├─ 同时 mainFrame.src = pages/home.html
+  │     └→ pages/home.html
+  │           └→ <script type="module" src="../js/pages/index.js">
+  │                 └→ router.js → home.html 分支
+  │                       └→ js/pages/home/index.js
+  │                             ├─ startHandshake() → postMessage('home-ready')
+  │                             └─ waitEngine() → 轮询 window.parent.Game
+  │
+  ├─ monitor.js 收到 home-ready → 回 ack → markHomeReady(true)
+  │
+  └─ tryBoot() 成功 → finishLoading() 隐藏 loading 屏
+        │
+        └─ 引擎 + 主页 + 握手 全部就绪
 
 
-
-
-
-
-加载关系图：
 index.html
   ├─ js/core/store.js
   ├─ js/core/state.js

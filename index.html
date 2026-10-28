@@ -1,11 +1,13 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>我的应用</title>
+    <title>甜蜜物语 - 开始</title>
     <style>
-        /* loading 屏：monitor.js 就绪后会自动淡出并隐藏 */
+        html, body { margin: 0; padding: 0; }
+
+        /* ============ loading 屏 ============ */
         #app-loading {
             position: fixed;
             inset: 0;
@@ -15,9 +17,14 @@
             align-items: center;
             justify-content: center;
             gap: 16px;
+            padding:
+                env(safe-area-inset-top)
+                env(safe-area-inset-right)
+                env(safe-area-inset-bottom)
+                env(safe-area-inset-left);
             background: #1b1b2f;
             color: #fff;
-            transition: opacity .3s;
+            transition: opacity .3s ease;
         }
         #loading-bar-wrap {
             width: 220px; height: 8px;
@@ -27,11 +34,11 @@
         #loading-bar {
             width: 0%; height: 100%;
             background: linear-gradient(90deg,#ff6b81,#ffa502);
-            transition: width .25s;
+            transition: width .25s ease;
         }
-        #loading-text { font: 14px/1.5 system-ui; }
+        #loading-text { font: 14px/1.5 system-ui, sans-serif; }
 
-        /* 加载失败提示样式 */
+        /* 加载失败提示 */
         #loading-error {
             display: none;
             margin-top: 12px;
@@ -40,8 +47,9 @@
             border: 1px solid #ff6b81;
             border-radius: 6px;
             color: #ffb8c6;
-            font: 13px/1.5 system-ui;
+            font: 13px/1.5 system-ui, sans-serif;
             text-align: center;
+            max-width: 80vw;
         }
         #loading-error.show { display: block; }
         #loading-retry {
@@ -52,11 +60,12 @@
             border-radius: 4px;
             color: #fff;
             cursor: pointer;
-            font: 13px system-ui;
+            font: 13px system-ui, sans-serif;
+            -webkit-tap-highlight-color: transparent;
         }
         #loading-retry:hover { background: rgba(255,255,255,.1); }
 
-        /* 无 JS 降级提示 */
+        /* 无 JS 降级 */
         .noscript-warning {
             position: fixed;
             inset: 0;
@@ -66,17 +75,14 @@
             justify-content: center;
             background: #1b1b2f;
             color: #fff;
-            font: 16px/1.6 system-ui;
+            font: 16px/1.6 system-ui, sans-serif;
             text-align: center;
             padding: 20px;
         }
 
-        /* 尊重用户浅色模式偏好 */
+        /* 浅色模式 */
         @media (prefers-color-scheme: light) {
-            #app-loading {
-                background: #f5f5fa;
-                color: #1b1b2f;
-            }
+            #app-loading { background: #f5f5fa; color: #1b1b2f; }
             #loading-bar-wrap { background: rgba(0,0,0,.1); }
             #loading-error {
                 background: rgba(255,107,129,.1);
@@ -86,26 +92,26 @@
                 border-color: rgba(0,0,0,.3);
                 color: #1b1b2f;
             }
+            #loading-retry:hover { background: rgba(0,0,0,.05); }
         }
     </style>
 </head>
 <body>
-    <!-- 应用外壳挂载点 -->
+
+    <!-- 应用挂载点（内容由 js/pages/index.js 渲染） -->
     <div id="app-root" aria-busy="true"></div>
 
     <!-- loading 屏 -->
     <div id="app-loading" role="status" aria-label="应用加载中">
         <div id="loading-text">初始化中…</div>
         <div id="loading-bar-wrap"><div id="loading-bar"></div></div>
-        <!-- 加载失败提示（默认隐藏） -->
         <div id="loading-error" role="alert">
             <span id="loading-error-message">加载超时，请检查网络后重试</span>
             <br>
-            <button id="loading-retry" onclick="location.reload()">重新加载</button>
+            <button id="loading-retry" type="button">重新加载</button>
         </div>
     </div>
 
-    <!-- JS 被禁用时的降级提示 -->
     <noscript>
         <div class="noscript-warning">
             您的浏览器已禁用 JavaScript，无法运行本应用。<br>
@@ -113,109 +119,173 @@
         </div>
     </noscript>
 
-    <!-- 加载超时与错误兜底：必须先于 monitor.js 注册，确保能捕获其加载失败 -->
+    <!-- ============================================================
+         兜底脚本：必须在所有应用脚本之前执行
+         - 注册错误捕获（资源加载失败 / 入口脚本同步异常）
+         - 超时兜底
+         - 暴露 appLoadingComplete / appLoadingFail
+         - MutationObserver 自动完成（防止 index.js 忘记调用）
+    ============================================================ -->
     <script>
-        (function() {
-            'use strict';
+    (function () {
+        'use strict';
 
-            var LOADING_TIMEOUT = 15000; // 15秒超时
-            var loadingEl = document.getElementById('app-loading');
-            var errorEl = document.getElementById('loading-error');
-            var errorMessageEl = document.getElementById('loading-error-message');
-            var rootEl = document.getElementById('app-root');
-            var isLoaded = false;
-            var isFailed = false;
-            var timeoutId = null;
+        var LOADING_TIMEOUT = 15000;  // 15s 超时
+        var LOADING_FADE    = 300;    // 淡出时长，需与 CSS transition 一致
 
-            // 隐藏错误提示
-            function hideError() {
-                if (errorEl) {
-                    errorEl.classList.remove('show');
-                }
+        var loadingEl   = document.getElementById('app-loading');
+        var errorEl     = document.getElementById('loading-error');
+        var errorMsgEl  = document.getElementById('loading-error-message');
+        var retryBtn    = document.getElementById('loading-retry');
+        var rootEl      = document.getElementById('app-root');
+
+        var isLoaded  = false;
+        var isFailed  = false;
+        var timeoutId = null;
+        var hideId    = null;
+
+        function hideError() {
+            if (errorEl) errorEl.classList.remove('show');
+        }
+
+        function showError(message) {
+            if (errorMsgEl && message) errorMsgEl.textContent = message;
+            if (errorEl) errorEl.classList.add('show');
+            // 失败后不再处于 busy 状态，通知无障碍工具
+            if (rootEl) rootEl.setAttribute('aria-busy', 'false');
+        }
+
+        function clearTimer() {
+            if (timeoutId !== null) { clearTimeout(timeoutId); timeoutId = null; }
+        }
+
+        // ---------- 对外 API ----------
+
+        // 加载成功（幂等；可从失败态恢复）
+        window.appLoadingComplete = function () {
+            if (isLoaded) return;
+            if (isFailed) { isFailed = false; hideError(); }
+            isLoaded = true;
+            clearTimer();
+
+            if (loadingEl) {
+                loadingEl.style.opacity = '0';
+                hideId = setTimeout(function () {
+                    hideId = null;
+                    loadingEl.style.display = 'none';
+                    loadingEl.setAttribute('aria-hidden', 'true');
+                }, LOADING_FADE);
             }
+            if (rootEl) rootEl.setAttribute('aria-busy', 'false');
+        };
 
-            // 显示错误提示（带自定义消息）
-            function showError(message) {
-                if (errorMessageEl && message) {
-                    errorMessageEl.textContent = message;
-                }
-                if (errorEl) {
-                    errorEl.classList.add('show');
-                }
+        // 加载失败（失败后仍可被 complete 恢复；已失败时只更新文案）
+        window.appLoadingFail = function (message) {
+            if (isLoaded) return;
+            if (isFailed) {
+                if (message) showError(message);
+                return;
             }
+            isFailed = true;
+            clearTimer();
+            showError(message || '应用加载失败，请刷新重试');
+        };
 
-            // 清理超时定时器
-            function clearTimer() {
-                if (timeoutId !== null) {
-                    clearTimeout(timeoutId);
-                    timeoutId = null;
-                }
-            }
-
-            // 标记加载完成（供 monitor.js 调用）
-            // 修复：允许从 failed 状态恢复，只要尚未成功加载
-            window.appLoadingComplete = function() {
-                if (isLoaded) return; // 已加载则忽略重复调用
-
-                // 从失败状态恢复：重置标志、隐藏错误、清理定时器
-                if (isFailed) {
-                    isFailed = false;
-                    hideError();
-                }
-
-                isLoaded = true;
-                clearTimer();
-
-                if (loadingEl) {
-                    loadingEl.style.opacity = '0';
-                    setTimeout(function() {
-                        loadingEl.style.display = 'none';
-                    }, 300);
-                }
-                if (rootEl) {
-                    rootEl.setAttribute('aria-busy', 'false');
-                }
-            };
-
-            // 标记加载失败（供 monitor.js 在捕获到错误时调用，可选）
-            // 修复：失败后仍允许后续恢复成功
-            window.appLoadingFail = function(message) {
-                if (isLoaded || isFailed) return;
-
+        // 超时兜底
+        timeoutId = setTimeout(function () {
+            timeoutId = null;
+            if (!isLoaded && !isFailed) {
                 isFailed = true;
-                clearTimer();
-                showError(message || '应用加载失败，请刷新重试');
-            };
+                showError('加载超时，请检查网络后重试');
+            }
+        }, LOADING_TIMEOUT);
 
-            // 超时检测：15秒后如果还没加载完成，显示错误提示
-            // 修复：超时后仍允许后续恢复成功（不永久锁死）
-            timeoutId = setTimeout(function() {
-                if (!isLoaded && !isFailed) {
-                    isFailed = true;
-                    showError('加载超时，请检查网络后重试');
+        // ---------- 错误捕获（捕获阶段，保证先于 app 脚本执行） ----------
+
+        function srcOf(el) {
+            // 优先取原始属性，避免某些环境下 .src 返回空串
+            return (el && ((el.getAttribute && el.getAttribute('src')) || el.src)) || '';
+        }
+
+        // 判断是否是我们自己的关键脚本
+        function isCriticalScript(src) {
+            return /monitor(\.min)?\.js|pages\/index(\.min)?\.js|js\/core\/[^/]+\.js/.test(src);
+        }
+
+        window.addEventListener('error', function (e) {
+            var target = e.target;
+
+            // 1) 资源加载失败（target 是元素，不是 window）
+            if (target && target !== window && target.tagName === 'SCRIPT') {
+                var src = srcOf(target);
+                if (isCriticalScript(src)) {
+                    window.appLoadingFail('核心脚本加载失败，请刷新重试');
+                    return;
                 }
-            }, LOADING_TIMEOUT);
-
-            // 全局错误捕获：只捕获资源加载错误，忽略运行时错误避免误报
-            // 修复：此脚本先于 monitor.js 执行，确保能捕获其加载失败
-            window.addEventListener('error', function(e) {
-                // 只处理资源加载失败（target 是元素），忽略 JS 运行时错误
-                if (e.target && e.target !== window && e.target.tagName) {
-                    // 如果是 monitor.js 加载失败，标记失败
-                    if (e.target.tagName === 'SCRIPT' && e.target.src.indexOf('monitor.js') !== -1) {
-                        if (window.appLoadingFail) {
-                            window.appLoadingFail('核心脚本加载失败，请刷新重试');
-                        }
-                    }
+                // 非关键脚本且尚未渲染：说明依赖链已经挂了
+                if (!isLoaded && rootEl && !rootEl.firstChild) {
+                    window.appLoadingFail('脚本加载失败，请刷新重试');
                 }
-            }, true); // 使用捕获阶段，确保能接收到资源错误
+                return;
+            }
 
-            // 暴露清理函数（兼容旧代码）
-            window.clearLoadingTimeout = clearTimer;
-        })();
+            // 2) 入口脚本的同步运行时异常（target 是 window，靠 e.filename 判断）
+            if (!target && e.filename && /pages\/index(\.min)?\.js/.test(e.filename)) {
+                if (rootEl && !rootEl.firstChild) {
+                    window.appLoadingFail('页面初始化失败，请刷新重试');
+                }
+            }
+        }, true);
+
+        // 未捕获的 Promise 拒绝：若页面仍为空，视为初始化失败
+        window.addEventListener('unhandledrejection', function () {
+            if (!isLoaded && !isFailed && rootEl && !rootEl.firstChild) {
+                window.appLoadingFail('页面初始化失败，请刷新重试');
+            }
+        });
+
+        // ---------- 重试按钮（替代内联 onclick，兼容严格 CSP） ----------
+        if (retryBtn) {
+            retryBtn.addEventListener('click', function () {
+                window.location.reload();
+            });
+        }
+
+        // ---------- 自动完成兜底 ----------
+        // 如果 index.js 渲染完成后忘了调用 appLoadingComplete，
+        // 只要 #app-root 出现了内容，就自动收尾。
+        // 注意：如果 index.js 会先挂一个占位骨架再异步渲染真实内容，
+        // 请务必在 index.js 中主动调用 window.appLoadingComplete()，
+        // 否则骨架出现约 200ms 后 loading 屏就会关闭。
+        if (rootEl && typeof MutationObserver !== 'undefined') {
+            var armed = false;
+            var mo = new MutationObserver(function () {
+                if (armed || !rootEl.firstChild) return;
+                armed = true;
+                setTimeout(function () {
+                    mo.disconnect();
+                    window.appLoadingComplete();
+                }, 200);
+            });
+            mo.observe(rootEl, { childList: true, subtree: true });
+        }
+
+        // 兼容旧代码
+        window.clearLoadingTimeout = clearTimer;
+    })();
     </script>
 
-    <!-- 使用 defer 确保 DOM 就绪后执行，减少竞态 -->
+    <!-- ============================================================
+         应用脚本（按依赖顺序，从下往上）
+         执行顺序：store.js → state.js → monitor.js → pages/index.js
+         - store/state：普通脚本，阻塞执行，先定义全局
+         - monitor.js：defer，与 module 同队列，先于 index.js
+         - index.js：module 默认 defer，最后执行，负责渲染
+    ============================================================ -->
+    <script src="js/core/store.js"></script>
+    <script src="js/core/state.js"></script>
     <script src="js/monitor.js" defer></script>
+    <script type="module" src="js/pages/index.js"></script>
+
 </body>
 </html>

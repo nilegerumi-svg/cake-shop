@@ -3,22 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <!-- 🚨 强制不缓存，防止手机加载旧代码 -->
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <title>地图与外出</title>
     <link rel="stylesheet" href="../../css/styles.css">
     <style>
         body { background: transparent; font-family: sans-serif; padding: 16px; display: flex; justify-content: center; color: #4a3b3f; margin: 0; }
         .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(255,182,193,0.2); width: 100%; max-width: 400px; }
-        
+
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px dashed #ffd1dc; padding-bottom: 12px; }
         .header h2 { color: #ff6b81; margin: 0; font-size: 18px; }
         .back-btn { background: none; border: none; color: #888; font-size: 15px; cursor: pointer; padding: 4px 8px; font-weight: bold; }
         .back-btn:active { color: #ff6b81; }
-        
+
         .energy-badge { background: #fff9fa; padding: 4px 10px; border-radius: 20px; font-size: 13px; border: 1px solid #ffd1dc; font-weight: bold; }
 
-        /* 地点列表 */
         .loc-list { display: flex; flex-direction: column; gap: 12px; }
         .loc-item {
             display: flex; align-items: center; justify-content: space-between;
@@ -27,13 +25,13 @@
         }
         .loc-item:active { transform: scale(0.98); background: #e0f5f0; }
         .loc-item.disabled { background: #f5f5f5; border-color: #ddd; cursor: not-allowed; opacity: 0.7; }
-        
+
         .loc-info { display: flex; align-items: center; gap: 12px; }
         .loc-emoji { font-size: 28px; }
         .loc-text { display: flex; flex-direction: column; text-align: left; }
         .loc-name { font-size: 16px; font-weight: bold; color: #4a3b3f; }
         .loc-desc { font-size: 12px; color: #888; margin-top: 4px; }
-        
+
         .loc-cost { font-size: 14px; font-weight: bold; color: #ff8fa3; }
         .loc-item.disabled .loc-cost { color: #aaa; }
     </style>
@@ -41,7 +39,7 @@
 <body>
     <div class="card">
         <div class="header">
-            <button class="back-btn" id="btnBack">◀ 返回</button>
+            <button class="back-btn" id="btnBack" type="button">◀ 返回</button>
             <h2>🗺️ 去哪里散步？</h2>
             <div class="energy-badge">⚡<span id="energy">--</span></div>
         </div>
@@ -55,33 +53,52 @@
     (() => {
         'use strict';
 
-        const Cake = window.parent.Cake || window.Cake;
         const $ = (id) => document.getElementById(id);
-
         const locListEl = $('locList');
         const energyEl  = $('energy');
+
+        let Cake = null;
+        let tries = 0;
+        const MAX_TRIES = 100;      // 100 × 100ms = 10s
+        const GO_DELAY = 600;
+
+        const num = (v, fallback = 0) => {
+            const n = Number(v);
+            return Number.isFinite(n) ? n : fallback;
+        };
+
+        const getCake = () => {
+            try {
+                if (window.parent && window.parent !== window && window.parent.Cake) {
+                    return window.parent.Cake;
+                }
+            } catch (_) { /* 跨域 */ }
+            return window.Cake || null;
+        };
+
+        /* ==================== 渲染地点列表 ==================== */
 
         const renderList = () => {
             try {
                 const state = Cake && Cake.store && Cake.store.state;
-                if (!state) throw new Error("无法读取当前游戏状态");
+                if (!state) throw new Error('无法读取当前游戏状态');
 
-                energyEl.innerText = state.energy;
+                const energy = Math.max(0, Math.min(100, num(state.energy, 0)));
+                if (energyEl) energyEl.innerText = energy;
 
                 const locs = Cake.LOCATIONS;
                 if (!locs || Object.keys(locs).length === 0) {
-                    throw new Error("LOCATIONS 数据为空！请检查地点文件的加载");
+                    throw new Error('LOCATIONS 数据为空！请检查地点文件的加载');
                 }
 
                 let html = '';
                 for (const [key, loc] of Object.entries(locs)) {
-                    // 🌟 核心防崩：跳过空数据
-                    if (!loc) continue; 
+                    if (!loc) continue; // 跳过空数据
 
-                    const cost = loc.cost || 8; // 默认消耗 8 点
-                    const disabled = state.energy < cost;
+                    const cost = num(loc.cost, 8);
+                    const disabled = energy < cost;
                     const cls = disabled ? 'loc-item disabled' : 'loc-item';
-                    
+
                     html += `
                         <div class="${cls}" data-loc="${key}">
                             <div class="loc-info">
@@ -95,7 +112,7 @@
                         </div>
                     `;
                 }
-                
+
                 if (html === '') {
                     html = '<div style="color:#888; text-align:center;">当前没有可去的地点...</div>';
                 }
@@ -104,36 +121,111 @@
             } catch (err) {
                 locListEl.innerHTML = `
                     <div style="color: red; padding: 15px; background: #ffe4e1; border-radius: 10px;">
-                        <strong>⚠️ 渲染失败：</strong><br>${err.message}
+                        <strong>⚠️ 渲染失败：</strong><br>${err.message || err}
                     </div>`;
             }
         };
 
-        // 🌟 修复 1：返回按钮直接跳转同级目录下的 index.html
-        $('btnBack').addEventListener('click', () => {
-            window.location.href = 'index.html'; 
-        });
+        /* ==================== 返回 ==================== */
 
-        locListEl.addEventListener('click', (e) => {
-            const item = e.target.closest('.loc-item');
-            if (!item || item.classList.contains('disabled')) return;
+        const goBack = () => {
+            // 优先走宿主路由，保持导航高亮一致
+            try {
+                if (window.parent && window.parent !== window &&
+                    window.parent.HostRouter &&
+                    typeof window.parent.HostRouter.navigateTo === 'function') {
+                    window.parent.HostRouter.navigateTo('pages/entertainment/index.html');
+                    return;
+                }
+            } catch (_) { /* 跨域或未定义 */ }
 
-            const locKey = item.dataset.loc;
-            item.style.pointerEvents = 'none';
-            item.querySelector('.loc-cost').innerText = '出发中...';
+            window.location.href = 'index.html';
+        };
 
-            // 触发散步
-            if (Cake && typeof Cake.walk === 'function') {
-                Cake.walk(locKey);
+        /* ==================== 事件绑定 ==================== */
+
+        const bindClick = () => {
+            const btnBack = $('btnBack');
+            if (btnBack && !btnBack.dataset.bound) {
+                btnBack.dataset.bound = 'true';
+                btnBack.addEventListener('click', goBack);
             }
 
-            // 🌟 修复 2：结算后退回同级目录下的 index.html
-            setTimeout(() => {
-                window.location.href = 'index.html';
-            }, 600);
-        });
+            if (locListEl && !locListEl.dataset.bound) {
+                locListEl.dataset.bound = 'true';
+                locListEl.addEventListener('click', (e) => {
+                    const item = e.target.closest('.loc-item');
+                    if (!item || item.classList.contains('disabled')) return;
 
-        window.addEventListener('load', renderList);
+                    const engine = Cake || getCake();
+                    if (!engine || !engine.store || !engine.store.state) return;
+
+                    const locKey = item.dataset.loc;
+                    item.style.pointerEvents = 'none';
+                    const costEl = item.querySelector('.loc-cost');
+                    if (costEl) costEl.innerText = '出发中...';
+
+                    // 触发散步：优先 Cake.walk，其次 Game.walk
+                    let walked = false;
+                    try {
+                        if (typeof engine.walk === 'function') {
+                            engine.walk(locKey);
+                            walked = true;
+                        } else if (
+                            window.parent && window.parent !== window &&
+                            window.parent.Game &&
+                            typeof window.parent.Game.walk === 'function'
+                        ) {
+                            window.parent.Game.walk(locKey);
+                            walked = true;
+                        }
+                    } catch (err) {
+                        console.error('[map] walk 执行失败:', err);
+                    }
+
+                    if (!walked) {
+                        // 失败时恢复 UI，避免用户卡在「出发中...」
+                        item.style.pointerEvents = '';
+                        if (costEl) costEl.innerText = '⚡' + num(
+                            (engine.LOCATIONS && engine.LOCATIONS[locKey] && engine.LOCATIONS[locKey].cost),
+                            8
+                        );
+                        alert('❌ 无法外出：散步功能未定义（Cake.walk / Game.walk）');
+                        return;
+                    }
+
+                    setTimeout(goBack, GO_DELAY);
+                });
+            }
+        };
+
+        /* ==================== 启动 ==================== */
+
+        const boot = () => {
+            const engine = getCake();
+
+            if (engine && engine.store && engine.store.state) {
+                Cake = engine;
+                window.Cake = engine;
+                bindClick();
+                renderList();
+                return;
+            }
+
+            if (++tries >= MAX_TRIES) {
+                if (locListEl) {
+                    locListEl.innerHTML = `
+                        <div style="color: red; padding: 15px; background: #ffe4e1; border-radius: 10px;">
+                            <strong>⚠️ 无法连接游戏引擎：</strong><br>父页面 Cake 未就绪，请刷新重试。
+                        </div>`;
+                }
+                return;
+            }
+
+            setTimeout(boot, 100);
+        };
+
+        boot();
     })();
     </script>
 </body>

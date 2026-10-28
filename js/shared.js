@@ -1,13 +1,9 @@
 // js/shared.js
 window.Cake = window.Cake || {};
 
-// 🚨 核心护盾：如果当前是子页面（iframe），绝不执行代理逻辑，防止互相劫持爆栈！
 if (window.self !== window.top) {
     console.log('🧩 [Shared] 检测到子页面环境，跳过代理生成。');
-    // 注意：直接 return 会导致后面的代码不执行。如果要在纯 JS 里 return，得包在函数里。
-    // 这里我们用块级作用域包裹。
 } else {
-    // ================= 以下代码只在父页面（game.html）执行 =================
 
     // ── 1. 初始化状态 ──
     (() => {
@@ -41,7 +37,7 @@ if (window.self !== window.top) {
                 if (sn && sn.trim()) s.shopName = sn.trim().slice(0, 12);
                 const AVATAR_MAP = { girl1: '👧🏻', girl2: '👩🏻', boy1: '👦🏻', cake: '🧁' };
                 if (av && AVATAR_MAP[av]) s.avatar = AVATAR_MAP[av];
-            } catch (_) { /* ignore */ }
+            } catch (_) {}
             store.state = s;
             if (typeof Cake.saveState === 'function') Cake.saveState();
         } else if (typeof Cake.loadStateFromStorage === 'function') {
@@ -58,21 +54,16 @@ if (window.self !== window.top) {
             'INGREDIENTS', 'RECIPES', 'BUNDLES', 'CHARACTERS', 'AFF_EVENTS',
             'CHAT_DIALOGUES', 'DATE_DIALOGUES', 'MEETINGS', 'RANDOM_EVENTS',
             'ACHIEVEMENTS', 'SHOP_UPGRADE_COSTS',
-            
             'LOCATIONS', 'COMMON_WALK_EVENTS', 'TOWN_EVENTS', 'Entertainment',
-            
             'advanceTime', 'getTimeString', 'getPeriodString',
             'triggerRest', 'sleep', 'Actions', 'RestSys', 'RestMonitor',
-            
             'SAVE_KEY', 'SAVE_VERSION',
             'defaultState', 'hasSave', 'saveState', 'loadStateFromStorage',
             'resetGame', 'saveGame', 'loadGame', 'showEnding',
-            
             '$', 'addLog', 'ingredientTags', 'affLevel', 'escapeHtml', 'fail',
             'showModal', 'closeModal',
             'renderHeader', 'renderNav', 'renderFooter', 'renderLog',
             'initPage', 'refreshPage',
-            
             'bakeCake', 'buyIngredient', 'buyBundle', 'researchRecipe',
             'upgradeShop', 'decorateShop', 'setPriceRate', 'openShop',
             'social', 'toggleGiftPanel', 'giveGift',
@@ -87,11 +78,12 @@ if (window.self !== window.top) {
             });
         }
 
+        // Game.state = 游戏存档（不是引擎状态）
         Object.defineProperty(Game, 'state', {
             configurable: true,
             enumerable: true,
-            get: () => Cake.store.state,
-            set: (v) => { Cake.store.state = v; },
+            get: () => (Cake.store ? Cake.store.state : undefined),
+            set: (v) => { if (Cake.store) Cake.store.state = v; },
         });
 
         Game.rest = () => { if (typeof Cake.rest === 'function') return Cake.rest(); };

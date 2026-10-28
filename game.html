@@ -30,7 +30,6 @@
             color: #c81e3f; cursor: pointer; font: 13px system-ui, sans-serif;
             -webkit-tap-highlight-color: transparent;
         }
-
         .app-wrapper { display: flex; flex-direction: column; height: 100vh; height: 100dvh; }
         header, nav { flex: 0 0 auto; z-index: 10; }
         .split-container {
@@ -64,7 +63,6 @@
     </style>
 </head>
 <body>
-    <!-- Loading 界面 -->
     <div id="app-loading">
         <div class="loading-title">🍰 甜蜜物语</div>
         <div id="loading-text" class="loading-text">正在准备启动...</div>
@@ -80,7 +78,6 @@
 
     <div id="error-overlay"></div>
 
-    <!-- 游戏外壳 -->
     <div class="app-wrapper" id="app-root">
         <header id="header"></header>
         <nav id="navBar"></nav>
@@ -91,35 +88,29 @@
         <div class="action-footer" id="footer"></div>
     </div>
 
-    <!-- 用 baseURI 解析 logFrame 路径，避免 <base> 影响 -->
     <script>
     (function () {
         var f = document.getElementById('logFrame');
         if (f) {
-            try {
-                f.src = new URL('pages/log.html', document.baseURI).href;
-            } catch (_) {
-                f.src = 'pages/log.html';
-            }
+            try { f.src = new URL('pages/log.html', document.baseURI).href; }
+            catch (_) { f.src = 'pages/log.html'; }
         }
     })();
     </script>
 
-    <!-- 🚀 根目录超级监视器入口 -->
+    <!-- 根目录启动器 -->
     <script src="monitor.js"></script>
 
-    <!-- 📋 日志桥接：把 console / sendLog 送进 #logFrame -->
+    <!-- 日志桥接 -->
     <script>
     (function () {
         'use strict';
         const targetOrigin = (location.origin === 'null' ? '*' : location.origin);
-
         const toLogFrame = (payload) => {
             const f = document.getElementById('logFrame');
             if (!f || !f.contentWindow) return;
             try { f.contentWindow.postMessage(payload, targetOrigin); } catch (_) {}
         };
-
         window.sendLog = (msg, level) => toLogFrame({ type: 'log', msg, level, time: Date.now() });
         window.clearLog = () => toLogFrame({ type: 'clear' });
 
@@ -150,14 +141,12 @@
     })();
     </script>
 
-    <!-- 🛟 12s 兜底：monitor.js 加载失败 / init 异常时，给用户一个明确提示 -->
+    <!-- 12s 兜底：monitor.js 未完成初始化时给用户明确提示 -->
     <script>
     (function () {
         setTimeout(function () {
             var el = document.getElementById('app-loading');
-            if (!el) return;
-            var visible = el.style.display !== 'none';
-            if (!visible) return;
+            if (!el || el.style.display === 'none') return;
             var err = document.getElementById('loading-error');
             var msg = document.getElementById('loading-error-message');
             var retry = document.getElementById('loading-retry');

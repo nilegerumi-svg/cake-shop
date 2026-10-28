@@ -2,11 +2,11 @@
 
 import './monitor.js';
 import './town/index.js';
+import './location-actions.js';   // ⭐ 地点动作系统
 
 (() => {
     'use strict';
 
-    // 跨域守卫：iframe 中访问 parent 可能抛错
     const getCake = () => {
         try {
             if (window.parent && window.parent !== window && window.parent.Cake) {
@@ -22,7 +22,6 @@ import './town/index.js';
         return;
     }
 
-    // 防重复挂载
     if (Cake.__mapLocationsLoaded) {
         console.log('🗺️ [Map] 总地图已汇总，跳过重复初始化');
         return;
@@ -32,7 +31,6 @@ import './town/index.js';
     // ⚠️ 不直接覆盖：保留已挂载的地点，合并新地点
     Cake.LOCATIONS = Cake.LOCATIONS || {};
 
-    // 汇总所有「已注册区域」的地点到全局 LOCATIONS（walk 用这张总表）
     const regions = Cake.REGIONS || {};
     if (Object.keys(regions).length === 0) {
         console.error('❌ [Map] 严重错误：REGIONS 为空，没有任何区域注册！');
@@ -55,7 +53,6 @@ import './town/index.js';
         }
     }
 
-    // 通用接口：按区域 id 取该区域的地点
     Cake.getRegionLocations = (regionId) => {
         const region = Cake.REGIONS && Cake.REGIONS[regionId];
         if (!region || !region.locationsKey) return null;

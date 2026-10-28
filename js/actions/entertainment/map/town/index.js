@@ -1,6 +1,6 @@
 // js/actions/entertainment/map/town/index.js
 
-import './monitor.js'; 
+import './monitor.js';
 import './home/index.js';
 import './park/index.js';
 import './street/index.js';
@@ -8,26 +8,58 @@ import './river/index.js';
 
 (() => {
     'use strict';
-    
-    // 🌟 不再写 if (!Cake) return; 而是强制建一个
-    window.Cake = window.Cake || {};
-    // 如果在 iframe 里，尝试取父页面的；如果没有父页面，就用当前页面的
-    const Cake = window.parent.Cake || window.Cake;
 
-    console.log("🏘️ [Town] 城镇模块开始执行，当前 Cake 是否就绪:", !!Cake);
+    const getCake = () => {
+        try {
+            if (window.parent && window.parent !== window && window.parent.Cake) {
+                return window.parent.Cake;
+            }
+        } catch (_) { /* 跨域忽略 */ }
+        return window.Cake || null;
+    };
 
-    // 如果发现底层数据没拿到，大概率是 home/index.js 报错了
-    if (!Cake._MAP_DATA_HOME) {
-        console.error("❌ [Town] 警告：未读取到 _MAP_DATA_HOME，请检查 home/index.js 是否加载或报错！");
+    const Cake = getCake();
+    if (!Cake) {
+        console.warn('⚠️ [Town] 未找到 Cake，跳过 REGION_TOWN 汇总');
+        return;
     }
 
-    // 城镇地点字典
-    Cake.REGION_TOWN = {
-        home: Cake._MAP_DATA_HOME,
-        park: Cake._MAP_DATA_PARK,
-        street: Cake._MAP_DATA_STREET,
-        river: Cake._MAP_DATA_RIVER
-    };
-    
-    console.log("🏘️ [Town] 城镇字典装载完毕:", Object.keys(Cake.REGION_TOWN));
+    // 防重复挂载
+    if (Cake.__townRegionLoaded) {
+        console.log('🏘️ [Town] REGION_TOWN 已汇总，跳过重复初始化');
+        return;
+    }
+    Cake.__townRegionLoaded = true;
+
+    console.log('🏘️ [Town] 城镇模块开始执行，当前 Cake 是否就绪:', !!Cake);
+
+    // ⚠️ 不直接覆盖：保留已有区域，合并新地点
+    Cake.REGION_TOWN = Cake.REGION_TOWN || {};
+
+    // 地点数据来源表
+    const SOURCES = [
+        ['home',   '_MAP_DATA_HOME',   '🏡 家园周围'],
+        ['park',   '_MAP_DATA_PARK',   '🌳 街心公园'],
+        ['street', '_MAP_DATA_STREET', '🛍️ 商业街'],
+        ['river',  '_MAP_DATA_RIVER',  '🌊 河边'],
+    ];
+
+    const missing = [];
+
+    for (const [key, dataKey, label] of SOURCES) {
+        const data = Cake[dataKey];
+        if (!data || typeof data !== 'object') {
+            console.error(`❌ [Town] 未读取到 ${dataKey}（${label}），请检查对应文件是否加载或报错！`);
+            missing.push(dataKey);
+            continue;
+        }
+        // 只在数据合法时覆盖，避免 undefined 混入
+        Cake.REGION_TOWN[key] = data;
+    }
+
+    console.log(
+        '🏘️ [Town] 城镇字典装载完毕:',
+        Object.keys(Cake.REGION_TOWN),
+        missing.length ? `（缺失: ${missing.join(', ')}）` : ''
+    );
 })();

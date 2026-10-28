@@ -55,21 +55,16 @@ if (window.self !== window.top) {
             'INGREDIENTS', 'RECIPES', 'BUNDLES', 'CHARACTERS', 'AFF_EVENTS',
             'CHAT_DIALOGUES', 'DATE_DIALOGUES', 'MEETINGS', 'RANDOM_EVENTS',
             'ACHIEVEMENTS', 'SHOP_UPGRADE_COSTS',
-
             'LOCATIONS', 'COMMON_WALK_EVENTS', 'TOWN_EVENTS', 'WALK_EVENTS', 'Entertainment',
-
             'advanceTime', 'getTimeString', 'getPeriodString',
             'triggerRest', 'sleep', 'Actions', 'RestSys', 'RestMonitor',
-
             'SAVE_KEY', 'SAVE_VERSION',
             'defaultState', 'hasSave', 'saveState', 'loadStateFromStorage',
             'resetGame', 'saveGame', 'loadGame', 'showEnding',
-
             '$', 'addLog', 'ingredientTags', 'affLevel', 'escapeHtml', 'fail',
             'showModal', 'closeModal',
             'renderHeader', 'renderNav', 'renderFooter', 'renderLog',
             'initPage', 'refreshPage',
-
             'bakeCake', 'buyIngredient', 'buyBundle', 'researchRecipe',
             'upgradeShop', 'decorateShop', 'setPriceRate', 'openShop',
             'social', 'toggleGiftPanel', 'giveGift',
@@ -111,10 +106,20 @@ if (window.self !== window.top) {
                 if (typeof Cake.loadStateFromStorage === 'function') {
                     Cake.store.state = Cake.loadStateFromStorage();
                 }
-                if (typeof Cake.refreshPage === 'function') {
-                    try { Cake.refreshPage(); return; } catch (_) {}
+
+                // 🌟 修复核心：加锁，防止 refreshPage 内部再次 saveState 导致死循环
+                Cake.__syncing = true;
+                try {
+                    if (typeof Cake.refreshPage === 'function') {
+                        Cake.refreshPage();
+                    } else {
+                        window.location.reload();
+                    }
+                } catch (_) {
+                    // ignore
+                } finally {
+                    Cake.__syncing = false;
                 }
-                try { window.location.reload(); } catch (_) {}
             });
             return true;
         };

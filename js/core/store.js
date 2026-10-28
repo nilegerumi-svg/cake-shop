@@ -4,8 +4,11 @@
 
     window.Cake = window.Cake || {};
 
-    // 默认状态模板：只读，ensureState 通过 JSON 深拷贝生成新对象
+    // ⚠️ 这是极早期兜底模板。
+    // 完整默认状态在 state.js 的 defaultState()（含 totalEarned / totalCakes / hour / minute / achievements 等）。
+    // shared.js 会在引擎启动时用 defaultState() 或存档覆盖它，因此这里字段少不会影响游戏。
     const DEFAULT_STATE = Object.freeze({
+        version: 1,
         day: 1,
         money: 500,
         energy: 100,
@@ -13,6 +16,8 @@
         shopLevel: 1,
         decoration: 0,
         priceRate: 1.0,
+        hour: 8,
+        minute: 0,
         avatar: '👩‍🍳',
         shopName: '甜蜜小屋',
         recipes: {},
@@ -20,6 +25,9 @@
         ingredients: {},
         characters: {},
         log: [],
+        achievements: {},
+        totalCakes: 0,
+        totalEarned: 0,
     });
 
     let _state = null;
@@ -38,6 +46,6 @@
         set state(val) {
             _state = val;
         },
-        DEFAULT_STATE, // ES6 属性简写，等价于 DEFAULT_STATE: DEFAULT_STATE
+        DEFAULT_STATE,
     };
 })();

@@ -34,32 +34,48 @@
 
         const contentEl = document.getElementById('content');
 
-        const renderRecipe = () => {
-            const s = Game.state;
+        let Game = null;
+        let tries = 0;
+        const MAX_TRIES = 100;
 
-            const cards = Object.entries(Game.RECIPES).map(([name, recipe]) => {
-                const unlocked = !!s.recipes[name];
+        const num = (v, fallback = 0) => {
+            const n = Number(v);
+            return Number.isFinite(n) ? n : fallback;
+        };
+
+        const renderRecipe = () => {
+            const s = Game.state || {};
+            const recipesAll = Game.RECIPES || {};
+            const unlockedMap = s.recipes || {};
+
+            const cards = Object.entries(recipesAll).map(([name, recipe]) => {
+                const unlocked = !!unlockedMap[name];
                 const need = recipe.unlock || { money: 0, rep: 0, shop: 1 };
-                const needShop = need.shop || 1;
+                const needShop = num(need.shop, 1);
+                const money = num(s.money, 0);
+                const rep = num(s.reputation, 0);
+                const shopLevel = num(s.shopLevel, 1);
+                const energy = num(s.energy, 0);
+
                 const canResearch =
                     !unlocked &&
-                    s.money >= need.money &&
-                    s.reputation >= need.rep &&
-                    s.shopLevel >= needShop &&
-                    s.energy >= 15;
+                    money >= need.money &&
+                    rep >= need.rep &&
+                    shopLevel >= needShop &&
+                    energy >= 15;
 
                 return `<div class="item-card" style="${unlocked ? 'border-color:#ffd54f;background:#fffde7;' : ''}">
-                    <span class="item-emoji">${recipe.emoji}</span>
+                    <span class="item-emoji">${recipe.emoji || '🍰'}</span>
                     <span class="item-name">${name} ${unlocked ? '✅ 已解锁' : '🔒 未解锁'}</span>
-                    <span class="item-desc">${recipe.desc}</span>
-                    <div class="ing-row">${Game.ingredientTags(recipe.ing)}</div>
+                    <span class="item-desc">${recipe.desc || ''}</span>
+                    <div class="ing-row">${Game.ingredientTags(recipe.ing || {})}</div>
                     <span class="item-meta">售价 ${recipe.price}元 · 声望+${recipe.rep}</span>
                     ${unlocked ? '<span class="item-meta" style="color:#388e3c;">已掌握配方</span>' : `
                         <div class="ing-row" style="margin-top:2px;">
-                            <span class="ing-tag ${s.money >= need.money ? 'ok' : 'lack'}">💰 ${need.money}元</span>
-                            <span class="ing-tag ${s.reputation >= need.rep ? 'ok' : 'lack'}">⭐ 声望${need.rep}</span>
-                            <span class="ing-tag ${s.shopLevel >= needShop ? 'ok' : 'lack'}">🏪 Lv.${needShop}</span>
-                            <span class="ing-tag ${s.energy >= 15 ? 'ok' : 'lack'}">⚡ 15精力</span>
+                            <span class="ing-tag ${money >= need.money ? 'ok' : 'lack'}">💰 ${need.money}元</span>
+                            <span class="ing-tag ${rep >= need.rep ? 'ok' : 'lack'}">⭐ 声望${need.rep}</span>
+                            <span class="ing-tag ${shopLevel >= needShop ? 'ok' : 'lack'}">🏪 Lv.${needShop}</span>
+                            <span class="ing-tag ${energy >= 15 ? 'ok' : 'lack'}">⚡ 15精力</span>
                         </div>
                         <button type="button" class="small" ${canResearch ? '' : 'disabled'} data-recipe="${name}">${canResearch ? '🔬 研发配方' : '❌ 条件不足'}</button>
                     `}
@@ -74,14 +90,43 @@
                 </div>`;
         };
 
-        /* 事件委托：点击研发按钮 */
-        contentEl.addEventListener('click', (e) => {
-            const btn = e.target.closest('[data-recipe]');
-            if (!btn || btn.disabled) return;
-            Game.researchRecipe(btn.dataset.recipe);
-        });
+        /* ==================== 事件委托 ==================== */
 
-        Game.initPage('recipe', renderRecipe);
+        const bindClick = () => {
+            contentEl.addEventListener('click', (e) => {
+                const btn = e.target.closest('[data-recipe]');
+                if (!btn || btn.disabled) return;
+                Game.researchRecipe(btn.dataset.recipe);
+            });
+        };
+
+        /* ==================== 启动 ==================== */
+
+        const boot = () => {
+            let G = null;
+            try {
+                if (window.parent && window.parent !== window && window.parent.Game) {
+                    G = window.parent.Game;
+                }
+            } catch (_) {}
+            if (!G) G = window.Game || null;
+
+            if (G && G.state && typeof G.initPage === 'function') {
+                Game = G;
+                window.Game = G;
+                bindClick();
+                G.initPage('recipe', renderRecipe);
+                return;
+            }
+
+            if (++tries >= MAX_TRIES) {
+                contentEl.innerHTML = '<div style="color:red;padding:20px;text-align:center;">❌ 游戏引擎加载超时，请刷新重试</div>';
+                return;
+            }
+            setTimeout(boot, 100);
+        };
+
+        boot();
     })();
     </script>
 </body>

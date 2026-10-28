@@ -8,7 +8,6 @@ export const renderHome = () => {
         return;
     }
 
-    // 🚨 强制排查输出，绝不静默退出
     if (!G) {
         contentEl.innerHTML = '<h2 style="color:red; text-align:center; margin-top:50px;">❌ 致命错误：找不到父页面的 G 对象</h2>';
         return;
@@ -18,7 +17,6 @@ export const renderHome = () => {
         return;
     }
 
-    // escapeHtml 守卫
     const escape = (typeof G.escapeHtml === 'function')
         ? G.escapeHtml
         : (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({
@@ -77,7 +75,7 @@ export const renderHome = () => {
                 <div class="char-actions">
                    <button type="button" class="small" data-action="nap" ${energy >= 100 ? 'disabled' : ''}>😴 家里小憩</button>
                    <button type="button" class="small" data-action="sleep">🛌 睡觉</button>
-                   <a href="entertainment/map.html" class="small secondary" style="text-decoration:none; text-align:center;">🚶‍♀️ 散步</a>
+                   <a href="entertainment/map/index.html" class="small secondary" style="text-decoration:none; text-align:center;">🚶‍♀️ 散步</a>
                 </div>
                 <h3>🧁 库存蛋糕</h3>
                 ${cakesHtml}

@@ -7,7 +7,6 @@
     const Cake = window.Cake;
 
     /* ==================== 兜底 bridge ==================== */
-    /* pages 没加载 bridge.js 时自动创建 */
 
     if (!Cake.bridge) {
         const inIframe = window.parent !== window;
@@ -21,7 +20,7 @@
             if (msg.sourceId && msg.sourceId === instanceId) return;
             if (inIframe && msg.type === 'state-sync') {
                 for (const listener of stateListeners) {
-                    try { listener(msg.sourceId); } catch (_) { /* ignore */ }
+                    try { listener(msg.sourceId); } catch (_) {}
                 }
             }
         });
@@ -37,7 +36,7 @@
                 if (!inIframe) return;
                 try {
                     window.parent.postMessage({ type: 'state-changed', sourceId: instanceId }, '*');
-                } catch (_) { /* ignore */ }
+                } catch (_) {}
             },
         };
     }
@@ -55,8 +54,8 @@
         money: 500,
         energy: 80,
         day: 1,
-        hour:8,
-        minute:0,
+        hour: 8,
+        minute: 0,
         reputation: 0,
         shopLevel: 1,
         decoration: 0,
@@ -80,20 +79,12 @@
     const migrateSave = (saved) => {
         let s = saved;
         const version = Number(s && s.version) || 0;
-
-        // 逐级迁移：旧版本 -> 当前版本
         if (version < 1) {
             // 预留：v0 -> v1 的字段补齐逻辑
-            // 例：s.hour = Number.isFinite(Number(s.hour)) ? s.hour : 8;
         }
-
-        // 后续有新版本时，按 if (version < 2) {...} 依次往上加
         return s;
     };
 
-    /* ==================== 工具：能否转成有限数字 ==================== */
-
-    // 与原写法 Number.isFinite(Number(v)) 完全等价
     const isNum = (v) => Number.isFinite(Number(v));
 
     /* ==================== 存档合并与校验 ==================== */
@@ -107,7 +98,7 @@
 
         const s = { ...def, ...saved };
 
-        /* --- 角色数据：只保留已知角色，逐个与默认值合并并校验 --- */
+        // 角色
         s.characters = {};
         for (const k of Object.keys(def.characters)) {
             const src = (saved.characters && saved.characters[k]) || {};
@@ -120,22 +111,24 @@
             s.characters[k] = char;
         }
 
-        /* --- 食材 / 蛋糕 / 配方：与默认值合并 --- */
+        // 食材 / 蛋糕 / 配方
         s.ingredients = { ...def.ingredients, ...(saved.ingredients || {}) };
         s.cakes       = { ...def.cakes,       ...(saved.cakes       || {}) };
         s.recipes     = { ...def.recipes,     ...(saved.recipes     || {}) };
 
-        /* --- 清理非法蛋糕与配方 --- */
-        const RECIPES = Cake.RECIPES;
+        // Cake.RECIPES 可能尚未加载，用可选访问
+        const RECIPES = Cake.RECIPES || {};
 
         for (const k of Object.keys(s.cakes)) {
             const v = Number(s.cakes[k]);
-            if (!RECIPES[k] || !Number.isFinite(v) || v <= 0) delete s.cakes[k];
+            // RECIPES 空时不删蛋糕（等 data/index.js 加载后再校验）
+            if (Object.keys(RECIPES).length > 0 && !RECIPES[k]) { delete s.cakes[k]; continue; }
+            if (!Number.isFinite(v) || v <= 0) delete s.cakes[k];
             else s.cakes[k] = Math.floor(v);
         }
 
         for (const k of Object.keys(s.recipes)) {
-            if (!RECIPES[k]) delete s.recipes[k];
+            if (Object.keys(RECIPES).length > 0 && !RECIPES[k]) delete s.recipes[k];
             else s.recipes[k] = !!s.recipes[k];
         }
 
@@ -145,7 +138,7 @@
             else s.ingredients[k] = Math.floor(v);
         }
 
-        /* --- 数值字段夹紧 --- */
+        // 数值字段夹紧
         s.money       = isNum(s.money)       ? Math.max(0, Number(s.money)) : def.money;
         s.energy      = isNum(s.energy)      ? Math.max(0, Math.min(100, Number(s.energy))) : def.energy;
         s.reputation  = isNum(s.reputation)  ? Math.max(0, Number(s.reputation)) : def.reputation;
@@ -158,7 +151,7 @@
         s.totalEarned = isNum(s.totalEarned) ? Math.max(0, Number(s.totalEarned)) : def.totalEarned;
         s.priceRate   = isNum(s.priceRate) && Number(s.priceRate) > 0 ? Number(s.priceRate) : def.priceRate;
 
-        /* --- 日志清洗：只保留合法条目，最多 60 条 --- */
+        // 日志
         if (!Array.isArray(s.log)) {
             s.log = def.log;
         } else {
@@ -174,7 +167,7 @@
             s.log = newLog.slice(-60);
         }
 
-        /* --- 成就与送礼面板状态 --- */
+        // 成就与送礼面板
         if (!s.achievements || typeof s.achievements !== 'object' || Array.isArray(s.achievements)) {
             s.achievements = {};
         }
@@ -196,18 +189,20 @@
         try {
             const d = localStorage.getItem(SAVE_KEY);
             if (d) return mergeWithDefault(JSON.parse(d));
-        } catch (e) { /* 损坏的存档按新档处理 */ }
+        } catch (e) { /* 损坏按新档处理 */ }
         return defaultState();
     };
 
     const saveState = () => {
+        const state = Cake.store && Cake.store.state;
+        if (!state || typeof state !== 'object') return false;
+
         try {
-            localStorage.setItem(SAVE_KEY, JSON.stringify(Cake.store.state));
+            localStorage.setItem(SAVE_KEY, JSON.stringify(state));
         } catch (e) {
             return false;
         }
-        // 写盘成功后广播，通知宿主与其它 iframe
-        if (Cake.bridge && Cake.bridge.notifyStateChanged) {
+        if (Cake.bridge && typeof Cake.bridge.notifyStateChanged === 'function') {
             Cake.bridge.notifyStateChanged();
         }
         return true;

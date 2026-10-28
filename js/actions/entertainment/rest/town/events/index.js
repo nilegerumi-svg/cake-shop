@@ -6,6 +6,8 @@ import './common.js';
 // 引入各个地点的专属事件
 import './place/home.js';
 import './place/park.js';
+import './place/street.js';  // ⭐ 新增
+import './place/river.js';   // ⭐ 新增
 
 (() => {
     'use strict';

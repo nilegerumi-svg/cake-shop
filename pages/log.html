@@ -18,7 +18,6 @@
         overflow: hidden;
     }
 
-    /* ---------- 头部 ---------- */
     .log-header {
         flex: 0 0 auto;
         padding: 10px 14px 8px;
@@ -59,7 +58,6 @@
         box-shadow: 0 0 0 3px rgba(255, 107, 129, .12);
     }
 
-    /* ---------- 列表 ---------- */
     .log-list {
         flex: 1 1 auto;
         min-height: 0;
@@ -114,7 +112,6 @@
         line-height: 1.8;
     }
 
-    /* ---------- 按钮 ---------- */
     .load-more {
         display: block;
         width: 100%;
@@ -147,6 +144,63 @@
     }
     .jump-btn.show { display: block; }
     .jump-btn:active { transform: scale(.97); }
+
+    /* 运行时日志（来自父页面 console 镜像） */
+    .runtime-group {
+        margin-bottom: 14px;
+        border: 1px dashed #ffd0d8;
+        border-radius: 8px;
+        padding: 8px 10px;
+        background: #fff;
+    }
+    .runtime-head {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        color: #c97a8a;
+        font-weight: 600;
+        font-size: 12px;
+        cursor: pointer;
+        user-select: none;
+    }
+    .runtime-head .runtime-count {
+        color: #c99;
+        font-weight: normal;
+        font-size: 11px;
+    }
+    .runtime-head .runtime-arrow {
+        margin-left: auto;
+        color: #c99;
+        font-size: 12px;
+    }
+    .runtime-clear {
+        margin-left: 8px;
+        padding: 2px 8px;
+        border: 1px solid #ffd0d8;
+        border-radius: 999px;
+        background: #fff5f7;
+        color: #ff6b81;
+        font-size: 11px;
+        cursor: pointer;
+    }
+    .runtime-clear:hover { background: #ffe4e8; }
+    .runtime-body {
+        margin-top: 6px;
+        max-height: 160px;
+        overflow-y: auto;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 11px;
+        line-height: 1.5;
+    }
+    .runtime-body.hidden { display: none; }
+    .runtime-entry {
+        padding: 2px 0;
+        border-bottom: 1px solid #fff0f2;
+        word-break: break-word;
+    }
+    .runtime-entry.info  { color: #4a7a8a; }
+    .runtime-entry.warn  { color: #b07a00; background: #fffbea; }
+    .runtime-entry.error { color: #c81e3f; background: #fff0f5; }
 </style>
 </head>
 <body>
@@ -160,6 +214,7 @@
     </div>
 
     <div class="log-list" id="logList">
+        <div id="runtimeBody"></div>
         <div id="listBody"></div>
         <button id="loadMore" class="load-more" type="button" hidden>加载更早的日记</button>
     </div>
@@ -170,33 +225,33 @@
 (() => {
     'use strict';
 
-    /* ==================== 配置 ==================== */
-    const SAVE_KEY = 'cakeShopSave_v1';
-    const PAGE = 200;          // 每次渲染的条目数上限（分组粒度会略超）
-    const TOP_THRESHOLD = 24;  // 距顶部多少 px 视为「在顶部」
-    const RETRY_MAX = 100;     // Cake 未就绪重试次数（100 × 100ms = 10s）
+    const PAGE = 200;
+    const TOP_THRESHOLD = 24;
+    const RETRY_MAX = 100;
     const SEARCH_DEBOUNCE = 120;
+    const RUNTIME_MAX = 500;
+    const RUNTIME_DISPLAY_MAX = 100;
 
-    /* ==================== DOM ==================== */
     const logList = document.getElementById('logList');
     const listBody = document.getElementById('listBody');
+    const runtimeBody = document.getElementById('runtimeBody');
     const countEl = document.getElementById('logCount');
     const searchInput = document.getElementById('logSearch');
     const loadMoreBtn = document.getElementById('loadMore');
     const jumpBtn = document.getElementById('jumpBtn');
 
-    /* ==================== 状态 ==================== */
     const state = {
-        logs: [],              // 原始日志（旧在前，新在后）
-        sig: null,             // 数据签名，用于判断是否真的有变化
-        query: '',             // 搜索词
-        collapsed: new Set(),  // 已折叠的天（key 为 String(day)）
-        groups: [],            // 过滤 + 分组后的数据
-        nextIndex: 0,          // 下一个待渲染的分组下标
-        pendingNew: false      // 是否有未展示的新日记
+        logs: [],
+        sig: null,
+        query: '',
+        collapsed: new Set(),
+        groups: [],
+        nextIndex: 0,
+        pendingNew: false,
+        runtimeLogs: [],
+        runtimeCollapsed: false
     };
 
-    /* ==================== 工具 ==================== */
     const el = (tag, cls) => {
         const node = document.createElement(tag);
         if (cls) node.className = cls;
@@ -206,20 +261,24 @@
     function getCake() {
         try {
             const p = window.parent;
-            if (!p || p === window) return null;
+            if (!p || p === window) return window.Cake || null;
             return p.Cake || null;
         } catch (e) {
-            return null;
+            return window.Cake || null;
         }
     }
 
-    function getLogs() {
+    function getStore() {
         const Cake = getCake();
-        const logs = Cake && Cake.store && Cake.store.state ? Cake.store.state.log : null;
+        return Cake && Cake.store ? Cake.store : null;
+    }
+
+    function getLogs() {
+        const store = getStore();
+        const logs = store && store.state ? store.state.log : null;
         return Array.isArray(logs) ? logs : [];
     }
 
-    // 数据签名：只关心长度和最后一条，避免每次全量比较
     function signature(logs) {
         if (!logs.length) return '0';
         const last = logs[logs.length - 1];
@@ -228,7 +287,6 @@
                '|' + (last.text == null ? '' : last.text);
     }
 
-    // 天数降序：数字按数值，其它按字符串
     function compareDay(a, b) {
         const na = Number(a);
         const nb = Number(b);
@@ -240,7 +298,6 @@
         return String(b).localeCompare(String(a), 'zh-Hans-CN');
     }
 
-    // 安全地把 text 写入 parent，命中 query 的部分用 <mark> 包起来
     function appendHighlighted(parent, text, query) {
         const q = query.trim();
         if (!q) {
@@ -266,8 +323,6 @@
         }
     }
 
-    /* ==================== 构建 ==================== */
-    // 过滤 → 按天分组 → 天降序、组内倒序（新在前）
     function buildGroups(logs, query) {
         const q = query.trim().toLowerCase();
         const map = new Map();
@@ -325,7 +380,6 @@
             body.appendChild(row);
         }
 
-        // 搜索状态下强制展开，方便看结果
         const isCollapsed = !state.query.trim() && state.collapsed.has(group.key);
         body.hidden = isCollapsed;
         arrow.textContent = isCollapsed ? '▸' : '▾';
@@ -334,10 +388,7 @@
             const willCollapse = !body.hidden;
             body.hidden = willCollapse;
             arrow.textContent = willCollapse ? '▸' : '▾';
-
-            // 搜索时只改 DOM 的临时展开状态，不污染持久折叠状态
             if (state.query.trim()) return;
-
             if (willCollapse) state.collapsed.add(group.key);
             else state.collapsed.delete(group.key);
         });
@@ -346,7 +397,6 @@
         return wrap;
     }
 
-    // 从 fromIndex 开始渲染，直到条目数达到 limit
     function renderGroups(fromIndex, limit) {
         const groups = state.groups;
         const frag = document.createDocumentFragment();
@@ -362,7 +412,6 @@
         return { frag: frag, nextIndex: i };
     }
 
-    /* ==================== 渲染 ==================== */
     function updateCount() {
         const total = state.logs.length;
         if (state.query.trim()) {
@@ -417,7 +466,85 @@
         updateLoadMore();
     }
 
-    /* ==================== 数据刷新 ==================== */
+    /* ---------------- 运行时日志（来自父页面 console 镜像） ---------------- */
+
+    function renderRuntime() {
+        if (!runtimeBody) return;
+        runtimeBody.replaceChildren();
+
+        const logs = state.runtimeLogs;
+        if (logs.length === 0) return;
+
+        const wrap = el('div', 'runtime-group');
+
+        const head = el('div', 'runtime-head');
+        const title = el('span');
+        title.textContent = '🛠️ 系统日志';
+
+        const cnt = el('span', 'runtime-count');
+        cnt.textContent = logs.length + ' 条';
+
+        const clearBtn = el('button', 'runtime-clear');
+        clearBtn.type = 'button';
+        clearBtn.textContent = '清空';
+        clearBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            state.runtimeLogs = [];
+            renderRuntime();
+        });
+
+        const arrow = el('span', 'runtime-arrow');
+        arrow.textContent = state.runtimeCollapsed ? '▸' : '▾';
+
+        head.append(title, cnt, clearBtn, arrow);
+
+        const body = el('div', 'runtime-body');
+        if (state.runtimeCollapsed) body.classList.add('hidden');
+
+        const start = Math.max(0, logs.length - RUNTIME_DISPLAY_MAX);
+        for (let i = start; i < logs.length; i++) {
+            const item = logs[i];
+            const row = el('div', 'runtime-entry ' + (item.level || 'info'));
+            const t = new Date(item.time || Date.now());
+            const hh = String(t.getHours()).padStart(2, '0');
+            const mm = String(t.getMinutes()).padStart(2, '0');
+            const ss = String(t.getSeconds()).padStart(2, '0');
+            row.textContent = `[${hh}:${mm}:${ss}] [${(item.level || 'info').toUpperCase()}] ${item.msg}`;
+            body.appendChild(row);
+        }
+
+        head.addEventListener('click', () => {
+            state.runtimeCollapsed = !state.runtimeCollapsed;
+            body.classList.toggle('hidden', state.runtimeCollapsed);
+            arrow.textContent = state.runtimeCollapsed ? '▸' : '▾';
+        });
+
+        wrap.append(head, body);
+        runtimeBody.appendChild(wrap);
+    }
+
+    window.addEventListener('message', (e) => {
+        if (e.origin !== location.origin) return;
+        if (!e.data || typeof e.data !== 'object') return;
+
+        if (e.data.type === 'log') {
+            state.runtimeLogs.push({
+                level: e.data.level || 'info',
+                msg: String(e.data.msg == null ? '' : e.data.msg),
+                time: e.data.time || Date.now()
+            });
+            if (state.runtimeLogs.length > RUNTIME_MAX) {
+                state.runtimeLogs.splice(0, state.runtimeLogs.length - RUNTIME_MAX);
+            }
+            renderRuntime();
+        } else if (e.data.type === 'clear') {
+            state.runtimeLogs = [];
+            renderRuntime();
+        }
+    });
+
+    /* ---------------- 数据刷新 ---------------- */
+
     function isNearTop() {
         return logList.scrollTop <= TOP_THRESHOLD;
     }
@@ -427,7 +554,6 @@
         jumpBtn.classList.remove('show');
     }
 
-    // force = true：无论签名是否变化，强制重建并回到顶部
     function refresh(force) {
         const logs = getLogs();
         const sig = signature(logs);
@@ -442,13 +568,13 @@
             hideJump();
             rebuild({ toTop: true });
         } else {
-            // 用户正在翻旧日记，不打断，只提示
             state.pendingNew = true;
             jumpBtn.classList.add('show');
         }
     }
 
-    /* ==================== 事件 ==================== */
+    /* ---------------- 事件 ---------------- */
+
     logList.addEventListener('scroll', () => {
         if (state.pendingNew && isNearTop()) {
             hideJump();
@@ -466,7 +592,6 @@
     searchInput.addEventListener('input', () => {
         clearTimeout(searchTimer);
         searchTimer = setTimeout(() => {
-            // 搜索时顺手同步一次最新数据，避免看到过期内容
             const logs = getLogs();
             state.logs = logs;
             state.sig = signature(logs);
@@ -477,35 +602,32 @@
         }, SEARCH_DEBOUNCE);
     });
 
-    // 其它同源窗口保存存档后，本窗口跟随刷新
+    // 放宽 storage 监听：不依赖硬编码 SAVE_KEY，refresh 内部有签名短路
     window.addEventListener('storage', (e) => {
-        if (e.key && e.key !== SAVE_KEY) return;
         if (e.storageArea && e.storageArea !== window.localStorage) return;
         refresh(false);
     });
 
-    // 切回页面时补一次刷新
     document.addEventListener('visibilitychange', () => {
         if (!document.hidden) refresh(false);
     });
 
-    // 供父窗口主动调用：iframe.contentWindow.__cakeShopRefresh?.()
     window.__cakeShopRefresh = function () {
         refresh(true);
     };
 
-    /* ==================== 启动 ==================== */
+    /* ---------------- 启动 ---------------- */
+
     (function boot() {
         let attempts = 0;
 
         (function tryConnect() {
-            const Cake = getCake();
-
-            if (Cake) {
+            const store = getStore();
+            if (store && store.state) {
                 refresh(true);
+                renderRuntime();
                 return;
             }
-
             if (++attempts > RETRY_MAX) {
                 showEmpty('无法连接到商店数据');
                 return;

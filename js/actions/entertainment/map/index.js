@@ -2,7 +2,7 @@
 
 import './monitor.js';
 import './town/index.js';
-import './location-actions.js';   // ⭐ 地点动作系统
+import './location_actions.js';   // ⭐ 已修改：将中划线改为下划线
 
 (() => {
     'use strict';

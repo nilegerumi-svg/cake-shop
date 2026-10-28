@@ -17,6 +17,19 @@
         .loading-text { font-size: 14px; color: #888; margin-bottom: 15px; font-weight: bold; }
         .loading-bar-wrap { width: 80%; max-width: 300px; height: 12px; background: #ffe4e1; border-radius: 6px; overflow: hidden; box-shadow: inset 0 1px 3px rgba(0,0,0,0.1); }
         .loading-bar-fill { width: 0%; height: 100%; background: #ff8fa3; transition: width 0.2s ease; }
+        #loading-error {
+            display: none; margin-top: 14px; padding: 8px 16px;
+            background: #fff0f5; border: 1px solid #ffb8c6; border-radius: 6px;
+            color: #c81e3f; font: 13px/1.5 system-ui, sans-serif;
+            text-align: center; max-width: 80vw;
+        }
+        #loading-error.show { display: block; }
+        #loading-retry {
+            margin-top: 8px; padding: 6px 16px; background: transparent;
+            border: 1px solid rgba(200, 30, 63, .4); border-radius: 4px;
+            color: #c81e3f; cursor: pointer; font: 13px system-ui, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
 
         .app-wrapper { display: flex; flex-direction: column; height: 100vh; height: 100dvh; }
         header, nav { flex: 0 0 auto; z-index: 10; }
@@ -58,6 +71,11 @@
         <div class="loading-bar-wrap">
             <div id="loading-bar" class="loading-bar-fill"></div>
         </div>
+        <div id="loading-error">
+            <span id="loading-error-message">加载超时，请检查网络后重试</span>
+            <br>
+            <button id="loading-retry" type="button">重新加载</button>
+        </div>
     </div>
 
     <div id="error-overlay"></div>
@@ -68,10 +86,24 @@
         <nav id="navBar"></nav>
         <div class="split-container">
             <iframe id="mainFrame" src="about:blank" class="main-frame"></iframe>
-            <iframe id="logFrame" src="pages/log.html" class="log-frame"></iframe>
+            <iframe id="logFrame" src="about:blank" class="log-frame"></iframe>
         </div>
         <div class="action-footer" id="footer"></div>
     </div>
+
+    <!-- 用 baseURI 解析 logFrame 路径，避免 <base> 影响 -->
+    <script>
+    (function () {
+        var f = document.getElementById('logFrame');
+        if (f) {
+            try {
+                f.src = new URL('pages/log.html', document.baseURI).href;
+            } catch (_) {
+                f.src = 'pages/log.html';
+            }
+        }
+    })();
+    </script>
 
     <!-- 🚀 根目录超级监视器入口 -->
     <script src="monitor.js"></script>
@@ -88,11 +120,9 @@
             try { f.contentWindow.postMessage(payload, targetOrigin); } catch (_) {}
         };
 
-        // 显式 API：main.js / home.html(经 parent) 可调
         window.sendLog = (msg, level) => toLogFrame({ type: 'log', msg, level, time: Date.now() });
         window.clearLog = () => toLogFrame({ type: 'clear' });
 
-        // 可选：把 console.log/warn/error 镜像进日志窗口
         ['log', 'warn', 'error'].forEach((lvl) => {
             const orig = console[lvl];
             console[lvl] = (...args) => {
@@ -111,13 +141,34 @@
             };
         });
 
-        // home.html 经 parent 转发的日志
         window.addEventListener('message', (e) => {
             if (e.origin !== location.origin) return;
             if (e.data && (e.data.type === 'log' || e.data.type === 'clear')) {
                 toLogFrame(e.data);
             }
         });
+    })();
+    </script>
+
+    <!-- 🛟 12s 兜底：monitor.js 加载失败 / init 异常时，给用户一个明确提示 -->
+    <script>
+    (function () {
+        setTimeout(function () {
+            var el = document.getElementById('app-loading');
+            if (!el) return;
+            var visible = el.style.display !== 'none';
+            if (!visible) return;
+            var err = document.getElementById('loading-error');
+            var msg = document.getElementById('loading-error-message');
+            var retry = document.getElementById('loading-retry');
+            if (msg) msg.textContent = '初始化超时，请检查网络后重试';
+            if (err) err.classList.add('show');
+            if (retry && !retry.__bound) {
+                retry.__bound = true;
+                retry.addEventListener('click', function () { location.reload(); });
+            }
+            if (window.sendLog) window.sendLog('⚠️ [Game] 12s 兜底触发：monitor.js 可能未完成初始化', 'warn');
+        }, 12000);
     })();
     </script>
 </body>

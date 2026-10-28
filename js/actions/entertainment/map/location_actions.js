@@ -27,11 +27,21 @@
     };
 
     /* ==================== 动作类型注册表（未来扩展点 ①） ==================== */
-    // 新增地点功能时，在这里登记动作类型
+    // 新增地点功能时，在这里登记动作类型，并可包含 isValid 校验规则
     Cake.ACTION_TYPES = Cake.ACTION_TYPES || Object.freeze({
         walk:  { name: '散步', emoji: '🚶‍♀️' },
         nap:   { name: '小憩', emoji: '😴' },
-        sleep: { name: '睡觉', emoji: '🛌' },
+        sleep: { 
+            name: '睡觉', 
+            emoji: '🛌',
+            // 🌟 为了可扩展性，增加 isValid 限制：
+            // 睡觉只允许在 town/home 进行，或者未来在配置中声明了 isPrivate 的特殊地点进行
+            isValid: (regionId, locKey, locCfg) => {
+                if (regionId === 'town' && locKey === 'home') return true;
+                if (locCfg && locCfg.isPrivate === true) return true;
+                return false;
+            }
+        },
         // 未来示例：
         // forage: { name: '采集', emoji: '🌿' },
         // chat:   { name: '闲聊', emoji: '💬' },
@@ -70,12 +80,20 @@
                 });
             }
             if (locRest.sleep) {
-                list.push({
-                    key: 'sleep',
-                    name: '睡觉',
-                    emoji: '🛌',
-                    desc: '精力回满 · 睡到次日 08:00',
-                });
+                // 👇 通过 ACTION_TYPES 的校验规则，限定睡觉只能在特殊单元内渲染
+                const sleepType = Cake.ACTION_TYPES.sleep;
+                const canSleep = sleepType && typeof sleepType.isValid === 'function' 
+                    ? sleepType.isValid(regionId, locationKey, locCfg)
+                    : true;
+
+                if (canSleep) {
+                    list.push({
+                        key: 'sleep',
+                        name: '睡觉',
+                        emoji: '🛌',
+                        desc: '精力回满 · 睡到次日 08:00',
+                    });
+                }
             }
         }
 
@@ -94,6 +112,21 @@
         }
 
         if (actionKey === 'nap' || actionKey === 'sleep') {
+            // 👇 双重保护：即使恶意篡改前端数据，也要拦截非法的 sleep 请求
+            if (actionKey === 'sleep') {
+                const locCfg = Cake.LOCATIONS && Cake.LOCATIONS[locationKey];
+                const sleepType = Cake.ACTION_TYPES.sleep;
+                const canSleep = sleepType && typeof sleepType.isValid === 'function' 
+                    ? sleepType.isValid(regionId, locationKey, locCfg)
+                    : true;
+
+                if (!canSleep) {
+                    Cake.addLog?.('❌ 这里不能睡觉，只能在自己家里（或私人领地）睡。');
+                    Cake.refreshPage?.();
+                    return null;
+                }
+            }
+
             if (typeof Cake.triggerRest === 'function') {
                 return Cake.triggerRest(regionId, locationKey, actionKey);
             }

@@ -5,7 +5,104 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>甜蜜物语 - 开始</title>
     <style>
-        html, body { margin: 0; padding: 0; }
+        /* ============ 基础重置 ============ */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #fff0f5 0%, #ffe8ee 40%, #fff5f7 100%);
+            min-height: 100vh;
+            min-height: 100dvh;
+            color: #4a3b3f;
+        }
+
+        /* 应用挂载点：静态 UI 在此，本身承担居中布局 */
+        #app-root {
+            min-height: 100vh;
+            min-height: 100dvh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            padding-bottom: calc(20px + env(safe-area-inset-bottom));
+        }
+
+        /* ============ 开始卡片 ============ */
+        .start-card {
+            background: #ffffff;
+            width: 100%;
+            max-width: 500px;
+            padding: 40px 30px;
+            border-radius: 24px;
+            box-shadow: 0 10px 30px rgba(255, 182, 193, 0.3);
+            text-align: center;
+            animation: fadeInUp 0.6s ease-out;
+        }
+        .game-header h1 { color: #ff6b81; font-size: 32px; margin-bottom: 8px; }
+        .game-header .subtitle { color: #ff9eaa; font-size: 14px; margin-bottom: 24px; font-weight: bold; }
+        .game-intro { background: #fff0f5; padding: 16px; border-radius: 16px; margin-bottom: 24px; }
+        .game-intro p { color: #666; font-size: 14px; line-height: 1.8; text-align: left; }
+        .game-intro strong { color: #ff6b81; }
+
+        .avatar-group { display: flex; justify-content: center; gap: 20px; margin-bottom: 24px; }
+        .avatar-option {
+            width: 60px; height: 60px; border-radius: 50%; background: #fff0f5;
+            border: 3px solid transparent; display: flex; align-items: center;
+            justify-content: center; font-size: 30px; cursor: pointer;
+            transition: all 0.2s ease; user-select: none; -webkit-tap-highlight-color: transparent;
+        }
+        .avatar-option:focus-visible { outline: 2px solid #ff8fa3; outline-offset: 2px; }
+        .avatar-option.selected {
+            border-color: #ff6b81; background: #ffe4e8;
+            box-shadow: 0 0 15px rgba(255, 107, 129, 0.4); transform: scale(1.1);
+        }
+
+        .input-group { text-align: left; margin-bottom: 16px; }
+        .input-group label {
+            display: block; font-size: 14px; font-weight: bold;
+            color: #d85c74; margin-bottom: 8px; margin-top: 16px;
+        }
+        .input-group label:first-child { margin-top: 0; }
+        .input-group input {
+            width: 100%; padding: 14px 16px; border: 2px solid #ffd1dc;
+            border-radius: 12px; font-size: 16px; background: #fafafa; color: #333;
+            transition: all 0.3s ease;
+        }
+        .input-group input:focus {
+            outline: none; border-color: #ff8fa3; background: #fff;
+            box-shadow: 0 0 0 4px rgba(255, 143, 163, 0.15);
+        }
+
+        /* 表单错误提示 */
+        .form-error {
+            display: none;
+            margin-bottom: 12px;
+            padding: 10px 14px;
+            background: #fff0f5;
+            border: 1px solid #ffb8c6;
+            border-radius: 10px;
+            color: #c81e3f;
+            font-size: 13px;
+            line-height: 1.5;
+            text-align: left;
+        }
+        .form-error.show { display: block; }
+
+        .button-group { display: flex; flex-direction: column; gap: 12px; }
+        .button-group button {
+            width: 100%; padding: 16px; border: none; border-radius: 50px;
+            font-size: 16px; font-weight: bold; cursor: pointer;
+            transition: all 0.2s ease; -webkit-tap-highlight-color: transparent;
+        }
+        .btn-start { background: #ff8fa3; color: white; box-shadow: 0 4px 15px rgba(255, 143, 163, 0.4); }
+        .btn-start:active { transform: scale(0.98); }
+        .btn-continue { background: #ffffff; color: #ff8fa3; border: 2px solid #ff8fa3 !important; }
+        .btn-continue:active { background: #fff0f5; transform: scale(0.98); }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
 
         /* ============ loading 屏 ============ */
         #app-loading {
@@ -22,31 +119,33 @@
                 env(safe-area-inset-right)
                 env(safe-area-inset-bottom)
                 env(safe-area-inset-left);
-            background: #1b1b2f;
-            color: #fff;
+            background: linear-gradient(135deg, #fff0f5 0%, #ffe8ee 40%, #fff5f7 100%);
+            color: #4a3b3f;
             transition: opacity .3s ease;
         }
         #loading-bar-wrap {
             width: 220px; height: 8px;
-            background: rgba(255,255,255,.15);
+            background: rgba(255, 143, 163, .2);
             border-radius: 999px; overflow: hidden;
         }
         #loading-bar {
             width: 0%; height: 100%;
-            background: linear-gradient(90deg,#ff6b81,#ffa502);
+            background: linear-gradient(90deg, #ff8fa3, #ff6b81);
             transition: width .25s ease;
         }
-        #loading-text { font: 14px/1.5 system-ui, sans-serif; }
+        #loading-text {
+            font: 14px/1.5 system-ui, sans-serif;
+            color: #d85c74;
+        }
 
-        /* 加载失败提示 */
         #loading-error {
             display: none;
             margin-top: 12px;
             padding: 8px 16px;
-            background: rgba(255,107,129,.2);
-            border: 1px solid #ff6b81;
+            background: #fff0f5;
+            border: 1px solid #ffb8c6;
             border-radius: 6px;
-            color: #ffb8c6;
+            color: #c81e3f;
             font: 13px/1.5 system-ui, sans-serif;
             text-align: center;
             max-width: 80vw;
@@ -56,16 +155,16 @@
             margin-top: 8px;
             padding: 6px 16px;
             background: transparent;
-            border: 1px solid rgba(255,255,255,.4);
+            border: 1px solid rgba(200, 30, 63, .4);
             border-radius: 4px;
-            color: #fff;
+            color: #c81e3f;
             cursor: pointer;
             font: 13px system-ui, sans-serif;
             -webkit-tap-highlight-color: transparent;
         }
-        #loading-retry:hover { background: rgba(255,255,255,.1); }
+        #loading-retry:hover { background: rgba(255, 143, 163, .12); }
 
-        /* 无 JS 降级 */
+        /* ============ 无 JS 降级 ============ */
         .noscript-warning {
             position: fixed;
             inset: 0;
@@ -73,36 +172,61 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background: #1b1b2f;
-            color: #fff;
+            background: #fff0f5;
+            color: #4a3b3f;
             font: 16px/1.6 system-ui, sans-serif;
             text-align: center;
             padding: 20px;
-        }
-
-        /* 浅色模式 */
-        @media (prefers-color-scheme: light) {
-            #app-loading { background: #f5f5fa; color: #1b1b2f; }
-            #loading-bar-wrap { background: rgba(0,0,0,.1); }
-            #loading-error {
-                background: rgba(255,107,129,.1);
-                color: #c81e3f;
-            }
-            #loading-retry {
-                border-color: rgba(0,0,0,.3);
-                color: #1b1b2f;
-            }
-            #loading-retry:hover { background: rgba(0,0,0,.05); }
         }
     </style>
 </head>
 <body>
 
-    <!-- 应用挂载点（内容由 js/pages/index.js 渲染） -->
-    <div id="app-root" aria-busy="true"></div>
+    <!-- ============================================================
+         应用挂载点
+         - 静态 UI 直接写在这里，首屏不依赖 JS 也能渲染
+         - index.js 只负责绑定交互 + 读写存档 + 关闭 loading
+    ============================================================ -->
+    <div id="app-root" aria-busy="true">
+        <main class="start-card">
+            <div class="game-header">
+                <h1>🍰 甜蜜物语</h1>
+                <div class="subtitle">✨ 女性向 · 高自由度蛋糕店模拟器 ✨</div>
+            </div>
+
+            <div class="game-intro">
+                <p>你刚刚接手了街角一间小小的蛋糕店。<br>
+                在这里，你可以<strong>自由烘焙每一款蛋糕</strong>、<strong>随心装饰你的店铺</strong>、邂逅温柔的邻居们，甚至——谈一场甜甜的恋爱。💕<br>
+                你的故事，由你亲手书写。</p>
+            </div>
+
+            <div class="avatar-group" id="avatarGroup" role="radiogroup" aria-label="选择头像">
+                <div class="avatar-option selected" role="radio" tabindex="0"  aria-checked="true"  data-avatar="girl1">👧🏻</div>
+                <div class="avatar-option"          role="radio" tabindex="-1" aria-checked="false" data-avatar="girl2">👩🏻</div>
+                <div class="avatar-option"          role="radio" tabindex="-1" aria-checked="false" data-avatar="boy1">👦🏻</div>
+                <div class="avatar-option"          role="radio" tabindex="-1" aria-checked="false" data-avatar="cake">🧁</div>
+            </div>
+
+            <div class="input-group">
+                <label for="playerName">你的名字</label>
+                <input id="playerName" type="text" maxlength="12" placeholder="给自己起个名字吧"
+                       value="小甜心" autocomplete="off" enterkeyhint="done">
+                <label for="shopName">店铺名字</label>
+                <input id="shopName" type="text" maxlength="12" placeholder="给蛋糕店起个名字"
+                       value="甜蜜小屋" autocomplete="off" enterkeyhint="done">
+            </div>
+
+            <div class="form-error" id="formError" role="alert" aria-live="assertive"></div>
+
+            <div class="button-group">
+                <button class="btn-start" id="btnStart" type="button">开始新游戏</button>
+                <button class="btn-continue" id="btnContinue" type="button" style="display:none;">继续游戏</button>
+            </div>
+        </main>
+    </div>
 
     <!-- loading 屏 -->
-    <div id="app-loading" role="status" aria-label="应用加载中">
+    <div id="app-loading" role="status" aria-live="polite" aria-label="应用加载中">
         <div id="loading-text">初始化中…</div>
         <div id="loading-bar-wrap"><div id="loading-bar"></div></div>
         <div id="loading-error" role="alert">
@@ -121,19 +245,22 @@
 
     <!-- ============================================================
          兜底脚本：必须在所有应用脚本之前执行
-         - 注册错误捕获（资源加载失败 / 入口脚本同步异常）
+         - 错误捕获（资源加载失败 / 同步脚本异常 / 未处理 Promise）
          - 超时兜底
-         - 暴露 appLoadingComplete / appLoadingFail
-         - MutationObserver 自动完成（防止 index.js 忘记调用）
+         - 暴露 appLoadingComplete / appLoadingFail / appLoadingProgress
+         - MutationObserver 自动完成（防 index.js 忘调）
     ============================================================ -->
     <script>
     (function () {
         'use strict';
 
-        var LOADING_TIMEOUT = 15000;  // 15s 超时
-        var LOADING_FADE    = 300;    // 淡出时长，需与 CSS transition 一致
+        var LOADING_TIMEOUT     = 10000; // 10s 超时
+        var LOADING_FADE        = 300;   // 与 CSS transition 一致
+        var AUTO_COMPLETE_DELAY = 1000;  // MutationObserver 触发后的确认延迟
 
         var loadingEl   = document.getElementById('app-loading');
+        var loadingBar  = document.getElementById('loading-bar');
+        var loadingText = document.getElementById('loading-text');
         var errorEl     = document.getElementById('loading-error');
         var errorMsgEl  = document.getElementById('loading-error-message');
         var retryBtn    = document.getElementById('loading-retry');
@@ -142,7 +269,6 @@
         var isLoaded  = false;
         var isFailed  = false;
         var timeoutId = null;
-        var hideId    = null;
 
         function hideError() {
             if (errorEl) errorEl.classList.remove('show');
@@ -151,7 +277,6 @@
         function showError(message) {
             if (errorMsgEl && message) errorMsgEl.textContent = message;
             if (errorEl) errorEl.classList.add('show');
-            // 失败后不再处于 busy 状态，通知无障碍工具
             if (rootEl) rootEl.setAttribute('aria-busy', 'false');
         }
 
@@ -161,6 +286,16 @@
 
         // ---------- 对外 API ----------
 
+        // 更新进度与文案（可选调用）
+        window.appLoadingProgress = function (pct, text) {
+            if (isLoaded) return;
+            var p = Number(pct);
+            if (!isFinite(p)) p = 0;
+            p = Math.max(0, Math.min(100, p));
+            if (loadingBar) loadingBar.style.width = p + '%';
+            if (loadingText && text) loadingText.textContent = text;
+        };
+
         // 加载成功（幂等；可从失败态恢复）
         window.appLoadingComplete = function () {
             if (isLoaded) return;
@@ -168,10 +303,10 @@
             isLoaded = true;
             clearTimer();
 
+            if (loadingBar) loadingBar.style.width = '100%';
             if (loadingEl) {
                 loadingEl.style.opacity = '0';
-                hideId = setTimeout(function () {
-                    hideId = null;
+                setTimeout(function () {
                     loadingEl.style.display = 'none';
                     loadingEl.setAttribute('aria-hidden', 'true');
                 }, LOADING_FADE);
@@ -179,7 +314,7 @@
             if (rootEl) rootEl.setAttribute('aria-busy', 'false');
         };
 
-        // 加载失败（失败后仍可被 complete 恢复；已失败时只更新文案）
+        // 加载失败（已失败时只更新文案）
         window.appLoadingFail = function (message) {
             if (isLoaded) return;
             if (isFailed) {
@@ -200,72 +335,58 @@
             }
         }, LOADING_TIMEOUT);
 
-        // ---------- 错误捕获（捕获阶段，保证先于 app 脚本执行） ----------
+        // ---------- 错误捕获 ----------
 
         function srcOf(el) {
-            // 优先取原始属性，避免某些环境下 .src 返回空串
             return (el && ((el.getAttribute && el.getAttribute('src')) || el.src)) || '';
         }
 
-        // 判断是否是我们自己的关键脚本
         function isCriticalScript(src) {
-            return /monitor(\.min)?\.js|pages\/index(\.min)?\.js|js\/core\/[^/]+\.js/.test(src);
+            return /(?:^|\/)(?:monitor|core\/store|core\/state|pages\/index)(?:\.min)?\.js(?:\?|$)/.test(src);
         }
 
         window.addEventListener('error', function (e) {
             var target = e.target;
 
-            // 1) 资源加载失败（target 是元素，不是 window）
+            // 1) 资源加载失败
             if (target && target !== window && target.tagName === 'SCRIPT') {
                 var src = srcOf(target);
                 if (isCriticalScript(src)) {
                     window.appLoadingFail('核心脚本加载失败，请刷新重试');
-                    return;
-                }
-                // 非关键脚本且尚未渲染：说明依赖链已经挂了
-                if (!isLoaded && rootEl && !rootEl.firstChild) {
-                    window.appLoadingFail('脚本加载失败，请刷新重试');
                 }
                 return;
             }
 
-            // 2) 入口脚本的同步运行时异常（target 是 window，靠 e.filename 判断）
-            if (!target && e.filename && /pages\/index(\.min)?\.js/.test(e.filename)) {
-                if (rootEl && !rootEl.firstChild) {
-                    window.appLoadingFail('页面初始化失败，请刷新重试');
-                }
+            // 2) 同步脚本运行时异常（e.filename 指向脚本 URL）
+            if ((!target || target === window) && e.filename && isCriticalScript(e.filename)) {
+                if (!isLoaded) window.appLoadingFail('页面初始化失败，请刷新重试');
             }
         }, true);
 
-        // 未捕获的 Promise 拒绝：若页面仍为空，视为初始化失败
+        // 3) 未捕获的 Promise 拒绝
         window.addEventListener('unhandledrejection', function () {
-            if (!isLoaded && !isFailed && rootEl && !rootEl.firstChild) {
+            if (!isLoaded && !isFailed) {
                 window.appLoadingFail('页面初始化失败，请刷新重试');
             }
         });
 
-        // ---------- 重试按钮（替代内联 onclick，兼容严格 CSP） ----------
+        // ---------- 重试按钮 ----------
         if (retryBtn) {
-            retryBtn.addEventListener('click', function () {
-                window.location.reload();
-            });
+            retryBtn.addEventListener('click', function () { window.location.reload(); });
         }
 
         // ---------- 自动完成兜底 ----------
-        // 如果 index.js 渲染完成后忘了调用 appLoadingComplete，
-        // 只要 #app-root 出现了内容，就自动收尾。
-        // 注意：如果 index.js 会先挂一个占位骨架再异步渲染真实内容，
-        // 请务必在 index.js 中主动调用 window.appLoadingComplete()，
-        // 否则骨架出现约 200ms 后 loading 屏就会关闭。
+        // 注意：初始静态内容不会触发（observe 在之后才注册）。
+        // 只有 index.js 若替换/增删了子节点，才会在延迟后自动收尾。
         if (rootEl && typeof MutationObserver !== 'undefined') {
             var armed = false;
             var mo = new MutationObserver(function () {
-                if (armed || !rootEl.firstChild) return;
+                if (armed) return;
                 armed = true;
                 setTimeout(function () {
                     mo.disconnect();
                     window.appLoadingComplete();
-                }, 200);
+                }, AUTO_COMPLETE_DELAY);
             });
             mo.observe(rootEl, { childList: true, subtree: true });
         }
@@ -276,11 +397,8 @@
     </script>
 
     <!-- ============================================================
-         应用脚本（按依赖顺序，从下往上）
+         应用脚本
          执行顺序：store.js → state.js → monitor.js → pages/index.js
-         - store/state：普通脚本，阻塞执行，先定义全局
-         - monitor.js：defer，与 module 同队列，先于 index.js
-         - index.js：module 默认 defer，最后执行，负责渲染
     ============================================================ -->
     <script src="js/core/store.js"></script>
     <script src="js/core/state.js"></script>

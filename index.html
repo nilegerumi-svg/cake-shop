@@ -16,7 +16,6 @@
             color: #4a3b3f;
         }
 
-        /* 应用挂载点：静态 UI 在此，本身承担居中布局 */
         #app-root {
             min-height: 100vh;
             min-height: 100dvh;
@@ -73,7 +72,6 @@
             box-shadow: 0 0 0 4px rgba(255, 143, 163, 0.15);
         }
 
-        /* 表单错误提示 */
         .form-error {
             display: none;
             margin-bottom: 12px;
@@ -183,9 +181,9 @@
 <body>
 
     <!-- ============================================================
-         应用挂载点
-         - 静态 UI 直接写在这里，首屏不依赖 JS 也能渲染
-         - index.js 只负责绑定交互 + 读写存档 + 关闭 loading
+         应用挂载点（开始页）
+         - 静态 UI 直接写在 HTML 中，首屏不依赖 JS 也能渲染
+         - js/pages/index.js 负责绑定交互 / 读写存档 / 关闭 loading
     ============================================================ -->
     <div id="app-root" aria-busy="true">
         <main class="start-card">
@@ -249,14 +247,16 @@
          - 超时兜底
          - 暴露 appLoadingComplete / appLoadingFail / appLoadingProgress
          - MutationObserver 自动完成（防 index.js 忘调）
+         - 软兜底：3s 内未收到完成信号且静态开始页已就绪 → 自动完成
     ============================================================ -->
     <script>
     (function () {
         'use strict';
 
-        var LOADING_TIMEOUT     = 10000; // 10s 超时
-        var LOADING_FADE        = 300;   // 与 CSS transition 一致
-        var AUTO_COMPLETE_DELAY = 1000;  // MutationObserver 触发后的确认延迟
+        var LOADING_TIMEOUT     = 10000; // 10s 硬超时
+        var SOFT_COMPLETE_DELAY = 3000;  // 3s 软兜底
+        var LOADING_FADE        = 300;
+        var AUTO_COMPLETE_DELAY = 1000;
 
         var loadingEl   = document.getElementById('app-loading');
         var loadingBar  = document.getElementById('loading-bar');
@@ -269,6 +269,7 @@
         var isLoaded  = false;
         var isFailed  = false;
         var timeoutId = null;
+        var softTimer = null;
 
         function hideError() {
             if (errorEl) errorEl.classList.remove('show');
@@ -280,13 +281,12 @@
             if (rootEl) rootEl.setAttribute('aria-busy', 'false');
         }
 
-        function clearTimer() {
+        function clearTimers() {
             if (timeoutId !== null) { clearTimeout(timeoutId); timeoutId = null; }
+            if (softTimer !== null) { clearTimeout(softTimer); softTimer = null; }
         }
 
         // ---------- 对外 API ----------
-
-        // 更新进度与文案（可选调用）
         window.appLoadingProgress = function (pct, text) {
             if (isLoaded) return;
             var p = Number(pct);
@@ -296,12 +296,11 @@
             if (loadingText && text) loadingText.textContent = text;
         };
 
-        // 加载成功（幂等；可从失败态恢复）
         window.appLoadingComplete = function () {
             if (isLoaded) return;
             if (isFailed) { isFailed = false; hideError(); }
             isLoaded = true;
-            clearTimer();
+            clearTimers();
 
             if (loadingBar) loadingBar.style.width = '100%';
             if (loadingEl) {
@@ -314,7 +313,6 @@
             if (rootEl) rootEl.setAttribute('aria-busy', 'false');
         };
 
-        // 加载失败（已失败时只更新文案）
         window.appLoadingFail = function (message) {
             if (isLoaded) return;
             if (isFailed) {
@@ -322,11 +320,11 @@
                 return;
             }
             isFailed = true;
-            clearTimer();
+            clearTimers();
             showError(message || '应用加载失败，请刷新重试');
         };
 
-        // 超时兜底
+        // 硬超时兜底
         timeoutId = setTimeout(function () {
             timeoutId = null;
             if (!isLoaded && !isFailed) {
@@ -335,20 +333,30 @@
             }
         }, LOADING_TIMEOUT);
 
-        // ---------- 错误捕获 ----------
+        // 软兜底：静态开始页已经在 DOM 里了，如果 3s 内没收到完成信号，
+        // 也先让开始页可见（"继续游戏"按钮的显隐可能稍后由 index.js 补上）
+        softTimer = setTimeout(function () {
+            softTimer = null;
+            if (isLoaded || isFailed) return;
+            if (document.querySelector('.start-card')) {
+                console.warn('[Fallback] 开始页 3s 内未收到完成信号，自动完成加载');
+                window.appLoadingComplete();
+            }
+        }, SOFT_COMPLETE_DELAY);
 
+        // ---------- 错误捕获 ----------
         function srcOf(el) {
             return (el && ((el.getAttribute && el.getAttribute('src')) || el.src)) || '';
         }
 
+        // 兼容完整路径与子路径
         function isCriticalScript(src) {
-            return /(?:^|\/)(?:monitor|core\/store|core\/state|pages\/index)(?:\.min)?\.js(?:\?|$)/.test(src);
+            return /(?:^|\/)(?:store|state|index)(?:\.min)?\.js(?:\?|$)/.test(src);
         }
 
         window.addEventListener('error', function (e) {
             var target = e.target;
 
-            // 1) 资源加载失败
             if (target && target !== window && target.tagName === 'SCRIPT') {
                 var src = srcOf(target);
                 if (isCriticalScript(src)) {
@@ -357,31 +365,26 @@
                 return;
             }
 
-            // 2) 同步脚本运行时异常（e.filename 指向脚本 URL）
             if ((!target || target === window) && e.filename && isCriticalScript(e.filename)) {
                 if (!isLoaded) window.appLoadingFail('页面初始化失败，请刷新重试');
             }
         }, true);
 
-        // 3) 未捕获的 Promise 拒绝
         window.addEventListener('unhandledrejection', function () {
             if (!isLoaded && !isFailed) {
                 window.appLoadingFail('页面初始化失败，请刷新重试');
             }
         });
 
-        // ---------- 重试按钮 ----------
         if (retryBtn) {
             retryBtn.addEventListener('click', function () { window.location.reload(); });
         }
 
-        // ---------- 自动完成兜底 ----------
-        // 注意：初始静态内容不会触发（observe 在之后才注册）。
-        // 只有 index.js 若替换/增删了子节点，才会在延迟后自动收尾。
+        // ---------- MutationObserver 自动完成 ----------
         if (rootEl && typeof MutationObserver !== 'undefined') {
             var armed = false;
             var mo = new MutationObserver(function () {
-                if (armed) return;
+                if (armed || isLoaded || isFailed) return;
                 armed = true;
                 setTimeout(function () {
                     mo.disconnect();
@@ -391,18 +394,17 @@
             mo.observe(rootEl, { childList: true, subtree: true });
         }
 
-        // 兼容旧代码
-        window.clearLoadingTimeout = clearTimer;
+        window.clearLoadingTimeout = clearTimers;
     })();
     </script>
 
     <!-- ============================================================
-         应用脚本
-         执行顺序：store.js → state.js → monitor.js → pages/index.js
+         应用脚本（开始页，不加载 monitor.js！）
+         执行顺序：store.js → state.js → pages/index.js
+         注意：pages/index.js 必须在初始化完成后调用 window.appLoadingComplete()
     ============================================================ -->
     <script src="js/core/store.js"></script>
     <script src="js/core/state.js"></script>
-    <script src="js/monitor.js" defer></script>
     <script type="module" src="js/pages/index.js"></script>
 
 </body>

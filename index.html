@@ -261,9 +261,13 @@
     })();
     </script>
 
-    <!-- ⚠️ 不再加载 js/monitor.js：它会替换开始页 -->
+    <!-- 👈 核心底层：按依赖顺序加载新架构引擎 -->
+    <script src="js/core/schema.js"></script>
+    <script src="js/core/migrate.js"></script>
+    <script src="js/core/utils.js"></script>
     <script src="js/core/store.js"></script>
-    <script src="js/core/state.js"></script>
+    
+    <!-- 页面逻辑入口（由 router.js 判断加载 start 还是 home） -->
     <script type="module" src="js/pages/index.js"></script>
 
 </body>

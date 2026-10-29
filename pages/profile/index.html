@@ -18,113 +18,161 @@
         .nav-title { font-weight: bold; color: var(--pink-600); font-size: 15px; }
         .nav-desc { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
         .arrow { color: var(--pink-300); font-size: 20px; font-weight: bold; }
+        .fatal-error { background: #ff4d4f; color: white; padding: 20px; border-radius: 10px; font-family: monospace; font-size: 14px; word-break: break-all; margin: 20px; }
     </style>
 </head>
 <body>
     <div class="game-body" style="padding-top: 10px;">
-        <div class="content" id="content"></div>
+        <div class="content" id="content">
+            <div class="muted text-center" style="margin-top:50px;">⏳ 正在获取玩家档案...</div>
+        </div>
     </div>
 
     <script type="module">
-        const Cake = window.parent.Cake || window.Cake;
-        if (!Cake) return;
+        let Cake = null;
+        let checkCount = 0;
 
-        const contentEl = document.getElementById('content');
-        const esc = Cake.escapeHtml || ((v) => String(v ?? ''));
-        const num = (v, fallback = 0) => Number.isFinite(Number(v)) ? Number(v) : fallback;
+        // 1. 引擎轮询等待器
+        function waitForEngine() {
+            Cake = window.parent.Cake || window.Cake;
+            if (Cake && Cake.store && Cake.store.state) {
+                renderPage();
+            } else {
+                checkCount++;
+                if (checkCount < 100) {
+                    setTimeout(waitForEngine, 100);
+                } else {
+                    showFatalError('游戏引擎加载超时！请刷新页面。');
+                }
+            }
+        }
 
-        const renderProfile = () => {
-            const s = Cake.store.state;
-            const shopName = s.shop?.name || '甜蜜小屋';
-            const day = num(s.time?.day, 1);
-            const money = num(s.money, 0);
-            const reputation = num(s.shop?.stats?.reputation, 0);
-            const shopLevel = num(s.shopLevel, 1); 
-            const decoration = num(s.decoration, 0);
-            const totalCakes = num(s.totalCakes, 0);
-            const totalEarned = num(s.totalEarned, 0);
-            
-            // 统计数据
-            const achCount = (Cake.ACHIEVEMENTS || []).filter(a => s.achievements && s.achievements[a.id]).length;
-            const toolCount = Object.keys(s.tools || {}).filter(id => s.tools[id].owned).length;
-            const invCount = (s.inventory || []).length;
+        function showFatalError(msg) {
+            const content = document.getElementById('content');
+            if (content) {
+                content.innerHTML = `<div class="fatal-error"><h3>🚨 致命错误</h3><div>${msg}</div></div>`;
+            }
+        }
 
-            contentEl.innerHTML = `
-                <div class="card">
-                    <h2>📊 我的档案</h2>
-                    <div class="grid-2" style="margin-bottom: 20px;">
-                        <div class="item-card">
-                            <span class="item-emoji">${esc(s.avatar || '👩‍🍳')}</span>
-                            <span class="item-name">${esc(s.playerName || '店长')}</span>
-                            <span class="item-desc">「${esc(shopName)}」的店长</span>
-                            <span class="item-meta">经营第 ${day} 天</span>
-                        </div>
-                        <div class="item-card">
-                            <span class="item-emoji">📈</span>
-                            <span class="item-name">经营数据</span>
-                            <span class="item-desc">余额：${money}元<br>累计卖出：${totalCakes}个<br>累计收入：${totalEarned}元<br>声望：${reputation}</span>
-                        </div>
-                    </div>
+        const render = () => {
+            try {
+                const contentEl = document.getElementById('content');
+                const s = Cake.store.state;
+                const esc = Cake.escapeHtml || ((v) => String(v ?? ''));
+                const num = (v, fallback = 0) => Number.isFinite(Number(v)) ? Number(v) : fallback;
 
-                    <!-- 个人中心导航 -->
-                    <h3>📂 我的收藏与资产</h3>
-                    
-                    <div class="nav-card" onclick="go('achievements.html')">
-                        <div class="nav-left">
-                            <span class="nav-icon">🏅</span>
-                            <div>
-                                <div class="nav-title">成就殿堂</div>
-                                <div class="nav-desc">已解锁 ${achCount} 个成就</div>
+                const shopName = s.shop?.name || '甜蜜小屋';
+                const day = num(s.time?.day, 1);
+                const money = num(s.money, 0);
+                const reputation = num(s.shop?.stats?.reputation, 0);
+                
+                // 统计数据
+                const achCount = (Cake.ACHIEVEMENTS || []).filter(a => s.achievements && s.achievements[a.id]).length;
+                const toolCount = Object.keys(s.tools || {}).filter(id => s.tools[id].owned).length;
+                const invCount = (s.inventory || []).length;
+
+                contentEl.innerHTML = `
+                    <div class="card">
+                        <h2>📊 我的档案</h2>
+                        <div class="grid-2" style="margin-bottom: 20px;">
+                            <div class="item-card">
+                                <span class="item-emoji">${esc(s.avatar || '👩‍🍳')}</span>
+                                <span class="item-name">${esc(s.playerName || '店长')}</span>
+                                <span class="item-desc">「${esc(shopName)}」的店长</span>
+                                <span class="item-meta">经营第 ${day} 天</span>
+                            </div>
+                            <div class="item-card">
+                                <span class="item-emoji">📈</span>
+                                <span class="item-name">经营数据</span>
+                                <span class="item-desc">余额：${money}元<br>累计卖出：${num(s.totalCakes, 0)}个<br>累计收入：${num(s.totalEarned, 0)}元<br>声望：${reputation}</span>
                             </div>
                         </div>
-                        <span class="arrow">→</span>
-                    </div>
 
-                    <div class="nav-card" onclick="go('tools.html')">
-                        <div class="nav-left">
-                            <span class="nav-icon">🛠️</span>
-                            <div>
-                                <div class="nav-title">工具库</div>
-                                <div class="nav-desc">已拥有 ${toolCount} 件工具</div>
+                        <h3>📂 我的收藏与资产</h3>
+                        
+                        <div class="nav-card" onclick="window.location.href='achievements.html'">
+                            <div class="nav-left">
+                                <span class="nav-icon">🏅</span>
+                                <div>
+                                    <div class="nav-title">成就殿堂</div>
+                                    <div class="nav-desc">已解锁 ${achCount} 个成就</div>
+                                </div>
                             </div>
+                            <span class="arrow">→</span>
                         </div>
-                        <span class="arrow">→</span>
-                    </div>
 
-                    <div class="nav-card" onclick="go('inventory.html')">
-                        <div class="nav-left">
-                            <span class="nav-icon">🎒</span>
-                            <div>
-                                <div class="nav-title">食材仓库</div>
-                                <div class="nav-desc">当前储存 ${invCount} 份食材</div>
+                        <div class="nav-card" onclick="window.location.href='tools.html'">
+                            <div class="nav-left">
+                                <span class="nav-icon">🛠️</span>
+                                <div>
+                                    <div class="nav-title">工具库</div>
+                                    <div class="nav-desc">已拥有 ${toolCount} 件工具</div>
+                                </div>
                             </div>
+                            <span class="arrow">→</span>
                         </div>
-                        <span class="arrow">→</span>
-                    </div>
 
-                    <h3>💾 系统操作</h3>
-                    <div class="char-actions" style="gap:10px;margin-top:8px;">
-                        <button type="button" class="small" onclick="Cake.saveState(); alert('✅ 游戏已保存！')">💾 保存游戏</button>
-                        <button type="button" class="small secondary" onclick="resetGame()">🔄 重新开始</button>
-                    </div>
-                </div>`;
-        };
+                        <div class="nav-card" onclick="window.location.href='inventory.html'">
+                            <div class="nav-left">
+                                <span class="nav-icon">🎒</span>
+                                <div>
+                                    <div class="nav-title">食材仓库</div>
+                                    <div class="nav-desc">当前储存 ${invCount} 份食材</div>
+                                </div>
+                            </div>
+                            <span class="arrow">→</span>
+                        </div>
 
-        // 内部跳转（iframe 内跳转）
-        window.go = (page) => {
-            window.location.href = page;
-        };
-
-        window.resetGame = () => {
-            if (confirm('⚠️ 确定要重新开始吗？这会清空当前所有进度！')) {
-                localStorage.removeItem(Cake.store.SAVE_KEY || 'cake_shop_save');
-                window.parent.location.href = '../../index.html';
+                        <h3>💾 系统操作</h3>
+                        <div class="char-actions" style="gap:10px;margin-top:8px;">
+                            <button type="button" class="small" onclick="window.saveGame()">💾 保存游戏</button>
+                            <button type="button" class="small secondary" onclick="window.resetGame()">🔄 重新开始</button>
+                        </div>
+                    </div>`;
+            } catch (err) {
+                console.error('❌ [Profile] 渲染崩溃:', err);
+                showFatalError(`渲染档案时发生异常：<br>${err.message}`);
             }
         };
 
-        if (typeof Cake.initPage === 'function') {
-            Cake.initPage('profile', () => renderProfile(), false);
+        // 👈 安全保存
+        window.saveGame = () => {
+            try {
+                if (typeof Cake.saveState === 'function') {
+                    Cake.saveState();
+                    alert('✅ 游戏已保存！');
+                } else {
+                    alert('❌ 存档系统未加载，无法保存');
+                }
+            } catch (err) {
+                alert('保存失败: ' + err.message);
+            }
+        };
+
+        // 👈 安全重置（修复了跨 iframe 路径跳转的问题）
+        window.resetGame = () => {
+            if (confirm('⚠️ 确定要重新开始吗？这会清空当前所有进度！')) {
+                try {
+                    localStorage.removeItem(Cake.store.SAVE_KEY || 'cake_shop_save');
+                    // 无论 iframe 嵌得多深，直接跳到页面最顶层的相对根目录 index.html
+                    window.parent.location.href = '../../index.html'; 
+                } catch (e) {
+                    // 如果跨域导致无法操作 parent，就用当前窗口的绝对路径
+                    window.location.href = '../../index.html';
+                }
+            }
+        };
+
+        function renderPage() {
+            if (typeof Cake.initPage === 'function') {
+                Cake.initPage('profile', render, false);
+            } else {
+                render();
+            }
         }
+
+        // 启动等待
+        waitForEngine();
     </script>
 </body>
 </html>

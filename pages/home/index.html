@@ -1,10 +1,11 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>主页</title>
-    <link rel="stylesheet" href="../css/styles.css">
+    <!-- 退两格找 css -->
+    <link rel="stylesheet" href="../../css/styles.css">
     <style>
         body {
             background: transparent;
@@ -23,9 +24,13 @@
     </style>
 </head>
 <body>
+    <!-- 之前你的 home 脚本里要用的容器 -->
     <div id="content"></div>
 
-    <!-- 页面系统入口：router.js 根据 pathname 路由到 js/pages/home/index.js -->
-    <script type="module" src="../js/pages/index.js"></script>
+    <!-- 
+      直接引入 home 专属的 index.js 
+      不要再走 router.js 了，router 是给外层 game.html 和 index.html 用的
+    -->
+    <script type="module" src="../../js/pages/home/index.js"></script>
 </body>
 </html>

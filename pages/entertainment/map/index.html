@@ -51,9 +51,23 @@
     </div>
 
     <script type="module">
-        // 直接使用最新的 Cake 引擎
-        const Cake = window.parent.Cake || window.Cake;
-        if (!Cake) return;
+        // 1. 引擎等待机制
+        let Cake = null;
+        let checkCount = 0;
+
+        function waitForEngine() {
+            Cake = window.parent.Cake || window.Cake;
+            if (Cake && Cake.store && Cake.store.state) {
+                initPage();
+            } else {
+                checkCount++;
+                if (checkCount < 50) { 
+                    setTimeout(waitForEngine, 100);
+                } else {
+                    document.getElementById('mapContent').innerHTML = '<h3 style="color:red; text-align:center;">❌ 游戏引擎加载超时，请刷新重试</h3>';
+                }
+            }
+        }
 
         const $ = (id) => document.getElementById(id);
         const num = (v, fallback = 0) => Number.isFinite(Number(v)) ? Number(v) : fallback;
@@ -65,59 +79,91 @@
 
         // 渲染地图上的所有地点
         const renderMap = () => {
-            const state = Cake.store.state;
-            const currentEnergy = num(state.energy, 0);
-            $('energy').innerText = currentEnergy;
+            try {
+                const state = Cake.store.state;
+                const currentEnergy = num(state.energy, 0);
+                $('energy').innerText = currentEnergy;
 
-            const regions = Cake.REGIONS || {};
-            const contentEl = $('mapContent');
-            let html = '';
-
-            // 遍历所有区域，比如 'town'
-            for (const [rId, region] of Object.entries(regions)) {
-                const locations = Cake.getRegionLocations(rId);
-                if (!locations) continue;
-
-                html += `<div class="region-title">${region.emoji || '📍'} ${region.name}</div>`;
-                html += `<div class="loc-list">`;
-
-                // 遍历区域内的所有地点，如 'street', 'park'
-                for (const [lId, loc] of Object.entries(locations)) {
-                    const cost = num(loc.cost, 0);
-                    const isDisabled = currentEnergy < cost;
-                    
-                    html += `
-                        <div class="loc-item ${isDisabled ? 'disabled' : ''}" onclick="goLocation('${rId}', '${lId}')">
-                            <div class="loc-info">
-                                <span class="loc-emoji">${loc.emoji || '🏠'}</span>
-                                <div class="loc-text">
-                                    <span class="loc-name">${loc.name}</span>
-                                    <span class="loc-desc">${loc.desc}</span>
-                                    <span class="loc-cost">消耗精力: ⚡${cost} · 耗时: ${loc.time}分</span>
-                                </div>
-                            </div>
-                            <span class="loc-arrow">▶</span>
-                        </div>
-                    `;
+                const regions = Cake.REGIONS || {};
+                const contentEl = $('mapContent');
+                
+                if (Object.keys(regions).length === 0) {
+                    contentEl.innerHTML = '<div class="muted" style="text-align:center; padding:20px;">当前没有可前往的区域</div>';
+                    return;
                 }
-                html += `</div>`;
-            }
 
-            contentEl.innerHTML = html;
+                let html = '';
+
+                // 遍历所有区域，比如 'town'
+                for (const [rId, region] of Object.entries(regions)) {
+                    if (!region) continue;
+
+                    // 👈 终极兜底：如果拿不到地点，就从全局强行捞
+                    let locations = (typeof Cake.getRegionLocations === 'function') 
+                        ? Cake.getRegionLocations(rId) 
+                        : null;
+                    if (!locations || Object.keys(locations).length === 0) {
+                        locations = Cake.LOCATIONS || {};
+                    }
+
+                    if (Object.keys(locations).length === 0) {
+                        html += `<div class="region-title">${region.emoji || '📍'} ${region.name}</div>`;
+                        html += `<div class="muted" style="padding: 10px;">暂无地点数据</div>`;
+                        continue;
+                    }
+
+                    html += `<div class="region-title">${region.emoji || '📍'} ${region.name}</div>`;
+                    html += `<div class="loc-list">`;
+
+                    for (const [lId, loc] of Object.entries(locations)) {
+                        if (!loc) continue;
+                        const cost = num(loc.cost, 0);
+                        const isDisabled = currentEnergy < cost;
+                        
+                        html += `
+                            <div class="loc-item ${isDisabled ? 'disabled' : ''}" onclick="goLocation('${rId}', '${lId}')">
+                                <div class="loc-info">
+                                    <span class="loc-emoji">${loc.emoji || '🏠'}</span>
+                                    <div class="loc-text">
+                                        <span class="loc-name">${loc.name}</span>
+                                        <span class="loc-desc">${loc.desc || ''}</span>
+                                        <span class="loc-cost">消耗精力: ⚡${cost} · 耗时: ${num(loc.time, 0)}分</span>
+                                    </div>
+                                </div>
+                                <span class="loc-arrow">▶</span>
+                            </div>
+                        `;
+                    }
+                    html += `</div>`;
+                }
+
+                contentEl.innerHTML = html;
+            } catch (err) {
+                console.error('❌ [Map] 渲染崩溃:', err);
+                $('mapContent').innerHTML = `<div style="color:red; padding:20px; background:#fff; border-radius:10px;">
+                    页面渲染遇到错误: ${err.message}
+                </div>`;
+            }
         };
 
         // 跳转到具体地点页面
         window.goLocation = (regionId, locId) => {
-            // 页面跳转，带上参数
             window.location.href = `location.html?region=${regionId}&loc=${locId}`;
         };
 
         // 初始化
-        if (typeof Cake.initPage === 'function') {
-            Cake.initPage('fun', () => {
+        function initPage() {
+            if (typeof Cake.initPage === 'function') {
+                Cake.initPage('fun', () => {
+                    renderMap();
+                }, false);
+            } else {
                 renderMap();
-            }, false);
+            }
         }
+
+        // 启动等待机制
+        waitForEngine();
     </script>
 </body>
 </html>

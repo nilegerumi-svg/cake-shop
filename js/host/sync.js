@@ -1,55 +1,29 @@
 // js/host/sync.js
-(() => {
+(function () {
     'use strict';
+    const Cake = window.Cake;
 
-    const frames = [
-        document.getElementById('mainFrame'),
-        document.getElementById('logFrame')
-    ].filter(Boolean);
-
-    const targetOrigin = (location.origin === 'null' ? '*' : location.origin);
-
-    const handleStateChanged = (sourceId) => {
-        const Cake = window.Cake;
-        if (!Cake || !Cake.store) return;
-
+    Cake.saveGame = function () {
+        if (!Cake.store || !Cake.store.state) return;
         try {
-            if (typeof Cake.loadStateFromStorage === 'function') {
-                const loaded = Cake.loadStateFromStorage();
-                if (loaded) Cake.store.state = loaded;
+            localStorage.setItem('cake_shop_save', JSON.stringify(Cake.store.state));
+            console.log('💾 [Host/Sync] 游戏已自动保存');
+        } catch (e) {
+            console.error('❌ [Host/Sync] 保存失败', e);
+        }
+    };
+
+    Cake.loadGame = function () {
+        try {
+            const raw = localStorage.getItem('cake_shop_save');
+            if (raw) {
+                const parsed = JSON.parse(raw);
+                // 使用 migrate 处理旧存档
+                return Cake.migrateState ? Cake.migrateState(parsed) : parsed;
             }
-        } catch (err) {
-            console.warn('[host] load state failed', err);
+        } catch (e) {
+            console.error('❌ [Host/Sync] 读取存档失败', e);
         }
-
-        try {
-            if (typeof Cake.renderHeader === 'function') Cake.renderHeader();
-            if (typeof Cake.renderNav === 'function') Cake.renderNav();
-            if (typeof Cake.renderFooter === 'function') Cake.renderFooter();
-        } catch (err) {
-            console.warn('[host] render failed', err);
-        }
-
-        const msg = { type: 'state-sync', sourceId };
-        for (const f of frames) {
-            try { f.contentWindow.postMessage(msg, targetOrigin); } catch (_) {}
-        }
+        return null;
     };
-
-    const registerBroadcaster = () => {
-        const bridge = window.Cake && window.Cake.bridge;
-        if (bridge && typeof bridge.setHostBroadcaster === 'function') {
-            bridge.setHostBroadcaster(handleStateChanged);
-            return true;
-        }
-        return false;
-    };
-
-    if (!registerBroadcaster()) {
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', registerBroadcaster, { once: true });
-        } else {
-            setTimeout(registerBroadcaster, 0);
-        }
-    }
 })();

@@ -14,7 +14,6 @@
     const Cake = getCake();
     if (!Cake) return;
 
-    // 防重复挂载
     if (Cake.__mapDataStreetLoaded) return;
     Cake.__mapDataStreetLoaded = true;
 
@@ -28,13 +27,14 @@
         id: 'street',
         name: '商业街',
         emoji: '🛍️',
-        cost: 8,
-        time: 30,   // ⭐ 散步耗时（分钟）
-        desc: '人来人往，充满商机与偶遇。',
+        cost: 5,
+        time: 15,
+        desc: '这里有街角超市，可以买到基础食材。',
         events: [
-            { text: '你在街边买了一杯饮品，感觉精神好多了。', energy: 3 },
-            { text: '一家新开的甜品店在发试吃，你学到了新的灵感。', rep: 2 },
-            { text: '你遇到顾言正在挑选咖啡豆，他跟你点了点头。', guyan: 2 },
-        ],
+            { text: '你在路边捡到了别人掉落的十块钱。', money: 10 },
+            { text: '你看到一家新开的甜品店在发传单，试吃了一口，得到了灵感。', rep: 1 },
+            { text: '街上人太多，你被路人不小心踩了一脚。', energy: -1 },
+            { text: '你闻到了一家高级面包店飘来的香气，忍不住驻足。', rep: 1 }
+        ]
     });
 })();

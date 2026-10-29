@@ -56,4 +56,3 @@ cake-shop/
 │   └── log/                 # 底边控制台日志
 ├── game.html                # 游戏主外壳 (包含 Topbar / Nav / Log)
 ├── index.html               # 开始页 (取名与创档)
-└── monitor.js               # (旧) 根目录监视器

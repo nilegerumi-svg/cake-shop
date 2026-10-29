@@ -18,65 +18,116 @@
         .nav-title { font-weight: bold; color: var(--pink-600); font-size: 18px; }
         .nav-desc { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
         .arrow { color: var(--pink-300); font-size: 24px; font-weight: bold; }
+        
+        /* 暴力报错样式 */
+        .fatal-error {
+            background: #ff4d4f; color: white; padding: 20px; border-radius: 10px;
+            font-family: monospace; font-size: 14px; word-break: break-all;
+            box-shadow: 0 4px 15px rgba(255, 77, 79, 0.4); margin: 20px;
+        }
     </style>
 </head>
 <body>
     <div class="game-body" style="padding-top: 10px;">
-        <div class="content" id="content"></div>
+        <div class="content" id="content">
+            <div class="muted text-center" style="margin-top:50px;">⏳ 正在等待引擎加载，请稍候...</div>
+        </div>
     </div>
+    
     <script type="module">
-        const Cake = window.parent.Cake || window.Cake;
-        if (!Cake) return;
+        let Cake = null;
+        let checkCount = 0;
+
+        // 👈 暴力等待器：死等父页面的引擎和数据全部就绪
+        function waitForEngine() {
+            Cake = window.parent.Cake || window.Cake;
+            
+            // 必须确保：引擎存在 + 存档加载完 + 菜谱数据加载完
+            if (Cake && Cake.store && Cake.store.state && Cake.RECIPES && Object.keys(Cake.RECIPES).length > 0) {
+                renderPage();
+            } else {
+                checkCount++;
+                if (checkCount < 100) { // 等 10 秒
+                    setTimeout(waitForEngine, 100);
+                } else {
+                    showFatalError('游戏引擎或配方数据加载超时！请刷新页面或检查父页面是否有 404。');
+                }
+            }
+        }
+
+        // 👈 暴力报错函数：出错了直接把红字怼在屏幕上
+        function showFatalError(msg) {
+            const content = document.getElementById('content');
+            if (content) {
+                content.innerHTML = `<div class="fatal-error">
+                    <h3 style="margin: 0 0 10px 0;">🚨 致命错误</h3>
+                    <div>${msg}</div>
+                </div>`;
+            }
+        }
 
         const render = () => {
-            const state = Cake.store.state;
-            const allRecipes = Object.entries(Cake.RECIPES);
-            
-            let bakeryTotal = 0, bakeryUnlocked = 0;
-            let cookTotal = 0, cookUnlocked = 0;
+            try {
+                const state = Cake.store.state;
+                const allRecipes = Object.entries(Cake.RECIPES);
+                
+                let bakeryTotal = 0, bakeryUnlocked = 0;
+                let cookTotal = 0, cookUnlocked = 0;
 
-            allRecipes.forEach(([key, r]) => {
-                if (r.skill === 'bakery') {
-                    bakeryTotal++;
-                    if (state.unlockedRecipes[key]) bakeryUnlocked++;
-                } else if (r.skill === 'cook') {
-                    cookTotal++;
-                    if (state.unlockedRecipes[key]) cookUnlocked++;
-                }
-            });
+                allRecipes.forEach(([key, r]) => {
+                    if (r.skill === 'bakery') {
+                        bakeryTotal++;
+                        if (state.unlockedRecipes[key]) bakeryUnlocked++;
+                    } else if (r.skill === 'cook') {
+                        cookTotal++;
+                        if (state.unlockedRecipes[key]) cookUnlocked++;
+                    }
+                });
 
-            document.getElementById('content').innerHTML = `
-                <div class="card" style="text-align: center; margin-bottom: 20px;">
-                    <h2 style="margin: 0;">📖 配方图鉴</h2>
-                    <p class="muted" style="margin-top: 10px;">收集并研发更多的美味，成为一代宗师吧！</p>
-                </div>
-
-                <div class="nav-card" onclick="go('bakery.html')">
-                    <div class="nav-left">
-                        <span class="nav-icon">🍰</span>
-                        <div>
-                            <div class="nav-title">烘焙专馆</div>
-                            <div class="nav-desc">已掌握 ${bakeryUnlocked} / ${bakeryTotal} 个配方</div>
-                        </div>
+                document.getElementById('content').innerHTML = `
+                    <div class="card" style="text-align: center; margin-bottom: 20px;">
+                        <h2 style="margin: 0;">📖 配方图鉴</h2>
+                        <p class="muted" style="margin-top: 10px;">收集并研发更多的美味，成为一代宗师吧！</p>
                     </div>
-                    <span class="arrow">→</span>
-                </div>
 
-                <div class="nav-card" onclick="go('cook.html')">
-                    <div class="nav-left">
-                        <span class="nav-icon">🥢</span>
-                        <div>
-                            <div class="nav-title">料理专馆</div>
-                            <div class="nav-desc">已掌握 ${cookUnlocked} / ${cookTotal} 个配方</div>
+                    <div class="nav-card" onclick="window.location.href='bakery.html'">
+                        <div class="nav-left">
+                            <span class="nav-icon">🍰</span>
+                            <div>
+                                <div class="nav-title">烘焙专馆</div>
+                                <div class="nav-desc">已掌握 ${bakeryUnlocked} / ${bakeryTotal} 个配方</div>
+                            </div>
                         </div>
+                        <span class="arrow">→</span>
                     </div>
-                    <span class="arrow">→</span>
-                </div>
-            `;
+
+                    <div class="nav-card" onclick="window.location.href='cook.html'">
+                        <div class="nav-left">
+                            <span class="nav-icon">🥢</span>
+                            <div>
+                                <div class="nav-title">料理专馆</div>
+                                <div class="nav-desc">已掌握 ${cookUnlocked} / ${cookTotal} 个配方</div>
+                            </div>
+                        </div>
+                        <span class="arrow">→</span>
+                    </div>
+                `;
+            } catch (err) {
+                console.error('❌ [Recipe] 渲染崩溃:', err);
+                showFatalError(`渲染过程发生异常：<br>${err.message}<br><br>堆栈：<br>${err.stack}`);
+            }
         };
 
-        window.go = (page) => window.location.href = page;
-        if (typeof Cake.initPage === 'function') Cake.initPage('recipe', render, false);
+        function renderPage() {
+            if (typeof Cake.initPage === 'function') {
+                Cake.initPage('recipe', render, false);
+            } else {
+                render(); // 如果父页面没这个接口，直接自己画
+            }
+        }
+
+        // 启动暴力等待
+        waitForEngine();
     </script>
 </body>
 </html>

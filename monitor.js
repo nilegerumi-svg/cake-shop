@@ -384,7 +384,7 @@
                 } catch (_) {}
             } else {
                 console.log('🖼️ [Root Monitor] 预加载主页 iframe...');
-                mainFrame.src = url('pages/home.html');
+                mainFrame.src = url('pages/home/index.html');
             }
 
             if (!state.homeReady) {
@@ -399,8 +399,8 @@
                             const p = doc.createElement('p');
                             p.style.margin = '0';
                             p.textContent = href === 'about:blank'
-                                ? '⚠️ 主页加载超时（10s）。请检查 pages/home.html 路径与网络。'
-                                : '⚠️ 主页加载超时（10s）。pages/home.html 可能仍在加载或存在错误。';
+                                ? '⚠️ 主页加载超时（10s）。请检查 pages/home/index.html 路径与网络。'
+                                : '⚠️ 主页加载超时（10s）。pages/home/index.html 可能仍在加载或存在错误。';
                             doc.body.appendChild(p);
                         }
                     } catch (_) {}

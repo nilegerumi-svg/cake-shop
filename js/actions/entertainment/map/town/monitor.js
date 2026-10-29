@@ -40,7 +40,8 @@
         {
             text: '🚂 一辆送货车飞驰而过，溅了你一身泥水……',
             energy: -2,
-            condition: (state) => state.hour > 6 && state.hour < 9,
+            // 👈 修复：适配最新的 schema，从 state.time.hour 读取小时
+            condition: (state) => state.time && state.time.hour > 6 && state.time.hour < 9,
         },
     ].map(deepFreeze);
 

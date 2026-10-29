@@ -48,7 +48,8 @@
 
             // 3. 工具状态（👈 新手礼包：送一台基础烤箱）
             tools: {
-                'oven_basic': { owned: true, lv: 1, exp: 0 }
+                'oven_basic': { owned: true, lv: 1, exp: 0 },
+                'wok': { owned: true, lv: 1, exp: 0 } 
             },
 
             // ================= 资产与背包 =================

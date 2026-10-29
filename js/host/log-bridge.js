@@ -5,10 +5,14 @@
     window.__cakeLogBridgeInstalled = true;
 
     const targetOrigin = (location.origin === 'null' ? '*' : location.origin);
+    const logLevels = ['log', 'info', 'warn', 'error'];
 
     const safeStringify = (value) => {
         if (typeof value === 'string') return value;
         if (value instanceof Error) return `${value.name}: ${value.message}`;
+        if (value === null) return 'null';
+        if (value === undefined) return 'undefined';
+
         try {
             return JSON.stringify(value);
         } catch (_) {
@@ -20,16 +24,38 @@
         }
     };
 
-    const toLogFrame = (payload) => {
+    const formatArgs = (args) => args.map((a) => safeStringify(a)).join(' ');
+
+    const nativeConsole = {};
+    logLevels.forEach((lvl) => {
+        const fn = console[lvl];
+        nativeConsole[lvl] = typeof fn === 'function' ? fn.bind(console) : null;
+    });
+
+    const sendToFrame = (payload) => {
         const frame = document.getElementById('logFrame');
-        if (!frame || !frame.contentWindow) return;
+        if (!frame || !frame.contentWindow) {
+            return false;
+        }
+
         try {
             frame.contentWindow.postMessage(payload, targetOrigin);
+            return true;
+        } catch (_) {
+            return false;
+        }
+    };
+
+    const reportConsoleFailure = (err) => {
+        try {
+            if (nativeConsole.error) {
+                nativeConsole.error.call(console, '[cake-log-bridge] native console call failed:', err);
+            }
         } catch (_) {}
     };
 
     const sendLog = (msg, level = 'info') => {
-        toLogFrame({
+        sendToFrame({
             type: 'log',
             level,
             time: Date.now(),
@@ -38,27 +64,33 @@
     };
 
     window.sendLog = (msg, level = 'info') => sendLog(msg, level);
-    window.clearLog = () => toLogFrame({ type: 'clear' });
+    window.clearLog = () => sendToFrame({ type: 'clear' });
 
-    ['log', 'info', 'warn', 'error'].forEach((lvl) => {
-        const original = console[lvl];
+    logLevels.forEach((lvl) => {
+        const original = nativeConsole[lvl];
+
         console[lvl] = (...args) => {
-            try {
-                original.apply(console, args);
-            } catch (_) {}
+            if (original) {
+                try {
+                    original.apply(console, args);
+                } catch (err) {
+                    reportConsoleFailure(err);
+                }
+            }
 
             try {
-                const text = args
-                    .map((a) => safeStringify(a))
-                    .join(' ');
+                const text = formatArgs(args);
+                const mappedLevel = lvl === 'log' ? 'info' : lvl;
 
-                toLogFrame({
+                sendToFrame({
                     type: 'log',
-                    level: lvl === 'log' ? 'info' : lvl,
+                    level: mappedLevel,
                     time: Date.now(),
                     msg: text
                 });
-            } catch (_) {}
+            } catch (err) {
+                reportConsoleFailure(err);
+            }
         };
     });
 })();

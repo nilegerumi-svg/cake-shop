@@ -20,7 +20,6 @@ window.Cake = window.Cake || {};
     let currentRender = null;
     let currentActiveTab = 'home';
 
-    // 数值守卫：undefined / NaN / 非数字 → fallback
     const num = (v, fallback = 0) => {
         const n = Number(v);
         return Number.isFinite(n) ? n : fallback;
@@ -35,24 +34,19 @@ window.Cake = window.Cake || {};
 
         const energy = Math.max(0, Math.min(100, num(state.energy, 80)));
         const pct = Math.round(energy);
-        const esc = typeof Cake.escapeHtml === 'function'
-            ? Cake.escapeHtml
-            : (v) => String(v ?? '');
-
-        const timeStr = typeof Cake.getTimeString === 'function'
-            ? Cake.getTimeString()
-            : '08:00';
+        const esc = Cake.escapeHtml;
+        const timeStr = Cake.getTimeString ? Cake.getTimeString() : '08:00';
 
         el.innerHTML = `
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                 <div class="header-left" style="display: flex; align-items: center; gap: 6px; font-weight: bold; font-size: 15px; color: #d6336c;">
-                    <span class="shop-emoji" style="font-size: 20px;">${esc(state.avatar ?? '👩‍🍳')}</span>
-                    <span>${esc(state.shopName ?? '甜蜜小屋')}</span>
+                    <span class="shop-emoji" style="font-size: 20px;">👩‍🍳</span>
+                    <span>${esc(state.shop?.name ?? '甜蜜小屋')}</span>
                 </div>
                 <div class="header-stats" style="display: flex; gap: 8px; font-size: 13px; color: #555; font-weight: bold;">
-                    <span>🍅 ${num(state.day, 1)}天 ${timeStr}</span>
-                    <span>💰 ${num(state.money, 500)}</span>
-                    <span>⭐ ${num(state.reputation, 0)}</span>
+                    <span>📅 ${num(state.time?.day, 1)}天 ${timeStr}</span>
+                    <span>💰 ${num(state.money, 100)}</span>
+                    <span>🧹 ${num(state.shop?.stats?.cleanliness, 100)}%</span>
                 </div>
             </div>
             <div class="energy-wrap" style="display: flex; align-items: center; gap: 8px; font-size: 12px;">
@@ -60,7 +54,7 @@ window.Cake = window.Cake || {};
                 <div class="energy-bar" style="flex: 1; height: 6px; background: #ffe4e1; border-radius: 4px; overflow: hidden;">
                     <div class="energy-bar-fill" style="height: 100%; width: ${pct}%; background: #ff8fa3;"></div>
                 </div>
-                <span style="color: #888; width: 45px; text-align: right;">${pct}/100</span>
+                <span style="color: #888; width: 45px; text-align: right;">${pct}/${state.maxEnergy || 100}</span>
             </div>`;
     };
 
@@ -74,9 +68,7 @@ window.Cake = window.Cake || {};
             const activeStyle = isActive
                 ? 'background: #ff8fa3; color: #ffffff; box-shadow: 0 4px 10px rgba(255,143,163,0.4); transform: translateY(-1px);'
                 : '';
-            return `<a class="nav-btn ${isActive ? 'active' : ''}"
-                        style="${activeStyle}"
-                        href="${item.href}">${item.label}</a>`;
+            return `<a class="nav-btn ${isActive ? 'active' : ''}" style="${activeStyle}" href="${item.href}">${item.label}</a>`;
         }).join('');
     };
 
@@ -93,18 +85,16 @@ window.Cake = window.Cake || {};
         const state = Cake.store && Cake.store.state;
         if (!state) return;
 
+        // 这里对应了我们要改造的 addLog
         const logs = Array.isArray(state.log) ? state.log : [];
         if (logs.length === 0) {
             list.innerHTML = '<div class="muted">还没有记录，快去创造故事吧！</div>';
             return;
         }
 
-        const esc = typeof Cake.escapeHtml === 'function'
-            ? Cake.escapeHtml
-            : (v) => String(v ?? '');
-
+        const esc = Cake.escapeHtml;
         list.innerHTML = logs.slice().reverse().map((l) =>
-            `<div class="log-item"><span class="log-day">第${num(l && l.day, 1)}天</span>${esc(l && l.text ? l.text : '')}</div>`
+            `<div class="log-item"><span class="log-day">第${num(l.day, 1)}天</span> ${esc(l.text || '')}</div>`
         ).join('');
         list.scrollTop = 0;
     };
@@ -124,17 +114,6 @@ window.Cake = window.Cake || {};
                 currentRender();
             } catch (err) {
                 console.error('[Render] 子页面渲染异常:', err);
-                const iframe = Cake.$('mainFrame');
-                if (iframe && iframe.contentDocument) {
-                    const innerContent = iframe.contentDocument.getElementById('content');
-                    if (innerContent) {
-                        innerContent.innerHTML = `
-                            <div style="color: red; padding: 20px; background: #fff; border-radius: 10px; margin: 16px;">
-                                <strong>⚠️ 子页面渲染报错：</strong><br>
-                                ${Cake.escapeHtml ? Cake.escapeHtml(err.message) : err.message}
-                            </div>`;
-                    }
-                }
             }
         }
     };
@@ -146,6 +125,7 @@ window.Cake = window.Cake || {};
         renderAll();
     };
 
+    // 这是供子页面调用的核心接口！
     const initPage = (activeTab, renderFn, showLog = false) => {
         currentActiveTab = activeTab || 'home';
         currentRender = typeof renderFn === 'function' ? renderFn : null;
@@ -154,12 +134,9 @@ window.Cake = window.Cake || {};
         refreshPage();
     };
 
-    // storage 监听：父页面同步存档
+    // 监听跨 iframe 的存档同步
     window.addEventListener('storage', (e) => {
-        if (!Cake.SAVE_KEY) return;
-        if (e.key && e.key !== Cake.SAVE_KEY) return;
-        if (e.storageArea && e.storageArea !== window.localStorage) return;
-
+        if (!Cake.SAVE_KEY || (e.key && e.key !== Cake.SAVE_KEY)) return;
         try {
             if (typeof Cake.loadStateFromStorage === 'function') {
                 Cake.store.state = Cake.loadStateFromStorage();
@@ -171,6 +148,7 @@ window.Cake = window.Cake || {};
         Cake.__syncing = false;
     });
 
+    // 绑定到全局
     Object.assign(Cake, {
         renderHeader,
         renderNav,
@@ -179,4 +157,6 @@ window.Cake = window.Cake || {};
         refreshPage,
         initPage,
     });
+
+    console.log('🎨 [Render] 渲染框架装载完毕');
 })();

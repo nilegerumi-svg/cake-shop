@@ -1,136 +1,59 @@
-# cake-shop
-为了客户
+# 🍰 甜蜜物语 (Sweet Story) · 高自由度蛋糕店模拟器
 
-游戏地址：
-https://nilegerumi-svg.github.io/cake-shop/
+> 一款纯前端开发、高度模块化的女性向 / 模拟经营 Web 游戏。
+> 你刚刚接手了街角一间小小的蛋糕店。在这里，你可以自由烘焙每一款蛋糕、随心装饰你的店铺、邂逅温柔的邻居们，甚至——谈一场甜甜的恋爱。💕
 
-目录：
+---
+
+## ✨ 核心特色 (Features)
+
+*   🍳 **硬核制作系统**：烘焙与料理双线并行。配方按尺寸（小/中/大）与菜系（家常/川/粤等）严格物理分目录。
+*   🏆 **四维品质体系**：最终品质由【食材品质 + 厨艺熟练度 + 配方熟练度 + 工具熟练度】共同决定，并可触发“完美✨”品质。
+*   🌸 **动态四季与时间**：内置游戏时钟。春天有草莓包，冬天有热可可。跨天自动结算精力、食材腐烂、卫生度下降，并触发季节白名单。
+*   🗺️ **多层级地图探索**：总地图 → 城镇 → 具体地点（家园/公园/商业街/河边）。包含随机事件池、精力消耗、时间流逝与即时采购。
+*   🛒 **完整经济闭环**：订购材料（需等待快递） → 烘焙/烹饪 → 上架货架 → 调整售价策略 → 接待顾客自动售卖。
+*   💕 **缘分与羁绊**：随机遇见特定 NPC，通过聊天、约会、赠送喜欢的蛋糕来提升好感度，解锁专属剧情与奖励。
+*   🛡️ **全链路防崩溃**：从底层到 UI，实现了极其严密的错误捕获、动态加载兜底、以及显式报错天网，杜绝白屏死机。
+
+---
+
+## 🛠️ 技术架构 (Tech Stack & Architecture)
+
+本项目采用**纯原生开发** (Vanilla HTML/CSS/JS)，未使用任何第三方框架，极致追求代码的模块化与底层逻辑的严谨性。
+
+*   **多 Iframe 外壳架构**：`game.html` 作为主外壳负责状态栏、导航与日志终端；`pages/` 下的各个子页面通过 iframe 挂载，实现互不干扰、无需整页刷新的丝滑切换。
+*   **自研生命周期状态机**：`js/main.js` 配合 `js/engine/`，严格控制引擎的 `IDLE -> INITIALIZING -> READY` 状态，防止并发冲突。
+*   **高内聚低耦合的数据层**：`js/data/` 下的物品、配方、角色全部分类拆分为独立文件，通过动态 `import` 按需加载。
+*   **跨页面通信与广播**：基于 `postMessage` 与自定义 `CustomEvent` 总线，子页面操作后能瞬间唤醒父页面更新数据。
+
+---
+
+## 📁 目录结构 (Directory Structure)
+
+```text
 cake-shop/
 ├── css/
-│   └── styles.css
+│   ├── styles.css           # 全局基础样式与主题变量
+│   └── game-shell.css       # 游戏外壳布局样式
 ├── js/
-│   ├── actions/          # 行为逻辑
-│   │   ├── bakery/
-│   │   ├── entertainment/
-│   │   ├── shop/
-│   │   ├── social/
-│   │   ├── index.js
-│   │   └── system.js
-│   ├── core/            # 核心模块
-│   │   ├── bridge.js
-│   │   ├── effects.js
-│   │   ├── index.js
-│   │   ├── modal.js
-│   │   ├── render.js
-│   │   ├── state.js
-│   │   ├── store.js
-│   │   └── utils.js
-│   ├── data/            # 静态数据与配置
-│   │   ├── achievements/
-│   │   ├── bundles/
-│   │   ├── characters/
-│   │   ├── ingredients/
-│   │   ├── recipes/
-│   │   ├── shop/
-│   │   ├── usually_shop_events/
-│   │   └── index.js
-│   ├── host/            # 宿主环境相关
-│   │   ├── error.js
-│   │   ├── index.js
-│   │   ├── main.js
-│   │   ├── router.js
-│   │   └── sync.js
-│   ├── monitor/         # 监控与埋点
-│   │   ├── index.js
-│   │   ├── page.js
-│   │   └── time.js
-│   ├── pages/           # 页面级脚本
-│   │   ├── home/
-│   │   ├── start/
-│   │   ├── index.js
-│   │   └── router.js
-│   ├── time/            # 时间系统
-│   │   └── index.js
-│   ├── main.js
-│   ├── monitor.js
-│   └── shared.js
-├── pages/               # HTML 页面
-│   ├── bake/index.html
-│   ├── buy/index.html
-│   ├── entertainment/
-│   │   ├── map/
-│   │   └── index.html
-│   ├── love/index.html
-│   ├── profile/index.html
-│   ├── recipe/index.html
-│   ├── shop/index.html
-│   ├── home.html
-│   └── log.html
-├── game.html
-├── index.html
-├── monitor.js           # 根目录下的监控入口
-└── README.mdcake-shop/
-├── css/
-│   └── styles.css
-├── js/
-│   ├── actions/          # 行为逻辑
-│   │   ├── bakery/
-│   │   ├── entertainment/
-│   │   ├── shop/
-│   │   ├── social/
-│   │   ├── index.js
-│   │   └── system.js
-│   ├── core/            # 核心模块
-│   │   ├── bridge.js
-│   │   ├── effects.js
-│   │   ├── index.js
-│   │   ├── modal.js
-│   │   ├── render.js
-│   │   ├── state.js
-│   │   ├── store.js
-│   │   └── utils.js
-│   ├── data/            # 静态数据与配置
-│   │   ├── achievements/
-│   │   ├── bundles/
-│   │   ├── characters/
-│   │   ├── ingredients/
-│   │   ├── recipes/
-│   │   ├── shop/
-│   │   ├── usually_shop_events/
-│   │   └── index.js
-│   ├── host/            # 宿主环境相关
-│   │   ├── error.js
-│   │   ├── index.js
-│   │   ├── main.js
-│   │   ├── router.js
-│   │   └── sync.js
-│   ├── monitor/         # 监控与埋点
-│   │   ├── index.js
-│   │   ├── page.js
-│   │   └── time.js
-│   ├── pages/           # 页面级脚本
-│   │   ├── home/
-│   │   ├── start/
-│   │   ├── index.js
-│   │   └── router.js
-│   ├── time/            # 时间系统
-│   │   └── index.js
-│   ├── main.js
-│   ├── monitor.js
-│   └── shared.js
-├── pages/               # HTML 页面
-│   ├── bake/index.html
-│   ├── buy/index.html
-│   ├── entertainment/
-│   │   ├── map/
-│   │   └── index.html
-│   ├── love/index.html
-│   ├── profile/index.html
-│   ├── recipe/index.html
-│   ├── shop/index.html
-│   ├── home.html
-│   └── log.html
-├── game.html
-├── index.html
-├── monitor.js           # 根目录下的监控入口
-└── README.md
+│   ├── main.js              # 启动入口，配置加载模块列表
+│   ├── engine/              # 核心状态机引擎 (init/ready/failed)
+│   ├── core/                # 核心系统 (Schema存档契约, 时间引擎, 渲染层)
+│   ├── data/                # 静态数据 (食材, 配方, 工具, 季节, 成就)
+│   ├── actions/             # 业务逻辑 (制作, 购买, 社交, 地图探索)
+│   ├── host/                # 宿主环境 (路由, 存档同步, Monitor 监控)
+│   ├── shared.js            # 跨页面共享层 (Game Proxy)
+│   └── pages/               # 页面逻辑与路由分发
+├── pages/                   # HTML 视图层
+│   ├── home/                # 主页(客厅)
+│   ├── bake/                # 烘焙工坊
+│   ├── buy/                 # 采购中心
+│   ├── shop/                # 店铺经营与货架
+│   ├── recipe/              # 配方图鉴
+│   ├── entertainment/       # 娱乐与地图探索
+│   ├── love/                # 缘分系统
+│   ├── profile/             # 玩家档案与资产
+│   └── log/                 # 底边控制台日志
+├── game.html                # 游戏主外壳 (包含 Topbar / Nav / Log)
+├── index.html               # 开始页 (取名与创档)
+└── monitor.js               # (旧) 根目录监视器

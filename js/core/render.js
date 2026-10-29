@@ -7,15 +7,15 @@ window.Cake = window.Cake || {};
 
     // 👈 修改：href 指向 pages/ 目录，配合 iframe 使用
     const NAV_ITEMS = [
-        { key: 'home',    label: '🏠 主页', href: 'pages/home.html' },
-        { key: 'shop',    label: '🏪 店铺', href: 'pages/shop.html' },
-        { key: 'bake',    label: '🧂 烘焙', href: 'pages/bake.html' },
-        { key: 'buy',     label: '🛒 采购', href: 'pages/buy.html' },
-        { key: 'recipe',  label: '🍖 配方', href: 'pages/recipe.html' },
-        { key: 'love',    label: '💕 缘分', href: 'pages/love.html' },
-        { key: 'fun',     label: '🎮 娱乐', href: 'pages/entertainment/index.html' },
-        { key: 'profile', label: '⭐ 我的', href: 'pages/profile.html' },
-    ];
+    { key: 'home',    label: '🏠 主页', href: 'pages/home.html' },
+    { key: 'shop',    label: '🏪 店铺', href: 'pages/shop/index.html' }, // 修改
+    { key: 'bake',    label: '🧂 烘焙', href: 'pages/bake/index.html' }, // 修改
+    { key: 'buy',     label: '🛒 采购', href: 'pages/buy/index.html' },  // 修改
+    { key: 'recipe',  label: '🍖 配方', href: 'pages/recipe/index.html' }, // 修改
+    { key: 'love',    label: '💕 缘分', href: 'pages/love/index.html' }, // 修改
+    { key: 'fun',     label: '🎮 娱乐', href: 'pages/entertainment/index.html' },
+    { key: 'profile', label: '⭐ 我的', href: 'pages/profile/index.html' }, // 修改
+];
 
     const isInIframe = window.self !== window.top;
     let currentRender = null;

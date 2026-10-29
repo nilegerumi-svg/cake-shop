@@ -34,6 +34,11 @@
             max-width: 100%;
             aspect-ratio: 4 / 5;
             box-sizing: border-box;
+            /* 地点动作与内嵌商店可能超出固定比例高度，允许滚动；
+               矮屏下再受视口高度限制，避免卡片整体被裁掉 */
+            max-height: calc(100vh - 32px);
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
         }
 
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px dashed #ffd1dc; padding-bottom: 12px; }
@@ -75,6 +80,25 @@
         .action-name { font-size: 15px; font-weight: bold; }
         .action-desc { font-size: 12px; color: #888; font-weight: normal; margin-top: 2px; }
         .action-arrow { font-size: 13px; color: #ffb6c1; white-space: nowrap; }
+
+        /* 内嵌商店 */
+        .shop-list { display: flex; flex-direction: column; gap: 8px; }
+        .shop-row {
+            display: flex; align-items: center; gap: 10px;
+            background: #fff8fa; border: 1px solid #ffd1dc;
+            border-radius: 10px; padding: 10px 12px;
+        }
+        .shop-emoji { font-size: 20px; flex: 0 0 auto; }
+        .shop-name { flex: 1; font-size: 13px; font-weight: bold; color: #4a3b3f; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .shop-price { font-size: 12px; color: #d85c74; font-weight: bold; white-space: nowrap; }
+        .buy-btn {
+            flex: 0 0 auto; border: none; border-radius: 999px;
+            padding: 6px 12px; font-size: 12px; font-weight: bold;
+            background: #ff8fa3; color: #fff; cursor: pointer;
+        }
+        .buy-btn:active { transform: scale(0.96); }
+        .buy-btn:disabled { background: #e5e5e5; color: #999; cursor: not-allowed; }
+        .shop-hint { font-size: 11px; color: #999; text-align: center; margin-top: 8px; }
 
         @media (min-width: 768px) {
             .card {
@@ -130,20 +154,61 @@
             if (!Cake || !Cake.store || !Cake.store.state) return;
             const params = new URLSearchParams(window.location.search);
             const key = params.get('id') || 'park';
-            const list = Array.isArray(Cake.LOCATIONS) ? Cake.LOCATIONS : Object.values(Cake.LOCATIONS || {});
-            const loc = list.find((item) => item.id === key || item.key === key) || {
-                id: key,
-                name: '未知地点',
-                emoji: '📍',
-                desc: '该地点目前尚未配置。',
-                actions: []
-            };
+
+            // 统一从区域配置取地点数据，并与动作接口保持一致
+            let loc = null;
+            const locs = (typeof Cake.getRegionLocations === 'function') ? Cake.getRegionLocations('town') : null;
+            loc = (locs && (locs[key] || (locs.find && locs.find((x) => x.id === key || x.key === key)))) || null;
+
+            // 兜底：从汇总 LOCATIONS 中查找
+            if (!loc) {
+                const list = Array.isArray(Cake.LOCATIONS) ? Cake.LOCATIONS : Object.values(Cake.LOCATIONS || {});
+                loc = list.find((item) => item.id === key || item.key === key) || null;
+            }
+
+            loc = loc || { id: key, name: '未知地点', emoji: '📍', desc: '该地点目前尚未配置。' };
             const state = Cake.store.state;
 
             $('pageTitle').textContent = `${loc.emoji || '📍'} ${loc.name || '地点'}`;
             $('energy').textContent = num(state.energy, 0);
 
-            const actions = Array.isArray(loc.actions) ? loc.actions : [];
+            // 动作列表：优先引擎接口，兜底 loc.actions
+            let actions = [];
+            if (typeof Cake.getLocationActions === 'function') {
+                try { actions = Cake.getLocationActions('town', key) || []; } catch (_) {}
+            }
+            if (actions.length === 0 && Array.isArray(loc.actions)) actions = loc.actions;
+
+            // 内嵌商店：该地点配了商店时，就地展示可购商品
+            let shopHtml = '';
+            try {
+                const shopInfo = (typeof Cake.getLocationShop === 'function') ? Cake.getLocationShop('town', key) : null;
+                if (shopInfo && Array.isArray(shopInfo.items) && shopInfo.items.length > 0) {
+                    const money = num(state.money, 0);
+                    const rows = shopInfo.items.map((item) => {
+                        const price = num(item.price, 0);
+                        const affordable = money >= price;
+                        return `
+                            <div class="shop-row">
+                                <span class="shop-emoji">${item.emoji || '📦'}</span>
+                                <span class="shop-name">${item.name || item.id}</span>
+                                <span class="shop-price">💰 ${price}</span>
+                                <button class="buy-btn" type="button" data-buy="${item.id}" ${affordable ? '' : 'disabled'}>${affordable ? '订购' : '钱不够'}</button>
+                            </div>
+                        `;
+                    }).join('');
+
+                    shopHtml = `
+                        <div class="section-title">${shopInfo.shop.emoji || '🏪'} ${shopInfo.shop.name || '商店'}</div>
+                        <div class="shop-list">${rows}</div>
+                        <div class="shop-hint">下单后约 2 小时送达店铺</div>
+                    `;
+                }
+            } catch (err) {
+                // 商店数据缺失时不影响地点探索
+                console.warn('[location] 商店渲染跳过:', err);
+            }
+
             const html = `
                 <div class="loc-head">
                     <div class="loc-emoji">${loc.emoji || '📍'}</div>
@@ -171,8 +236,41 @@
                         `;
                     }).join('') || '<div class="muted text-center">暂无可执行动作</div>' }
                 </div>
+                ${shopHtml}
             `;
             $('locationContent').innerHTML = html;
+            bindShopButtons();
+        }
+
+        // === 商店订购按钮（事件委托，避免重渲染后失效） ===
+        function bindShopButtons() {
+            const root = $('locationContent');
+            if (!root || root.dataset.shopBound === 'true') return;
+            root.dataset.shopBound = 'true';
+
+            root.addEventListener('click', (e) => {
+                const btn = e.target.closest('[data-buy]');
+                if (!btn || btn.disabled) return;
+
+                const itemId = btn.dataset.buy;
+                if (!Cake || !Cake.store || !Cake.store.state) return;
+
+                try {
+                    if (typeof Cake.orderItem !== 'function') {
+                        alert('❌ 订购功能未加载，请刷新重试');
+                        return;
+                    }
+                    const res = Cake.orderItem(itemId, 1);
+                    if (res && res.success === false) {
+                        alert(res.message || '订购失败');
+                    } else {
+                        renderLocation();
+                    }
+                } catch (err) {
+                    console.error('[location] 订购失败:', err);
+                    alert('❌ 订购失败：' + (err && err.message || err));
+                }
+            });
         }
 
         function bindPage() {

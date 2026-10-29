@@ -1,4 +1,8 @@
 /* css/game-shell.css */
+:root {
+    /* 底部动作栏高度：内容区避让必须与它保持一致，故统一用变量 */
+    --footer-h: clamp(52px, 8vh, 60px);
+}
 body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; background: #fff0f5; }
 #app-loading {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -15,12 +19,29 @@ body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; background: 
 header, nav { flex: 0 0 auto; z-index: 10; }
 .split-container {
     flex: 1; display: flex; flex-direction: column; overflow: hidden;
-    padding-bottom: calc(60px + env(safe-area-inset-bottom));
+    padding-bottom: calc(var(--footer-h) + env(safe-area-inset-bottom));
 }
-.main-frame { flex: 1; width: 100%; border: none; background: transparent; min-height: 240px; }
+
+/* 两个分栏容器：原先写死在 game.html 的内联样式里，内联优先级高于样式表，
+   导致 .main-frame / .log-frame 的弹性规则无法生效，现统一到此处管理 */
+.main-pane {
+    position: relative;
+    flex: 1 1 auto;          /* 占据剩余全部空间 */
+    display: flex;
+    /* 主内容区最小高度按视口百分比给出，窄屏也不会被压到无法操作 */
+    min-height: clamp(180px, 42vh, 240px);
+    overflow: hidden;
+}
+.log-pane {
+    position: relative;
+    /* 日志面板按视口百分比占位，窄屏时压缩高度把空间让给主内容区 */
+    flex: 0 0 clamp(78px, 15vh, 160px);
+    overflow: hidden;
+}
+
+.main-frame { flex: 1 1 auto; width: 100%; border: none; background: transparent; min-height: 0; }
 .log-frame {
-    flex: 0 0 clamp(100px, 20vh, 160px);
-    width: 100%; border: none; background: #fff;
+    width: 100%; height: 100%; border: none; background: #fff;
     border-top: 2px dashed #ffd1dc;
     box-shadow: 0 -4px 10px rgba(255, 143, 163, 0.1);
 }
@@ -29,7 +50,8 @@ iframe { display: block; width: 100%; height: 100%; }
 /* 底部增强栏 */
 .action-footer {
     position: fixed; bottom: 0; left: 0; right: 0;
-    height: 60px;
+    /* 高度与内容区避让共用同一变量，避免两处数值失配 */
+    height: var(--footer-h);
     background: #fff;
     border-top: 1px solid var(--pink-200);
     display: flex; align-items: center; justify-content: space-around;
@@ -53,4 +75,21 @@ iframe { display: block; width: 100%; height: 100%; }
     padding: 10px; font-size: 13px; line-height: 1.4;
     word-break: break-all; pointer-events: none;
     max-height: 40vh; overflow-y: auto; display: none;
+}
+
+/* ===== 窄屏适配（手机竖屏） ===== */
+@media (max-width: 420px) {
+    /* 屏幕越小，日志面板越应该让位给主内容区 */
+    .log-pane { flex: 0 0 clamp(64px, 12vh, 110px); }
+
+    /* 底栏：文字缩小，图标与文字间距收紧，保证三个按钮不挤压 */
+    .footer-btn { font-size: 11px; }
+    .footer-btn .icon { font-size: 16px; margin-bottom: 0; }
+    .footer-time { font-size: 12px; }
+}
+
+/* 极窄屏（≤340px）：日志面板压到最薄，优先保证可玩 */
+@media (max-width: 340px) {
+    .log-pane { flex: 0 0 56px; }
+    .main-pane { min-height: 160px; }
 }

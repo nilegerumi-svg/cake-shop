@@ -22,21 +22,16 @@
         <div id="content"></div>
     </div>
 
+    <!-- 引擎等待器（与配方页/采购页一致） -->
+    <script src="../boot-safe.js"></script>
     <script type="module">
-        const Cake = window.parent.Cake || window.Cake;
-        if (!Cake) return;
+        // 引擎由父页面异步注入，不能在此同步取用
+        let Cake = null;
+        let char = null;
+        let cid = null;
 
-        const params = new URLSearchParams(window.location.search);
-        const cid = params.get('id');
-
-        if (!cid || !Cake.CHARACTERS[cid]) {
-            document.getElementById('content').innerHTML = '<div class="muted text-center">未找到该角色</div>';
-            throw new Error('Character not found');
-        }
-
+        // 返回按钮不依赖引擎，先绑定
         document.getElementById('backBtn').addEventListener('click', () => history.back());
-
-        const char = Cake.CHARACTERS[cid];
 
         const affLevel = (aff) => {
             if (aff >= 100) return '💖 挚爱';
@@ -155,7 +150,38 @@
             renderDetail();
         };
 
-        if (typeof Cake.initPage === 'function') Cake.initPage('love', renderDetail, false);
+        const start = () => {
+            const params = new URLSearchParams(window.location.search);
+            cid = params.get('id');
+
+            if (!cid || !Cake.CHARACTERS || !Cake.CHARACTERS[cid]) {
+                document.getElementById('content').innerHTML =
+                    '<div class="muted text-center">未找到该角色，请返回重新选择。</div>';
+                return;
+            }
+            char = Cake.CHARACTERS[cid];
+
+            if (typeof Cake.initPage === 'function') {
+                Cake.initPage('love', renderDetail, false);
+            } else {
+                renderDetail();
+            }
+        };
+
+        if (window.safePageBoot && typeof window.safePageBoot.waitForCake === 'function') {
+            window.safePageBoot.waitForCake((readyCake) => {
+                Cake = readyCake;
+                start();
+            }, {
+                timeout: 15000,
+                // 需等角色数据到位，否则无法解析当前角色
+                required: (game) => !!(game && game.store && game.store.state && game.CHARACTERS),
+                onTimeout: () => '缘分详情：游戏引擎或角色数据加载超时，请刷新页面重试。'
+            });
+        } else {
+            Cake = window.parent.Cake || window.Cake;
+            if (Cake && Cake.store && Cake.store.state) start();
+        }
     </script>
 </body>
 </html>

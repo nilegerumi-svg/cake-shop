@@ -14,8 +14,16 @@ import './home_cooking.js';
 window.Cake = window.Cake || {};
 window.Cake.RECIPES_CHINA = Object.assign(
     {},
-    window.Cake.RECIPES_CHINA_HOME
-    // 以后你的八大菜系（sichuan, cantonese等）写好了也加在这里
+    window.Cake.RECIPES_CHINA_HOME || {},
+    // 八大菜系
+    window.Cake.RECIPES_CHINA_SICHUAN || {},
+    window.Cake.RECIPES_CHINA_CANTONESE || {},
+    window.Cake.RECIPES_CHINA_SHANDONG || {},
+    window.Cake.RECIPES_CHINA_HUAIYANG || {},
+    window.Cake.RECIPES_CHINA_HUNAN || {},
+    window.Cake.RECIPES_CHINA_ANHUI || {},
+    window.Cake.RECIPES_CHINA_FUJIAN || {},
+    window.Cake.RECIPES_CHINA_ZHEJIANG || {}
 );
 
 console.log('🥢 [Recipes/China] 中国菜系装载完毕');

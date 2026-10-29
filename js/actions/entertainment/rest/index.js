@@ -1,6 +1,8 @@
 // js/actions/entertainment/rest/index.js
 
-(async () => {
+// 导出就绪 Promise：父模块 import 后 await restReady，
+// 确保 Cake.triggerRest / sleep / nap 已挂载（内部含提前 return 守卫，故不拆包重排）
+export const restReady = (async () => {
     'use strict';
     console.log('🛌 [Rest] 开始逐个加载休息子模块...');
 
@@ -150,20 +152,53 @@
 
     /* ==================== 快捷接口 ==================== */
 
+    /* ---- 睡觉白名单 ----
+     * 只有列在这里的地点才允许睡觉；以后开放旅馆等新地点，只需往数组里加 key。
+     * 注意 state.currentLocation 目前只有 'home' / 'town' 两级（见 js/core/store.js 的 allowLocation），
+     * 因此玩家在镇上任何地方（含地图内页）都不在白名单内。
+     */
+    Cake.SLEEP_WHITELIST = Object.freeze(['home']);
+
+    // 白名单判定：region 目前只有 town，地点 key 必须同时存在于白名单与休息配置中
+    Cake.canSleepAt = (region, location) => {
+        const list = Cake.SLEEP_WHITELIST || [];
+        if (!list.includes(location)) return false;
+
+        const regionCfg = Cake.Actions && Cake.Actions.Rest && Cake.Actions.Rest[region];
+        return !!(regionCfg && regionCfg[location] && regionCfg[location].sleep);
+    };
+
+    // 解析玩家当前所在地点：调用方可显式指定，否则以存档位置为准
+    const resolveLocation = (opts) => {
+        const state = Cake.store && Cake.store.state;
+        return {
+            region: (opts && opts.region) || 'town',
+            location: (opts && opts.location) || (state && state.currentLocation) || 'home'
+        };
+    };
+
     Cake.rest = () => {
-        const isValid = Cake.ACTION_TYPES?.nap?.isValid?.('town', 'home') ?? true;
-        if (!isValid) return;
         return Cake.triggerRest('town', 'home', 'nap');
     };
 
-    Cake.sleep = () => {
-        const isValid = Cake.ACTION_TYPES?.sleep?.isValid?.('town', 'home') ?? false;
-        if (!isValid) {
-            Cake.addLog?.('❌ 这里无法睡觉。');
+    // 👈 小憩快捷接口：娱乐页「休息」按钮依赖它
+    Cake.nap = () => {
+        return Cake.triggerRest('town', 'home', 'nap');
+    };
+
+    // 睡觉：受白名单约束，只有在家里才能触发
+    Cake.sleep = (opts) => {
+        const { region, location } = resolveLocation(opts);
+
+        if (!Cake.canSleepAt(region, location)) {
+            const msg = '🛌 只有回到家里才能睡觉哦，先去「主页」回家吧。';
+            Cake.addLog?.(msg);
             Cake.refreshPage?.();
-            return;
+            return { success: false, message: msg };
         }
-        return Cake.triggerRest('town', 'home', 'sleep');
+
+        const res = Cake.triggerRest(region, location, 'sleep');
+        return (res && typeof res === 'object') ? res : { success: true };
     };
 
     console.log('🛌 事件驱动型休息系统注册表已装载！');

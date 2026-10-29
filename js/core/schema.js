@@ -53,11 +53,13 @@
             },
 
             // ================= 资产与背包 =================
+            // shelfLife = 该食材的总保质期（天），分级变质按「剩余天数 / shelfLife」判定
+            // 面粉与糖可久存；蛋奶刻意设为开局第 3、4 天到期，用于引导玩家体会保质期机制
             inventory: [
-                { id: 'flour_low', quality: 50, expireDay: 5 },
-                { id: 'sugar', quality: 50, expireDay: 30 },
-                { id: 'chicken_egg', quality: 50, expireDay: 3 },
-                { id: 'milk', quality: 50, expireDay: 4 }
+                { id: 'flour_low', quality: 50, shelfLife: 180, expireDay: 181, isRotten: false },
+                { id: 'sugar', quality: 50, shelfLife: 365, expireDay: 366, isRotten: false },
+                { id: 'chicken_egg', quality: 50, shelfLife: 7, expireDay: 4, isRotten: false },
+                { id: 'milk', quality: 50, shelfLife: 7, expireDay: 5, isRotten: false }
             ],
 
             orders: [],

@@ -58,20 +58,45 @@
         state.energy = state.maxEnergy;
         state.shop.stats.cleanliness = Math.max(0, state.shop.stats.cleanliness - 10);
 
-        // 检查食材腐烂
+        // 检查食材变质：按分级状态机结算（新鲜/即将变质/发酸发臭/彻底腐烂）
         let rottenCount = 0;
+        let spoiledCount = 0;
+        let warningCount = 0;
         if (state.inventory && state.inventory.length > 0) {
             state.inventory.forEach(item => {
-                if (state.time.day > item.expireDay && !item.isRotten) {
-                    item.isRotten = true;
-                    rottenCount++;
+                const spoil = (typeof Cake.getItemSpoilage === 'function') ? Cake.getItemSpoilage(item) : null;
+                if (!spoil) return;
+
+                const penalty = Number(spoil.penalty) || 0;
+
+                // 彻底腐烂：不可食用，标记为烂掉
+                if (spoil.edible === false) {
+                    if (!item.isRotten) {
+                        item.isRotten = true;
+                        rottenCount++;
+                    }
+                    return;
+                }
+
+                // 尚未腐烂的分级：按 penalty 扣减品质，避免重复扣减
+                if (!item.isRotten && penalty > 0 && item.spoiledAt !== spoil.name) {
+                    item.spoiledAt = spoil.name;
+                    item.quality = Math.max(0, (Number(item.quality) || 0) - penalty);
+                    if (spoil === Cake.SPOILAGE_STATES.spoiled) spoiledCount++;
+                    else if (spoil === Cake.SPOILAGE_STATES.warning) warningCount++;
                 }
             });
         }
 
         Cake.addLog(`☀️ 第 ${state.time.day} 天开始了，精力已恢复。`);
+        if (warningCount > 0) {
+            Cake.addLog(`⚠️ 有 ${warningCount} 份食材即将变质，尽快用掉吧。`);
+        }
+        if (spoiledCount > 0) {
+            Cake.addLog(`🤢 有 ${spoiledCount} 份食材发酸发臭，品质大幅下降。`, 'error');
+        }
         if (rottenCount > 0) {
-            Cake.addLog(`🤢 有 ${rottenCount} 份食材因为过期而腐烂了，记得清理！`, 'error');
+            Cake.addLog(`☠️ 有 ${rottenCount} 份食材彻底腐烂了，记得清理！`, 'error');
         }
 
         // 检查社交相遇
@@ -117,17 +142,24 @@
                 itemName = Cake.TOOLS?.[order.itemId]?.name || '未知工具';
             } else {
                 const item = Cake.INGREDIENTS?.[order.itemId];
-                // 👈 防御：防止 getRandomShelfLife 没加载
-                const shelfLife = typeof Cake.getRandomShelfLife === 'function' 
-                    ? Cake.getRandomShelfLife((item && item.tags && item.tags[0]) || 'default') 
-                    : 7;
-                
+
                 for (let i = 0; i < order.quantity; i++) {
-                    state.inventory.push({
-                        id: order.itemId,
-                        quality: 50, 
-                        expireDay: state.time.day + shelfLife
-                    });
+                    // 统一走 createInventoryItem，确保记录 shelfLife 供分级变质计算
+                    if (typeof Cake.createInventoryItem === 'function') {
+                        state.inventory.push(Cake.createInventoryItem(order.itemId, { day: state.time.day }));
+                    } else {
+                        // 兜底：保质期引擎缺失时仍可入库
+                        const shelfLife = typeof Cake.getRandomShelfLife === 'function'
+                            ? Cake.getRandomShelfLife((item && item.tags && item.tags[0]) || 'default')
+                            : 7;
+                        state.inventory.push({
+                            id: order.itemId,
+                            quality: 50,
+                            shelfLife: shelfLife,
+                            expireDay: state.time.day + shelfLife,
+                            isRotten: false
+                        });
+                    }
                 }
                 itemName = item?.name || '未知食材';
             }

@@ -66,6 +66,26 @@
     window.sendLog = (msg, level = 'info') => sendLog(msg, level);
     window.clearLog = () => sendToFrame({ type: 'clear' });
 
+    // 详细日志开关：默认关闭，避免装载与运行期的 info 噪音持续刷屏。
+    // 需要排查问题时在控制台执行 setLogVerbose(true) 即可看到全部输出。
+    const MIRROR_LEVELS = { warn: true, error: true };
+
+    const isVerbose = () => window.__cakeLogVerbose === true;
+
+    // 仅当开启详细模式，或该级别属于需要保留的告警/错误时才镜像到面板
+    const shouldMirror = (level) => isVerbose() || !!MIRROR_LEVELS[level];
+
+    window.setLogVerbose = (on) => {
+        window.__cakeLogVerbose = !!on;
+        sendToFrame({
+            type: 'log',
+            level: 'info',
+            time: Date.now(),
+            msg: window.__cakeLogVerbose ? '🔧 已开启详细日志' : '🔧 已关闭详细日志'
+        });
+        return window.__cakeLogVerbose;
+    };
+
     logLevels.forEach((lvl) => {
         const original = nativeConsole[lvl];
 
@@ -79,8 +99,11 @@
             }
 
             try {
-                const text = formatArgs(args);
                 const mappedLevel = lvl === 'log' ? 'info' : lvl;
+
+                if (!shouldMirror(mappedLevel)) return;
+
+                const text = formatArgs(args);
 
                 sendToFrame({
                     type: 'log',

@@ -25,10 +25,13 @@
         <div class="content" id="content"></div>
     </div>
 
+    <!-- 引擎等待器（与配方页/采购页一致） -->
+    <script src="../boot-safe.js"></script>
     <script type="module">
-        const Cake = window.parent.Cake || window.Cake;
-        if (!Cake) return;
+        // 引擎由父页面异步注入，不能在此同步取用
+        let Cake = null;
 
+        // 返回按钮不依赖引擎，先绑定，避免页面成为死胡同
         document.getElementById('backBtn').addEventListener('click', () => history.back());
 
         const render = () => {
@@ -65,7 +68,28 @@
                 </div>`;
         };
 
-        Cake.initPage('profile', render, false);
+        const start = () => {
+            if (typeof Cake.initPage === 'function') {
+                Cake.initPage('profile', render, false);
+            } else {
+                render();
+            }
+        };
+
+        if (window.safePageBoot && typeof window.safePageBoot.waitForCake === 'function') {
+            window.safePageBoot.waitForCake((readyCake) => {
+                Cake = readyCake;
+                start();
+            }, {
+                timeout: 15000,
+                // 需等成就数据到位，否则会渲染成空的「暂无成就」
+                required: (game) => !!(game && game.store && game.store.state && game.ACHIEVEMENTS),
+                onTimeout: () => '成就殿堂：游戏引擎或成就数据加载超时，请刷新页面重试。'
+            });
+        } else {
+            Cake = window.parent.Cake || window.Cake;
+            if (Cake && Cake.store && Cake.store.state) start();
+        }
     </script>
 </body>
 </html>

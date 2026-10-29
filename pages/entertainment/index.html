@@ -32,6 +32,10 @@
             max-width: 100%;
             aspect-ratio: 4 / 5;
             box-sizing: border-box;
+            /* 矮屏下卡片高度受视口限制，超出部分内部滚动 */
+            max-height: calc(100vh - 32px);
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
         }
 
         .energy-box {

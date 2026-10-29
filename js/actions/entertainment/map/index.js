@@ -1,5 +1,7 @@
 // js/actions/entertainment/map/index.js
-(async () => {
+// 导出就绪 Promise：父模块 import 后 await mapReady，
+// 确保 Cake.LOCATIONS 与 getRegionLocations 已汇总完成
+export const mapReady = (async () => {
     'use strict';
     console.log('🗺️ [Map] 开始加载总地图子模块...');
 

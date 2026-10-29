@@ -53,10 +53,10 @@ window.Cake = window.Cake || {};
                     mainFrame.src = navHref;
                 }
 
-                if (navKey === 'bake' || navKey === 'home') {
-                    if (Cake.store && Cake.store.state) {
-                        Cake.store.state.currentLocation = 'home';
-                    }
+                // 记录玩家所在位置：娱乐（含地图探索）视为出门在外，
+                // 其余页面都属于店内/家中活动。睡觉白名单与烘焙的位置校验都依赖它。
+                if (Cake.store && Cake.store.state) {
+                    Cake.store.state.currentLocation = (navKey === 'fun') ? 'town' : 'home';
                 }
 
                 if (typeof Cake.initPage === 'function') {

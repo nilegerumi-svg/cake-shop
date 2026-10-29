@@ -34,4 +34,33 @@
         Cake.addLog(`📞 成功向供应商订购了 ${item.name} ×${quantity}，预计 2 小时内送达。`);
         if (Cake.refreshPage) Cake.refreshPage();
     };
+
+    // 👈 材料包购买：整包下单，走统一的订单送达流程
+    Cake.buyBundle = function (bundleId, quantity = 1) {
+        const state = Cake.store.state;
+        const bundle = (Cake.BUNDLES || []).find((b) => b.id === bundleId);
+        if (!bundle) return Cake.fail('❌ 没有这个材料包');
+
+        quantity = Math.max(1, Math.floor(quantity));
+        const totalPrice = bundle.cost * quantity;
+
+        if (state.money < totalPrice) return Cake.fail('💸 钱不够啦！');
+
+        state.money -= totalPrice;
+
+        // 材料包按物品展开成一串订单，送达时逐件入库
+        for (let i = 0; i < quantity; i++) {
+            for (const [itemId, qty] of Object.entries(bundle.contents || {})) {
+                state.orders.push({
+                    itemId: itemId,
+                    quantity: qty,
+                    isTool: false,
+                    arriveTime: (state.time.totalMinutes || 0) + 120
+                });
+            }
+        }
+
+        Cake.addLog(`📦 成功订购 ${bundle.name} ×${quantity}，预计 2 小时内送达。`);
+        if (Cake.refreshPage) Cake.refreshPage();
+    };
 })();

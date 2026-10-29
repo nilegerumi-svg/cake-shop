@@ -1,7 +1,8 @@
 // js/actions/shop/sell.js
 (function () {
     'use strict';
-    const Cake = window.Cake;
+    // 兼容父页面引擎与 iframe 子页面两种加载环境
+    const Cake = window.Cake || (window.parent && window.parent.Cake);
 
     // 价格表
     const BASE_PRICE = { small: 15, medium: 50, large: 200 };
@@ -73,5 +74,29 @@
         Cake.addLog(`🗑️ 你花时间把 ${count} 个烤焦的废品扔进了垃圾桶。`, 'success');
         
         if (Cake.emit) Cake.emit('refresh_ui');
+    };
+
+    // ==================== 3. 手动卖出库存 ====================
+    // 对应店铺页货架的「卖出」按钮（shop/index.html 的 data-sell 下标）
+    Cake.sellItem = function (index) {
+        const state = Cake.store.state;
+        const inventory = state.inventory || [];
+        const item = inventory[index];
+        if (!item) return Cake.fail('这个商品不在货架上。');
+
+        const data = Cake.INGREDIENTS?.[item.id] || Cake.TOOLS?.[item.id];
+        if (!data) return Cake.fail('未知的商品，无法定价。');
+
+        // 手动清仓：按基础价 8 折，品质越高折价越高（0.8 ~ 1.2 系数）
+        const base = Math.max(1, Number(data.price) || 5);
+        const quality = Math.max(0, Math.min(100, Number(item.quality) || 50));
+        const price = Math.max(1, Math.floor(base * 0.8 * (0.8 + quality / 250)));
+
+        inventory.splice(index, 1);
+        state.money += price;
+
+        Cake.addLog(`💰 手动卖出 ${data.name}，收入 ${price} 元。`, 'success');
+        if (Cake.emit) Cake.emit('refresh_ui');
+        return { success: true, price: price };
     };
 })();

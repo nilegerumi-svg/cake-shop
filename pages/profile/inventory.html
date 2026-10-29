@@ -7,7 +7,17 @@
     <link rel="stylesheet" href="../../css/styles.css">
     <style>
         .back-btn { display: inline-block; margin-bottom: 15px; color: var(--pink-600); cursor: pointer; font-weight: bold; }
-        .inv-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; }
+        .inv-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
+
+        /* 分级变质徽标 */
+        .spoil-badge {
+            display: inline-block; margin-top: 6px;
+            padding: 2px 8px; border-radius: 999px;
+            font-size: 11px; font-weight: bold; line-height: 1.6;
+        }
+        .spoil-badge.warning { background: #fff8e1; color: #a06a00; border: 1px solid #ffe082; }
+        .spoil-badge.spoiled { background: #fff0f0; color: #c62828; border: 1px solid #ffcdd2; }
+        .spoil-badge.rotten  { background: #f5f5f5; color: #616161; border: 1px solid #e0e0e0; }
     </style>
 </head>
 <body>
@@ -16,10 +26,13 @@
         <div class="content" id="content"></div>
     </div>
 
+    <!-- 引擎等待器（与配方页/采购页一致） -->
+    <script src="../boot-safe.js"></script>
     <script type="module">
-        const Cake = window.parent.Cake || window.Cake;
-        if (!Cake) return;
+        // 引擎由父页面异步注入，不能在此同步取用
+        let Cake = null;
 
+        // 返回按钮不依赖引擎，先绑定，避免页面成为死胡同
         document.getElementById('backBtn').addEventListener('click', () => history.back());
 
         const render = () => {
@@ -34,20 +47,52 @@
             const summary = {};
             state.inventory.forEach(item => {
                 if (!summary[item.id]) {
-                    summary[item.id] = { count: 0, rotten: 0, data: Cake.INGREDIENTS[item.id] || { name: item.id, emoji: '❓' } };
+                    summary[item.id] = {
+                        count: 0, rotten: 0, spoiled: 0, warning: 0,
+                        minRemain: Infinity, minQuality: Infinity,
+                        data: Cake.INGREDIENTS[item.id] || { name: item.id, emoji: '❓' }
+                    };
                 }
-                summary[item.id].count++;
-                if (item.isRotten) summary[item.id].rotten++;
+                const g = summary[item.id];
+                g.count++;
+                if (item.isRotten) g.rotten++;
+
+                // 分级变质状态（保质期系统）
+                const spoil = (typeof Cake.getItemSpoilage === 'function') ? Cake.getItemSpoilage(item) : null;
+                if (spoil) {
+                    if (spoil === Cake.SPOILAGE_STATES.spoiled) g.spoiled++;
+                    else if (spoil === Cake.SPOILAGE_STATES.warning) g.warning++;
+                }
+
+                const remain = Number(item.expireDay) - Number(state.time.day);
+                if (remain < g.minRemain) g.minRemain = remain;
+                const q = Number(item.quality) || 0;
+                if (q < g.minQuality) g.minQuality = q;
             });
 
             const cards = Object.values(summary).map(item => {
                 const isRotten = item.rotten > 0;
+
+                // 变质徽标：优先展示最严重的状态
+                let badge = '';
+                if (isRotten) {
+                    badge = `<span class="spoil-badge rotten">☠️ 腐烂 ${item.rotten}</span>`;
+                } else if (item.spoiled > 0) {
+                    badge = `<span class="spoil-badge spoiled">🤢 变质 ${item.spoiled}</span>`;
+                } else if (item.warning > 0) {
+                    badge = `<span class="spoil-badge warning">⚠️ 临期 ${item.warning}</span>`;
+                }
+
+                const remain = item.minRemain === Infinity ? '-' : Math.max(0, item.minRemain);
+
                 return `
                     <div class="item-card" style="${isRotten ? 'border-color: var(--red-line); background: #fff0f0;' : ''}">
                         <span class="item-emoji">${item.data.emoji}</span>
                         <span class="item-name">${item.data.name}</span>
                         <span class="item-meta">数量：${item.count}</span>
-                        ${isRotten ? `<span class="item-meta" style="color: var(--red-lack); font-weight: bold;">已腐烂: ${item.rotten}</span>` : ''}
+                        <span class="item-meta">最短剩余：${remain} 天</span>
+                        <span class="item-meta">最低品质：${item.minQuality === Infinity ? '-' : item.minQuality}</span>
+                        ${badge}
                     </div>
                 `;
             }).join('');
@@ -55,13 +100,34 @@
             contentEl.innerHTML = `
                 <div class="card">
                     <h2>🎒 食材仓库</h2>
-                    <p class="muted" style="margin-bottom: 15px;">食材会随时间过期变质，请尽快使用。</p>
+                    <p class="muted" style="margin-bottom: 15px;">食材会随时间逐级变质：临期 → 变质 → 腐烂，品质越低做出的成品越差，请尽快使用。</p>
                     <div class="inv-grid">${cards}</div>
                 </div>
             `;
         };
 
-        Cake.initPage('profile', render, false);
+        const start = () => {
+            if (typeof Cake.initPage === 'function') {
+                Cake.initPage('profile', render, false);
+            } else {
+                render();
+            }
+        };
+
+        if (window.safePageBoot && typeof window.safePageBoot.waitForCake === 'function') {
+            window.safePageBoot.waitForCake((readyCake) => {
+                Cake = readyCake;
+                start();
+            }, {
+                timeout: 15000,
+                // 需等食材数据到位，否则食材名会显示成原始 id
+                required: (game) => !!(game && game.store && game.store.state && game.INGREDIENTS),
+                onTimeout: () => '食材仓库：游戏引擎或食材数据加载超时，请刷新页面重试。'
+            });
+        } else {
+            Cake = window.parent.Cake || window.Cake;
+            if (Cake && Cake.store && Cake.store.state) start();
+        }
     </script>
 </body>
 </html>

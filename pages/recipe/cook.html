@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🥢 料理配方</title>
+    <link rel="stylesheet" href="../../css/styles.css">
+    <style>
+        .back-btn { display: inline-block; margin-bottom: 15px; color: var(--pink-600); cursor: pointer; font-weight: bold; }
+        .group-title {
+            margin: 20px 0 10px 0; font-size: 15px; color: var(--pink-600); 
+            border-left: 4px solid var(--pink-400); padding-left: 8px;
+            display: flex; align-items: center; gap: 6px;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-body" style="padding-top: 10px;">
+        <div class="back-btn" onclick="history.back()">← 返回图鉴大厅</div>
+        <div class="content" id="content"></div>
+    </div>
+    <script type="module">
+        const Cake = window.parent.Cake || window.Cake;
+        if (!Cake) return;
+
+        const CUISINE_NAMES = { home: '家常菜', sichuan: '川菜', cantonese: '粤菜', shandong: '鲁菜' };
+
+        const render = () => {
+            const state = Cake.store.state;
+            const contentEl = document.getElementById('content');
+
+            // 过滤料理配方
+            const filtered = Object.entries(Cake.RECIPES).filter(([key, r]) => r.skill === 'cook');
+
+            // 按菜系分组
+            const grouped = {};
+            filtered.forEach(([key, r]) => {
+                const groupKey = r.cuisine || 'other';
+                if (!grouped[groupKey]) grouped[groupKey] = [];
+                grouped[groupKey].push([key, r]);
+            });
+
+            let html = '';
+            const order = ['home', 'sichuan', 'cantonese', 'shandong', 'other'];
+
+            order.forEach(groupKey => {
+                const groupItems = grouped[groupKey];
+                if (!groupItems || groupItems.length === 0) return;
+
+                const groupName = CUISINE_NAMES[groupKey] || groupKey;
+                html += `<div class="group-title">📌 ${groupName}</div>`;
+                html += `<div class="grid-2">`;
+
+                groupItems.forEach(([recipeKey, recipe]) => {
+                    const isUnlocked = !!state.unlockedRecipes[recipeKey];
+                    const ingHtml = Cake.ingredientTags ? Cake.ingredientTags(recipe.ing) : '';
+                    const costMoney = 50;
+                    const canResearch = !isUnlocked && state.money >= costMoney && state.energy >= 15;
+
+                    html += `
+                        <div class="item-card" style="${isUnlocked ? 'border-color: var(--pink-300); background: #fffafb;' : ''}">
+                            <span class="item-emoji">${recipe.emoji || '🍲'}</span>
+                            <span class="item-name">${recipe.name || recipeKey}</span>
+                            <span class="item-desc" style="color:var(--text-muted); font-size:12px; margin: 4px 0;">⚡ ${recipe.energy}</span>
+                            <div class="ing-row">${ingHtml}</div>
+                            <div style="margin-top: 15px; width: 100%;">
+                                ${isUnlocked 
+                                    ? `<span class="ing-tag ok" style="width: 100%; justify-content: center;">✅ 已掌握</span>` 
+                                    : `<button type="button" class="small gold" style="width: 100%;" 
+                                            ${canResearch ? `onclick="doResearch('${recipeKey}')"` : 'disabled'}>
+                                            ${canResearch ? `🔬 研发 (💰${costMoney} ⚡15)` : '❌ 资源不足'}
+                                       </button>`
+                                }
+                            </div>
+                        </div>
+                    `;
+                });
+                html += `</div>`;
+            });
+
+            contentEl.innerHTML = html || '<div class="muted text-center">暂无料理配方</div>';
+        };
+
+        window.doResearch = (recipeKey) => {
+            const res = Cake.researchRecipe(recipeKey);
+            if (res && res.success === false) alert(res.message);
+            else render();
+        };
+
+        if (typeof Cake.initPage === 'function') Cake.initPage('recipe', render, false);
+    </script>
+</body>
+</html>

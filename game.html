@@ -17,42 +17,43 @@
         .loading-text { font-size: 14px; color: #888; margin-bottom: 15px; font-weight: bold; }
         .loading-bar-wrap { width: 80%; max-width: 300px; height: 12px; background: #ffe4e1; border-radius: 6px; overflow: hidden; box-shadow: inset 0 1px 3px rgba(0,0,0,0.1); }
         .loading-bar-fill { width: 0%; height: 100%; background: #ff8fa3; transition: width 0.2s ease; }
-        #loading-error {
-            display: none; margin-top: 14px; padding: 8px 16px;
-            background: #fff0f5; border: 1px solid #ffb8c6; border-radius: 6px;
-            color: #c81e3f; font: 13px/1.5 system-ui, sans-serif;
-            text-align: center; max-width: 80vw;
-        }
-        #loading-error.show { display: block; }
-        #loading-retry {
-            margin-top: 8px; padding: 6px 16px; background: transparent;
-            border: 1px solid rgba(200, 30, 63, .4); border-radius: 4px;
-            color: #c81e3f; cursor: pointer; font: 13px system-ui, sans-serif;
-            -webkit-tap-highlight-color: transparent;
-        }
+        
         .app-wrapper { display: flex; flex-direction: column; height: 100vh; height: 100dvh; }
         header, nav { flex: 0 0 auto; z-index: 10; }
         .split-container {
             flex: 1; display: flex; flex-direction: column; overflow: hidden;
-            padding-bottom: calc(var(--footer-h, 70px) + env(safe-area-inset-bottom));
+            padding-bottom: calc(60px + env(safe-area-inset-bottom));
         }
         .main-frame { flex: 1; width: 100%; border: none; background: transparent; min-height: 240px; }
         .log-frame {
-            flex: 0 0 clamp(110px, 22vh, 180px);
+            flex: 0 0 clamp(100px, 20vh, 160px);
             width: 100%; border: none; background: #fff;
             border-top: 2px dashed #ffd1dc;
             box-shadow: 0 -4px 10px rgba(255, 143, 163, 0.1);
         }
         iframe { display: block; width: 100%; height: 100%; }
+        
+        /* 底部增强栏 */
         .action-footer {
-            position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
-            width: 100%; max-width: 500px;
-            padding: 10px 15px calc(10px + env(safe-area-inset-bottom));
-            box-sizing: border-box;
-            background: linear-gradient(to top, #fff0f5 80%, transparent);
-            display: flex; flex-direction: column; align-items: center;
-            gap: 6px; z-index: 100;
+            position: fixed; bottom: 0; left: 0; right: 0;
+            height: 60px;
+            background: #fff;
+            border-top: 1px solid var(--pink-200);
+            display: flex; align-items: center; justify-content: space-around;
+            padding-bottom: env(safe-area-inset-bottom);
+            z-index: 100;
+            box-shadow: 0 -2px 10px rgba(255, 143, 163, 0.15);
         }
+        .footer-btn {
+            flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            cursor: pointer; color: var(--text-mid); font-size: 12px; font-weight: bold;
+            transition: 0.2s; border-right: 1px solid #f0f0f0;
+        }
+        .footer-btn:last-child { border-right: none; }
+        .footer-btn:active { background: var(--pink-50); }
+        .footer-btn .icon { font-size: 18px; margin-bottom: 2px; }
+        .footer-time { color: var(--pink-600); font-size: 13px; }
+
         #error-overlay {
             position: fixed; top: 0; left: 0; width: 100%; z-index: 999999;
             background: rgba(220, 38, 38, 0.95); color: white;
@@ -69,11 +70,6 @@
         <div class="loading-bar-wrap">
             <div id="loading-bar" class="loading-bar-fill"></div>
         </div>
-        <div id="loading-error">
-            <span id="loading-error-message">加载超时，请检查网络后重试</span>
-            <br>
-            <button id="loading-retry" type="button">重新加载</button>
-        </div>
     </div>
 
     <div id="error-overlay"></div>
@@ -81,18 +77,35 @@
     <div class="app-wrapper" id="app-root">
         <header id="header"></header>
         <nav id="navBar"></nav>
+        
         <div class="split-container">
-            <!-- monitor.js 会自动接管这里的 src -->
-            <iframe id="mainFrame" src="about:blank" class="main-frame"></iframe>
-            <iframe id="logFrame" src="about:blank" class="log-frame"></iframe>
+            <!-- 直接指向 home 文件夹 -->
+            <iframe id="mainFrame" src="pages/home/index.html" class="main-frame"></iframe>
+            <!-- 直接指向 log 文件夹 -->
+            <iframe id="logFrame" src="pages/log/index.html" class="log-frame"></iframe>
         </div>
-        <div class="action-footer" id="footer"></div>
+        
+        <!-- 增强版全局底栏 -->
+        <div class="action-footer" id="footer">
+            <div class="footer-btn" onclick="window.footerAction('sleep')">
+                <span class="icon">🛌</span>
+                <span>睡觉</span>
+            </div>
+            <div class="footer-btn" onclick="window.footerAction('shop')">
+                <span class="icon" id="f-icon-shop">🚪</span>
+                <span id="f-text-shop">营业</span>
+            </div>
+            <div class="footer-btn" style="cursor:default;">
+                <span class="icon">📅</span>
+                <span class="footer-time" id="f-time">Day 1 08:00</span>
+            </div>
+        </div>
     </div>
 
     <!-- 根目录启动器 -->
     <script src="monitor.js"></script>
 
-    <!-- 日志桥接 -->
+    <!-- 日志桥接系统 -->
     <script>
     (function () {
         'use strict';
@@ -122,14 +135,57 @@
                 } catch (_) {}
             };
         });
-
-        window.addEventListener('message', (e) => {
-            if (e.origin !== location.origin) return;
-            if (e.data && (e.data.type === 'log' || e.data.type === 'clear')) {
-                toLogFrame(e.data);
-            }
-        });
     })();
+    </script>
+
+    <!-- 底部增强栏逻辑 -->
+    <script type="module">
+        // 监听引擎启动，更新底栏时间与状态
+        const updateFooter = () => {
+            const Cake = window.Cake;
+            if (!Cake || !Cake.store || !Cake.store.state) return;
+            
+            const state = Cake.store.state;
+            const timeStr = Cake.getTimeString ? Cake.getTimeString() : '08:00';
+            
+            const timeEl = document.getElementById('f-time');
+            if (timeEl) timeEl.textContent = `Day ${state.time.day} ${timeStr}`;
+
+            const shopIcon = document.getElementById('f-icon-shop');
+            const shopText = document.getElementById('f-text-shop');
+            if (state.shop?.isOpen) {
+                shopIcon.textContent = '🔕';
+                shopText.textContent = '打烊';
+                shopText.style.color = 'var(--pink-600)';
+            } else {
+                shopIcon.textContent = '🚪';
+                shopText.textContent = '营业';
+                shopText.style.color = '';
+            }
+        };
+
+        window.footerAction = (action) => {
+            const Cake = window.Cake;
+            if (!Cake) return;
+            
+            if (action === 'sleep' && Cake.sleep) {
+                Cake.sleep();
+                // 同步一下 mainFrame，让里面页面知道刷新了
+                const mainFrame = document.getElementById('mainFrame');
+                if (mainFrame && mainFrame.contentWindow) {
+                    mainFrame.contentWindow.location.reload();
+                }
+            } 
+            else if (action === 'shop' && Cake.toggleShopStatus) {
+                const res = Cake.toggleShopStatus();
+                if (res && res.success === false) alert(res.message);
+            }
+            updateFooter();
+        };
+
+        // 等引擎 ready 后先刷一次
+        window.addEventListener('game-ready', updateFooter);
+        setInterval(updateFooter, 2000); // 兜底轮询刷新
     </script>
 </body>
 </html>

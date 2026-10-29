@@ -48,11 +48,9 @@ window.Cake = window.Cake || {};
                 const navKey = link.dataset.navKey;
                 const navHref = link.dataset.navHref;
 
-                if (navHref) {
-                    const mainFrame = document.getElementById('mainFrame');
-                    if (mainFrame) {
-                        mainFrame.src = navHref;
-                    }
+                const mainFrame = document.getElementById('mainFrame');
+                if (mainFrame && navHref) {
+                    mainFrame.src = navHref;
                 }
 
                 if (navKey === 'bake' || navKey === 'home') {

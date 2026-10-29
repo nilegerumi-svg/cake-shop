@@ -4,7 +4,7 @@ export const renderHome = () => {
     const contentEl = document.getElementById('content');
 
     if (!contentEl) {
-        console.error('❌ [Home] 未找到 #content');
+        console.error('❌ [Home] 未找�� #content');
         return;
     }
     if (!G || !G.state) {

@@ -12,7 +12,7 @@
 </head>
 <body>
     <div class="game-body" style="padding-top: 10px;">
-        <div class="back-btn" onclick="history.back()">← 返回个人中心</div>
+        <button type="button" class="back-btn" id="backBtn">← 返回个人中心</button>
         <div class="content" id="content"></div>
     </div>
 
@@ -20,16 +20,17 @@
         const Cake = window.parent.Cake || window.Cake;
         if (!Cake) return;
 
+        document.getElementById('backBtn').addEventListener('click', () => history.back());
+
         const render = () => {
             const state = Cake.store.state;
             const contentEl = document.getElementById('content');
-            
+
             if (!state.inventory || state.inventory.length === 0) {
                 contentEl.innerHTML = '<div class="card text-center muted">仓库空空如也，快去采购吧！</div>';
                 return;
             }
 
-            // 按 ID 汇总
             const summary = {};
             state.inventory.forEach(item => {
                 if (!summary[item.id]) {

@@ -21,7 +21,7 @@
 </head>
 <body>
     <div class="game-body" style="padding-top: 10px;">
-        <div class="back-btn" onclick="history.back()">← 返回个人中心</div>
+        <button type="button" class="back-btn" id="backBtn">← 返回个人中心</button>
         <div class="content" id="content"></div>
     </div>
 
@@ -29,11 +29,13 @@
         const Cake = window.parent.Cake || window.Cake;
         if (!Cake) return;
 
+        document.getElementById('backBtn').addEventListener('click', () => history.back());
+
         const render = () => {
             const s = Cake.store.state;
             const achievements = Cake.ACHIEVEMENTS || [];
             const contentEl = document.getElementById('content');
-            
+
             const earnedCount = achievements.filter(a => s.achievements && s.achievements[a.id]).length;
             const pct = achievements.length > 0 ? Math.round((earnedCount / achievements.length) * 100) : 0;
 

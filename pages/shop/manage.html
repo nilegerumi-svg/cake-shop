@@ -14,7 +14,7 @@
 </head>
 <body>
     <div class="game-body" style="padding-top: 10px;">
-        <div class="back-btn" onclick="history.back()">← 返回店铺</div>
+        <button type="button" class="back-btn" id="backBtn">← 返回店铺</button>
         <div class="content" id="content">
             <div class="muted text-center" style="margin-top:50px;">⏳ 正在加载经营数据...</div>
         </div>
@@ -59,7 +59,7 @@
                         <p class="muted" style="margin-bottom:10px;">定价越高，单笔利润越大，但顾客购买意愿会降低。</p>
                         <div style="display:flex; gap:8px;">
                             ${RATES.map(r => `
-                                <button class="rate-btn ${priceRate === r.val ? 'active' : ''}" onclick="window.setRate(${r.val})">
+                                <button class="rate-btn ${priceRate === r.val ? 'active' : ''}" data-rate="${r.val}">
                                     ${r.label}<br>${r.val}x
                                 </button>
                             `).join('')}
@@ -67,27 +67,29 @@
                     </div>
                 `;
 
-                const cleanBtn = document.getElementById('btn-clean');
-                if (cleanBtn && cleanliness < 100) {
-                    cleanBtn.onclick = () => {
-                        try {
-                            if (typeof Cake.cleanShop === 'function') {
-                                const res = Cake.cleanShop();
-                                if (res && res.success === false) {
-                                    alert(res.message);
-                                } else {
-                                    render();
-                                }
+                document.getElementById('btn-clean').addEventListener('click', () => {
+                    try {
+                        if (typeof Cake.cleanShop === 'function') {
+                            const res = Cake.cleanShop();
+                            if (res && res.success === false) {
+                                alert(res.message);
                             } else {
-                                alert('打扫功能未加载');
+                                render();
                             }
-                        } catch (e) {
-                            console.error(e);
-                            alert('打扫时发生错误: ' + e.message);
+                        } else {
+                            alert('打扫功能未加载');
                         }
-                    };
-                }
+                    } catch (e) {
+                        console.error(e);
+                        alert('打扫时发生错误: ' + e.message);
+                    }
+                });
 
+                document.querySelectorAll('[data-rate]').forEach((btn) => {
+                    btn.addEventListener('click', () => {
+                        window.setRate(Number(btn.dataset.rate));
+                    });
+                });
             } catch (err) {
                 console.error('❌ [Manage] 渲染崩溃:', err);
                 showFatalError(`渲染过程发生异常：<br>${err.message}`);
@@ -113,6 +115,8 @@
                 render();
             }
         }
+
+        document.getElementById('backBtn').addEventListener('click', () => history.back());
 
         window.safePageBoot.waitForCake((readyCake) => {
             Cake = readyCake;

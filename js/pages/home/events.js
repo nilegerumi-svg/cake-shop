@@ -25,9 +25,7 @@ export const bindEvents = () => {
         }
 
         if (action === 'go-park') {
-            if (typeof G.walk === 'function') {
-                G.walk('park');
-            }
+            if (typeof G.walk === 'function') G.walk('park');
         }
 
         if (action === 'go-town') {

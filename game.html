@@ -7,10 +7,8 @@
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="css/game-shell.css">
     
-    <!-- 把监视器作为模块提前引入，接管全站错误 -->
     <script type="module" src="js/host/monitor/index.js"></script>
     <style>
-        /* 针对 iframe 报错的蒙层样式 */
         .iframe-error-overlay {
             position: absolute; inset: 0; background: rgba(255,240,245,0.95); z-index: 999;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -34,7 +32,6 @@
         <nav id="navBar"></nav>
         
         <div class="split-container">
-            <!-- 给 iframe 的父容器加上相对定位，方便显示报错蒙层 -->
             <div style="position:relative; flex:1; display:flex; min-height:240px;">
                 <iframe id="mainFrame" src="pages/home/index.html" class="main-frame" style="flex:1;"></iframe>
             </div>
@@ -44,10 +41,10 @@
         </div>
         
         <div class="action-footer" id="footer">
-            <div class="footer-btn" onclick="window.footerAction('sleep')">
+            <div class="footer-btn" data-footer-action="sleep">
                 <span class="icon">🛌</span><span>睡觉</span>
             </div>
-            <div class="footer-btn" onclick="window.footerAction('shop')">
+            <div class="footer-btn" data-footer-action="shop">
                 <span class="icon" id="f-icon-shop">🚪</span><span id="f-text-shop">营业</span>
             </div>
             <div class="footer-btn" style="cursor:default;">
@@ -56,53 +53,47 @@
         </div>
     </div>
 
-    <!-- 日志桥接（必须尽早执行以劫持 console） -->
     <script src="js/host/log-bridge.js"></script>
-    
-    <!-- 底栏交互逻辑 -->
     <script type="module" src="js/host/game-shell.js"></script>
 
-    <!-- 👈 针对 HTML 加载的显式报错系统 -->
     <script>
         (function() {
             'use strict';
 
-            // 检测 iframe 加载状态
+            document.querySelectorAll('[data-footer-action]').forEach((btn) => {
+                btn.addEventListener('click', () => {
+                    const action = btn.dataset.footerAction;
+                    if (typeof window.footerAction === 'function') {
+                        window.footerAction(action);
+                    }
+                });
+            });
+
             function checkIframeLoaded(iframeId, pageName) {
                 const iframe = document.getElementById(iframeId);
                 if (!iframe) return;
 
                 iframe.addEventListener('load', () => {
                     try {
-                        // 同源策略下，可以读取内部 DOM
                         const doc = iframe.contentDocument || iframe.contentWindow.document;
-                        
-                        // 检查是否加载失败或空白
                         const bodyText = doc.body ? doc.body.innerText.toLowerCase() : '';
                         const titleText = doc.title ? doc.title.toLowerCase() : '';
                         const htmlContent = doc.documentElement ? doc.documentElement.innerHTML.toLowerCase() : '';
 
-                        // 1. 判断是否是 GitHub Pages 的 404 页面
                         if (bodyText.includes('404') || titleText.includes('404') || bodyText.includes('file not found')) {
                             showIframeError(iframe, `${pageName} (404 找不到文件)`, iframe.src);
-                        } 
-                        // 2. 判断内容是否完全为空（没有可见文本，且没有 script 标签，说明是个白板）
-                        else if (!doc.body || (doc.body.children.length === 0 && htmlContent.length < 200)) {
+                        } else if (!doc.body || (doc.body.children.length === 0 && htmlContent.length < 200)) {
                             showIframeError(iframe, `${pageName} (内容为空)`, '页面似乎只有空标签，请检查 HTML 结构是否有误。');
                         }
                     } catch (err) {
-                        // 如果跨域，静默跳过
                         console.warn(`无法读取 ${iframeId} 的内容 (可能跨域)`, err);
                     }
                 });
             }
 
-            // 显示报错蒙层覆盖在 iframe 上
             function showIframeError(iframe, title, detail) {
                 const parent = iframe.parentNode;
                 if (!parent) return;
-                
-                // 防止重复添加
                 if (parent.querySelector('.iframe-error-overlay')) return;
 
                 const overlay = document.createElement('div');
@@ -110,17 +101,17 @@
                 overlay.innerHTML = `
                     <h3>⚠️ ${title}</h3>
                     <p style="margin-bottom:10px; max-width:100%;">${detail}</p>
-                    <button onclick="this.parentNode.remove()" style="padding:8px 20px; border:none; border-radius:20px; background:#ff8fa3; color:white; font-weight:bold; cursor:pointer;">关闭并查看原页面</button>
+                    <button type="button" style="padding:8px 20px; border:none; border-radius:20px; background:#ff8fa3; color:white; font-weight:bold; cursor:pointer;">关闭</button>
                 `;
+                const closeBtn = overlay.querySelector('button');
+                closeBtn.addEventListener('click', () => overlay.remove());
                 parent.appendChild(overlay);
             }
 
-            // 等 DOM 加载完开始检测
             document.addEventListener('DOMContentLoaded', () => {
                 checkIframeLoaded('mainFrame', '主页 iframe 加载失败');
                 checkIframeLoaded('logFrame', '日志 iframe 加载失败');
             });
-
         })();
     </script>
 </body>

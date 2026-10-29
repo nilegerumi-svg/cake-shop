@@ -32,7 +32,6 @@
         let Cake = null;
         let checkCount = 0;
 
-        // 1. 引擎轮询等待器
         function waitForEngine() {
             Cake = window.parent.Cake || window.Cake;
             if (Cake && Cake.store && Cake.store.state) {
@@ -65,8 +64,6 @@
                 const day = num(s.time?.day, 1);
                 const money = num(s.money, 0);
                 const reputation = num(s.shop?.stats?.reputation, 0);
-                
-                // 统计数据
                 const achCount = (Cake.ACHIEVEMENTS || []).filter(a => s.achievements && s.achievements[a.id]).length;
                 const toolCount = Object.keys(s.tools || {}).filter(id => s.tools[id].owned).length;
                 const invCount = (s.inventory || []).length;
@@ -89,8 +86,7 @@
                         </div>
 
                         <h3>📂 我的收藏与资产</h3>
-                        
-                        <div class="nav-card" onclick="window.location.href='achievements.html'">
+                        <div class="nav-card" data-href="achievements.html">
                             <div class="nav-left">
                                 <span class="nav-icon">🏅</span>
                                 <div>
@@ -101,7 +97,7 @@
                             <span class="arrow">→</span>
                         </div>
 
-                        <div class="nav-card" onclick="window.location.href='tools.html'">
+                        <div class="nav-card" data-href="tools.html">
                             <div class="nav-left">
                                 <span class="nav-icon">🛠️</span>
                                 <div>
@@ -112,7 +108,7 @@
                             <span class="arrow">→</span>
                         </div>
 
-                        <div class="nav-card" onclick="window.location.href='inventory.html'">
+                        <div class="nav-card" data-href="inventory.html">
                             <div class="nav-left">
                                 <span class="nav-icon">🎒</span>
                                 <div>
@@ -125,17 +121,35 @@
 
                         <h3>💾 系统操作</h3>
                         <div class="char-actions" style="gap:10px;margin-top:8px;">
-                            <button type="button" class="small" onclick="window.saveGame()">💾 保存游戏</button>
-                            <button type="button" class="small secondary" onclick="window.resetGame()">🔄 重新开始</button>
+                            <button type="button" class="small" data-action="save-game">💾 保存游戏</button>
+                            <button type="button" class="small secondary" data-action="reset-game">🔄 重新开始</button>
                         </div>
                     </div>`;
+
+                contentEl.querySelectorAll('.nav-card').forEach((card) => {
+                    card.addEventListener('click', () => {
+                        const href = card.dataset.href;
+                        if (href) window.location.href = href;
+                    });
+                });
+
+                contentEl.querySelectorAll('[data-action]').forEach((btn) => {
+                    btn.addEventListener('click', () => {
+                        const action = btn.dataset.action;
+                        if (action === 'save-game') {
+                            window.saveGame();
+                        }
+                        if (action === 'reset-game') {
+                            window.resetGame();
+                        }
+                    });
+                });
             } catch (err) {
                 console.error('❌ [Profile] 渲染崩溃:', err);
                 showFatalError(`渲染档案时发生异常：<br>${err.message}`);
             }
         };
 
-        // 👈 安全保存
         window.saveGame = () => {
             try {
                 if (typeof Cake.saveState === 'function') {
@@ -149,15 +163,12 @@
             }
         };
 
-        // 👈 安全重置（修复了跨 iframe 路径跳转的问题）
         window.resetGame = () => {
             if (confirm('⚠️ 确定要重新开始吗？这会清空当前所有进度！')) {
                 try {
                     localStorage.removeItem(Cake.store.SAVE_KEY || 'cake_shop_save');
-                    // 无论 iframe 嵌得多深，直接跳到页面最顶层的相对根目录 index.html
-                    window.parent.location.href = '../../index.html'; 
+                    window.parent.location.href = '../../index.html';
                 } catch (e) {
-                    // 如果跨域导致无法操作 parent，就用当前窗口的绝对路径
                     window.location.href = '../../index.html';
                 }
             }
@@ -171,7 +182,6 @@
             }
         }
 
-        // 启动等待
         waitForEngine();
     </script>
 </body>

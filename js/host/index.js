@@ -7,7 +7,6 @@
         './error.js',
         './sync.js',
         './router.js',
-        './monitor/index.js'
     ];
 
     for (const path of HOST_MODULES) {

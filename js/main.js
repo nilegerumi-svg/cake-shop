@@ -16,13 +16,13 @@ let isReadyFired = false;
 let initGeneration = 0;
 let activeTask = null;
 
-// js/main.js 中只改这一段
+// 👈 终极精简版模块列表（绝对和你的目录匹配）
 const MODULES = [
-    { path: './data/index.js',    name: '🚦 正在加载配方与色彩数据' },
-    { path: './core/index.js',    name: '🟱 正在加载底层渲染引擎' },
-    { path: './actions/index.js', name: '🎮 正在加载地图与音乐动作' },
+    { path: './data/index.js',    name: '🚦 正在加载数据字典' },
+    { path: './core/index.js',    name: '🟱 正在加载核心引擎与时间系统' },
+    { path: './actions/index.js', name: '🎮 正在加载行为与探索动作' },
     { path: './shared.js',        name: '🟩 正在加载跨页面共享层' },
-    { path: './host/index.js',    name: '🏥 正在加载访客主体控制台' }
+    { path: './host/index.js',    name: '🏥 正在加载宿主控制台' }
 ];
 
 const TRANSITIONS = Object.freeze({
@@ -98,13 +98,6 @@ function emit(name, detail) {
     catch (e) { console.warn(`⚠️ [Engine] emit(${name}) 失败`, e); }
 }
 
-/* ============================================================
-   defineGame —— 合并式，不覆盖 shared.js 已挂载的 Game 兼容层
-   契约：
-     - Game.state      → 游戏存档（由 shared.js 定义，禁止覆盖）
-     - Game.getState() → 引擎状态（本模块提供，仅缺失时补充）
-     - Game.version / Game.startedAt / Game.getEngineState → 引擎元信息
-   ============================================================ */
 function defineGame() {
     const existing = (window.Game && typeof window.Game === 'object') ? window.Game : {};
 
@@ -308,7 +301,14 @@ async function init() {
             const mod = MODULES[i];
             const percent = 5 + Math.round((i / MODULES.length) * 85);
             window.updateLoadingProgress?.(`${mod.name} (${mod.path})…`, percent);
-            await import(mod.path);
+            
+            try {
+                await import(mod.path);
+            } catch (importErr) {
+                // 👈 专门针对模块加载失败做精准提示
+                console.error(`❌ [Engine] 模块加载失败 -> ${mod.path}`, importErr);
+                throw new Error(`无法加载模块: ${mod.path} - ${importErr.message || '文件不存在'}`);
+            }
         }
 
         if (task.isCancelled()) return false;
@@ -329,6 +329,9 @@ async function init() {
             return false;
         }
         if (task.generation !== initGeneration) return false;
+        
+        // 打印出具体的错误
+        console.error('❌ [Engine] 初始化崩溃详情:', err);
         markFailed(err, task.generation);
         return false;
 
@@ -372,7 +375,3 @@ window.cancelEngineInit = () => {
 };
 
 init();
-
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { init, ready, markFailed };
-}

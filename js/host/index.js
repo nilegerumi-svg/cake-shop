@@ -1,25 +1,20 @@
 // js/host/index.js
 (async () => {
     'use strict';
-    console.log('🏠 [Host] 开始精准排查宿主环境子模块...');
+    console.log('🏠 [Host] 开始加载宿主环境子模块...');
 
     const HOST_MODULES = [
         './error.js',
         './sync.js',
-        './router.js',
+        './router.js'
+        // 👈 彻底删掉 './monitor/index.js'，它已经在 game.html 顶层加载了，绝对不能在这里再引！
     ];
 
     for (const path of HOST_MODULES) {
         try {
             await import(path);
-            console.log(`✅ [Host] 成功加载: ${path}`);
         } catch (err) {
-            // 👈 终极法医鉴定：如果是 404 还是语法错误，全部扒光！
-            console.error(`❌ [Host] 真凶找到了！加载失败 -> ${path}`);
-            console.error(`错误原因: ${err.message}`);
-            
-            // 抛出带有具体文件名和具体错误信息的异常，直接通知引擎！
-            throw new Error(`Host 子模块加载失败: ${path} - ${err.message}`);
+            console.warn(`⚠️ [Host] 模块加载失败，已跳过 -> ${path}`);
         }
     }
 

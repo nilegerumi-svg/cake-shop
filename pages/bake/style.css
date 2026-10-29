@@ -1,0 +1,65 @@
+/* pages/bake/style.css */
+.workshop-layout { 
+    display: flex; 
+    gap: 15px; 
+    flex-wrap: wrap; 
+}
+
+.recipe-menu { 
+    flex: 1 1 120px; 
+    display: flex; 
+    flex-direction: column; 
+    gap: 10px; 
+}
+
+.recipe-item {
+    padding: 12px; 
+    border-radius: 12px; 
+    background: #fff;
+    border: 2px solid transparent; 
+    text-align: center; 
+    cursor: pointer;
+    transition: 0.2s; 
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.recipe-item.active {
+    border-color: var(--pink-400); 
+    background: var(--pink-50);
+    transform: scale(1.02);
+}
+
+.workbench {
+    flex: 2 1 200px; 
+    background: #fff; 
+    padding: 20px; 
+    border-radius: 16px;
+    box-shadow: var(--shadow-card); 
+    display: flex; 
+    flex-direction: column;
+}
+
+.big-craft-btn {
+    margin-top: auto; 
+    background: var(--pink-400); 
+    color: #fff; 
+    border: none;
+    padding: 15px; 
+    border-radius: 50px; 
+    font-size: 16px; 
+    font-weight: bold;
+    cursor: pointer; 
+    box-shadow: 0 4px 15px rgba(255, 107, 129, 0.4);
+    transition: 0.1s;
+}
+
+.big-craft-btn:active { 
+    transform: translateY(2px); 
+    box-shadow: 0 2px 5px rgba(255, 107, 129, 0.4); 
+}
+
+.big-craft-btn:disabled { 
+    background: #ccc; 
+    box-shadow: none; 
+    cursor: not-allowed; 
+}

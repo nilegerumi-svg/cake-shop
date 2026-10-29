@@ -3,28 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🏅 成就殿堂 · 甜蜜物语</title>
-    <link rel="stylesheet" href="../css/styles.css">
+    <title>🏅 成就殿堂</title>
+    <link rel="stylesheet" href="../../css/styles.css">
     <style>
-        .achievement-grid { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; }
         .ach-card {
             display: flex; align-items: center; gap: 12px;
             padding: 12px 15px; border-radius: 12px;
             background: #fff; border: 1px solid var(--pink-100);
-            opacity: 0.7; transition: all 0.3s ease;
+            opacity: 0.7; margin-bottom: 10px; transition: 0.3s;
         }
-        .ach-card.earned {
-            background: #fffde7; border-color: #ffd54f; opacity: 1;
-            box-shadow: 0 4px 10px rgba(255, 213, 79, 0.2);
-        }
+        .ach-card.earned { background: #fffde7; border-color: #ffd54f; opacity: 1; }
         .ach-icon { font-size: 28px; width: 40px; text-align: center; }
-        .ach-info { flex: 1; }
         .ach-name { font-weight: bold; font-size: 15px; color: var(--text-main); }
         .ach-desc { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+        .back-btn { display: inline-block; margin-bottom: 15px; color: var(--pink-600); cursor: pointer; font-weight: bold; }
     </style>
 </head>
 <body>
     <div class="game-body" style="padding-top: 10px;">
+        <div class="back-btn" onclick="history.back()">← 返回个人中心</div>
         <div class="content" id="content"></div>
     </div>
 
@@ -32,27 +29,20 @@
         const Cake = window.parent.Cake || window.Cake;
         if (!Cake) return;
 
-        const renderAchievements = () => {
-            const state = Cake.store.state;
-            const allAchs = Cake.ACHIEVEMENTS || [];
+        const render = () => {
+            const s = Cake.store.state;
+            const achievements = Cake.ACHIEVEMENTS || [];
             const contentEl = document.getElementById('content');
+            
+            const earnedCount = achievements.filter(a => s.achievements && s.achievements[a.id]).length;
+            const pct = achievements.length > 0 ? Math.round((earnedCount / achievements.length) * 100) : 0;
 
-            if (allAchs.length === 0) {
-                contentEl.innerHTML = '<div class="muted text-center">暂无成就数据...</div>';
-                return;
-            }
-
-            // 计算总进度
-            const earnedCount = allAchs.filter(a => state.achievements && state.achievements[a.id]).length;
-            const pct = Math.round((earnedCount / allAchs.length) * 100);
-
-            // 渲染卡片
-            const cards = allAchs.map(a => {
-                const earned = Boolean(state.achievements && state.achievements[a.id]);
+            const cards = achievements.map(a => {
+                const earned = Boolean(s.achievements && s.achievements[a.id]);
                 return `
                     <div class="ach-card ${earned ? 'earned' : ''}">
                         <div class="ach-icon">${earned ? (a.icon || '🏅') : '🔒'}</div>
-                        <div class="ach-info">
+                        <div>
                             <div class="ach-name">${a.name || a.id}</div>
                             <div class="ach-desc">${a.desc || '完成特定条件解锁'}</div>
                         </div>
@@ -64,22 +54,16 @@
                 <div class="card">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
                         <h2 style="margin:0;">🏅 成就殿堂</h2>
-                        <span style="font-weight:bold; color:var(--pink-600);">${earnedCount}/${allAchs.length} (${pct}%)</span>
+                        <span style="font-weight:bold; color:var(--pink-600);">${earnedCount}/${achievements.length} (${pct}%)</span>
                     </div>
-                    <div class="aff-bar" style="height:8px;">
+                    <div class="aff-bar" style="height:8px; margin-bottom: 15px;">
                         <div class="aff-fill" style="width:${pct}%;"></div>
                     </div>
-                    <div class="achievement-grid">
-                        ${cards}
-                    </div>
-                </div>
-            `;
+                    ${cards || '<p class="muted">暂无成就</p>'}
+                </div>`;
         };
 
-        if (typeof Cake.initPage === 'function') {
-            // 如果有自己的专属 Tab key 可以传，没有就传个空
-            Cake.initPage('achievements', renderAchievements, false);
-        }
+        Cake.initPage('profile', render, false);
     </script>
 </body>
 </html>

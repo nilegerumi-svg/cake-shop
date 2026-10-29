@@ -2,11 +2,18 @@
 (() => {
     'use strict';
 
-    const defineGlobal = (key, value) => {
+    const ensureCake = () => {
+        if (!window.Cake) {
+            window.Cake = {};
+        }
+        return window.Cake;
+    };
+
+    const setGlobalSafe = (key, value) => {
         try {
             const desc = Object.getOwnPropertyDescriptor(window, key);
             if (desc && desc.configurable === false && desc.writable === false) {
-                console.warn(`[Shared] ${key} is read-only; skipping global assignment.`);
+                console.warn(`[Shared] ${key} is read-only; skipping assignment.`);
                 return false;
             }
         } catch (_) {}
@@ -30,31 +37,17 @@
         }
     };
 
-    const ensureCake = () => {
-        if (!window.Cake) {
-            window.Cake = {};
-        }
-        return window.Cake;
-    };
-
-    const Cake = ensureCake();
-
-    // 子页面不需要父页面全局代理，直接退出
     if (window.self !== window.top) {
         console.log('🧩 [Shared] 检测到子页面环境，跳过代理生成。');
         return;
     }
 
-    const bootKey = '__cakeSharedBooted';
-    if (window[bootKey]) return;
-    window[bootKey] = true;
-
-    const initShared = () => {
+    const boot = () => {
         const Cake = ensureCake();
 
         if (!Cake.store) {
             console.warn('⚠️ [Shared] store 尚未准备好，稍后重试。');
-            setTimeout(initShared, 100);
+            setTimeout(boot, 100);
             return;
         }
 
@@ -111,7 +104,7 @@
             }
         });
 
-        defineGlobal('Game', Game);
+        setGlobalSafe('Game', Game);
         console.log('🧩 [Shared] 父页面 Game 动态代理已挂载');
 
         if (typeof Cake.on === 'function') {
@@ -128,5 +121,5 @@
         console.log('🧩 [Shared] 父页面共享层装载完毕');
     };
 
-    initShared();
+    boot();
 })();

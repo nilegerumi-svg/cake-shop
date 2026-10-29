@@ -6,14 +6,17 @@
     <title>主页 · 甜蜜物语</title>
     <link rel="stylesheet" href="../../css/styles.css">
     <style>
+        /* 1. 让 body 填满 iframe，并自己处理滚动 */
         body {
             background: transparent;
             padding: 16px;
             margin: 0;
-            min-height: 100vh;
+            height: 100%; /* 不再用 100vh */
             box-sizing: border-box;
             display: block !important;
             font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+            overflow-y: auto; /* 内容过多时内部滚动 */
+            -webkit-overflow-scrolling: touch; /* 移动端顺滑滚动 */
         }
         .room-card {
             display: flex;
@@ -38,10 +41,12 @@
 </head>
 <body>
     <div id="content">
+        <!-- 这个加载提示如果一直不消失，说明 index.js 报错了，或者没拿到 Cake 引擎 -->
         <div class="muted text-center" style="margin-top:50px;">⏳ 正在等待引擎加载...</div>
     </div>
 
-    <script src="../boot-safe.js"></script>
+    <!-- 🚨 检查这里！大概率少写了一个 ../ 或 js/ -->
+    <script src="../../js/boot-safe.js"></script> 
     <script type="module" src="index.js"></script>
 </body>
 </html>

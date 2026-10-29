@@ -1,12 +1,25 @@
 // js/actions/entertainment/map/index.js
-
-import './monitor.js';
-import './town/index.js';
-import './location_actions.js';   // ⭐ 已修改：将中划线改为下划线
-
-(() => {
+(async () => {
     'use strict';
+    console.log('🗺️ [Map] 开始加载总地图子模块...');
 
+    const MAP_MODULES = [
+        './monitor.js',
+        './town/index.js',
+        './location_actions.js'
+    ];
+
+    for (const path of MAP_MODULES) {
+        try {
+            await import(path);
+        } catch (err) {
+            // 👈 终极报错放大镜：谁不在或者写错了，直接揪出来！
+            console.warn(`⚠️ [Map] 致命错误！子模块加载失败 -> ${path}`);
+            console.warn(`原因: ${err.message}`);
+        }
+    }
+
+    // ==== 下面是原有的挂载逻辑 ====
     const getCake = () => {
         try {
             if (window.parent && window.parent !== window && window.parent.Cake) {

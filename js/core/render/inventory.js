@@ -44,13 +44,21 @@ window.Cake = window.Cake || {};
 
         let html = '<div class="ing-row" style="justify-content:flex-start;">';
         for (const [recipeKey, data] of Object.entries(state.foods)) {
+            if (!data) continue;
             const recipe = Cake.RECIPES[recipeKey];
             const name = recipe ? recipe.name : recipeKey;
+            
+            // 👈 核心防御：全部加上 || 0，彻底杜绝 undefined 导致崩溃
+            const p = data.perfect || 0;
+            const g = data.good || 0;
+            const n = data.normal || 0;
+            const f = data.failed || 0;
+
             const parts = [];
-            if (data.perfect > 0) parts.push(`<span style="color:var(--pink-500)">✨完美 ${data.perfect}</span>`);
-            if (data.good > 0) parts.push(`<span style="color:var(--green-ok)">👍优良 ${data.good}</span>`);
-            if (data.normal > 0) parts.push(`<span>普通 ${data.normal}</span>`);
-            if (data.failed > 0) parts.push(`<span style="color:var(--text-muted)">💀失败 ${data.failed}</span>`);
+            if (p > 0) parts.push(`<span style="color:var(--pink-500)">✨完美 ${p}</span>`);
+            if (g > 0) parts.push(`<span style="color:var(--green-ok)">👍优良 ${g}</span>`);
+            if (n > 0) parts.push(`<span>普通 ${n}</span>`);
+            if (f > 0) parts.push(`<span style="color:var(--text-muted)">💀失败 ${f}</span>`);
 
             if (parts.length > 0) {
                 html += `<div class="ing-tag" style="padding: 8px 12px; background: #fff;">

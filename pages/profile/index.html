@@ -10,61 +10,49 @@
     <div class="game-body" style="padding-top: 10px;">
         <div class="content" id="content"></div>
     </div>
-    <script src="../js/core/store.js"></script>
-    <script src="../js/data/ingredients.js"></script>
-    <script src="../js/data/recipes.js"></script>
-    <script src="../js/data/bundles.js"></script>
-    <script src="../js/data/characters.js"></script>
-    <script src="../js/data/events.js"></script>
-    <script src="../js/data/shop-config.js"></script>
-    <script src="../js/data/achievements.js"></script>
-    <script src="../js/core/utils.js"></script>
-    <script src="../js/core/state.js"></script>
-    <script src="../js/core/modal.js"></script>
-    <script src="../js/core/effects.js"></script>
-    <script src="../js/core/render.js"></script>
-    <script src="../js/actions/bakery.js"></script>
-    <script src="../js/actions/shop.js"></script>
-    <script src="../js/actions/social.js"></script>
-    <script src="../js/actions/system.js"></script>
-    <script src="../js/shared.js"></script>
-    <script>
-    (() => {
-        'use strict';
+
+    <script type="module">
+        const Cake = window.parent.Cake || window.Cake;
+        if (!Cake) return;
 
         const contentEl = document.getElementById('content');
+        const esc = Cake.escapeHtml || ((v) => String(v ?? ''));
+        const num = (v, fallback = 0) => Number.isFinite(Number(v)) ? Number(v) : fallback;
 
-        let Game = null;
-        let tries = 0;
-        const MAX_TRIES = 100;
-
-        const esc = (v) => (Game && typeof Game.escapeHtml === 'function')
-            ? Game.escapeHtml(v)
-            : String(v == null ? '' : v);
-
-        const num = (v, fallback = 0) => {
-            const n = Number(v);
-            return Number.isFinite(n) ? n : fallback;
+        // 渲染成就模块
+        const renderAchievements = (s, achievements) => {
+            if (!achievements || achievements.length === 0) return '<p class="muted">尚未解锁任何成就。</p>';
+            return achievements.map((a) => {
+                const earned = Boolean(s.achievements && s.achievements[a.id]);
+                return `<div class="achievement ${earned ? 'earned' : ''}">
+                    <span class="a-icon">${earned ? '✅' : '🔒'}</span>
+                    <div>
+                        <div style="font-weight:700;">${a.icon || ''} ${a.name || a.id}</div>
+                        <div class="muted">${a.desc || ''}</div>
+                    </div>
+                </div>`;
+            }).join('');
         };
 
-        const renderAchievements = (s, achievements) => (achievements || []).map((a) => {
-            const earned = Boolean(s.achievements && s.achievements[a.id]);
-            return `<div class="achievement ${earned ? 'earned' : ''}">
-                <span class="a-icon">${earned ? '✅' : '🔒'}</span>
-                <div>
-                    <div style="font-weight:700;">${a.icon || ''} ${a.name || a.id}</div>
-                    <div class="muted">${a.desc || ''}</div>
-                </div>
-            </div>`;
-        }).join('');
-
         const renderProfile = () => {
-            const s = Game.state || {};
-            const achievements = Game.ACHIEVEMENTS || [];
+            const s = Cake.store.state;
+            const achievements = Cake.ACHIEVEMENTS || [];
 
             const earnedCount = achievements.filter((a) => s.achievements && s.achievements[a.id]).length;
             const total = achievements.length;
             const pct = total > 0 ? Math.round((earnedCount / total) * 100) : 0;
+
+            // 对齐最新的 schema 结构
+            const shopName = s.shop?.name || '甜蜜小屋';
+            const day = num(s.time?.day, 1);
+            const money = num(s.money, 0);
+            const reputation = num(s.shop?.stats?.reputation, 0);
+            
+            // 这些数据目前 schema 里还没加，先做兜底展示
+            const shopLevel = num(s.shopLevel, 1); 
+            const decoration = num(s.decoration, 0);
+            const totalCakes = num(s.totalCakes, 0);
+            const totalEarned = num(s.totalEarned, 0);
 
             contentEl.innerHTML = `
                 <div class="card">
@@ -73,42 +61,44 @@
                         <div class="item-card">
                             <span class="item-emoji">${esc(s.avatar || '👩‍🍳')}</span>
                             <span class="item-name">${esc(s.playerName || '店长')}</span>
-                            <span class="item-desc">「${esc(s.shopName || '甜蜜小屋')}」的店长</span>
-                            <span class="item-meta">经营第 ${num(s.day, 1)} 天 · Lv.${num(s.shopLevel, 1)} · 装饰度 ${num(s.decoration, 0)}</span>
+                            <span class="item-desc">「${esc(shopName)}」的店长</span>
+                            <span class="item-meta">经营第 ${day} 天 · Lv.${shopLevel} · 装饰度 ${decoration}</span>
                         </div>
                         <div class="item-card">
                             <span class="item-emoji">📈</span>
                             <span class="item-name">经营数据</span>
-                            <span class="item-desc">余额：${num(s.money, 0)}元<br>累计卖出：${num(s.totalCakes, 0)}个<br>累计收入：${num(s.totalEarned, 0)}元<br>当前声望：${num(s.reputation, 0)}</span>
+                            <span class="item-desc">余额：${money}元<br>累计卖出：${totalCakes}个<br>累计收入：${totalEarned}元<br>当前声望：${reputation}</span>
                         </div>
                     </div>
+                    
                     <h3>🏅 成就（${earnedCount}/${total}，${pct}%）</h3>
                     <div class="aff-bar" style="height:8px;margin:0 0 10px;" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}">
                         <div class="aff-fill" style="width:${pct}%;"></div>
                     </div>
                     <div class="achievement-list">${renderAchievements(s, achievements)}</div>
-                    <h3>💾 存档 & 结局</h3>
+                    
+                    <h3>💾 存档 & 系统</h3>
                     <div class="char-actions" style="gap:10px;margin-top:8px;">
                         <button type="button" class="small" data-action="save">💾 保存游戏</button>
-                        <button type="button" class="small secondary" data-action="load">📂 读取存档</button>
-                        <button type="button" class="small gold" data-action="ending">🌟 查看结局</button>
-                        <button type="button" class="small" data-action="reset">🔄 重新开始</button>
+                        <button type="button" class="small secondary" data-action="reset">🔄 重新开始</button>
                     </div>
                 </div>`;
         };
 
         /* ==================== 事件委托 ==================== */
-
         const bindClick = () => {
             const ACTIONS = {
-                save:   () => typeof Game.saveGame === 'function' && Game.saveGame(),
-                load:   () => {
-                    if (confirm('读取存档会回到上次保存的进度，当前未保存的改动会丢失，确定吗？')) {
-                        if (typeof Game.loadGame === 'function') Game.loadGame();
-                    }
+                save: () => {
+                    Cake.saveState();
+                    alert('✅ 游戏已保存！');
                 },
-                ending: () => typeof Game.showEnding === 'function' && Game.showEnding(),
-                reset:  () => typeof Game.resetGame === 'function' && Game.resetGame(),
+                reset: () => {
+                    if (confirm('⚠️ 确定要重新开始吗？这会清空当前所有进度！')) {
+                        localStorage.removeItem(Cake.store.SAVE_KEY || 'cake_shop_save');
+                        // 跳到开始页
+                        window.parent.location.href = '../index.html';
+                    }
+                }
             };
 
             contentEl.addEventListener('click', (e) => {
@@ -119,34 +109,13 @@
             });
         };
 
-        /* ==================== 启动 ==================== */
-
-        const boot = () => {
-            let G = null;
-            try {
-                if (window.parent && window.parent !== window && window.parent.Game) {
-                    G = window.parent.Game;
-                }
-            } catch (_) {}
-            if (!G) G = window.Game || null;
-
-            if (G && G.state && typeof G.initPage === 'function') {
-                Game = G;
-                window.Game = G;
-                bindClick();
-                G.initPage('profile', renderProfile);
-                return;
-            }
-
-            if (++tries >= MAX_TRIES) {
-                contentEl.innerHTML = '<div style="color:red;padding:20px;text-align:center;">❌ 游戏引擎加载超时，请刷新重试</div>';
-                return;
-            }
-            setTimeout(boot, 100);
-        };
-
-        boot();
-    })();
+        /* ==================== 初始化页面 ==================== */
+        if (typeof Cake.initPage === 'function') {
+            bindClick();
+            Cake.initPage('profile', () => {
+                renderProfile();
+            }, false);
+        }
     </script>
 </body>
 </html>

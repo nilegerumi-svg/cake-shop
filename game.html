@@ -4,9 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>🍰 甜蜜物语</title>
-    <!-- 引入全局样式和外壳样式 -->
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="css/game-shell.css">
+    
+    <!-- 👈 把监视器作为模块提前引入，接管全站错误 -->
+    <script type="module" src="js/host/monitor/index.js"></script>
 </head>
 <body>
     <div id="app-loading">
@@ -17,8 +19,6 @@
         </div>
     </div>
 
-    <div id="error-overlay"></div>
-
     <div class="app-wrapper" id="app-root">
         <header id="header"></header>
         <nav id="navBar"></nav>
@@ -28,30 +28,23 @@
             <iframe id="logFrame" src="pages/log/index.html" class="log-frame"></iframe>
         </div>
         
-        <!-- 底栏 -->
         <div class="action-footer" id="footer">
             <div class="footer-btn" onclick="window.footerAction('sleep')">
-                <span class="icon">🛌</span>
-                <span>睡觉</span>
+                <span class="icon">🛌</span><span>睡觉</span>
             </div>
             <div class="footer-btn" onclick="window.footerAction('shop')">
-                <span class="icon" id="f-icon-shop">🚪</span>
-                <span id="f-text-shop">营业</span>
+                <span class="icon" id="f-icon-shop">🚪</span><span id="f-text-shop">营业</span>
             </div>
             <div class="footer-btn" style="cursor:default;">
-                <span class="icon">📅</span>
-                <span class="footer-time" id="f-time">Day 1 08:00</span>
+                <span class="icon">📅</span><span class="footer-time" id="f-time">Day 1 08:00</span>
             </div>
         </div>
     </div>
 
-    <!-- 1. 日志桥接（必须尽早执行） -->
+    <!-- 日志桥接（必须尽早执行以劫持 console） -->
     <script src="js/host/log-bridge.js"></script>
     
-    <!-- 2. 根目录启动器（加载引擎） -->
-    <script src="monitor.js"></script>
-
-    <!-- 3. 底栏交互逻辑 -->
+    <!-- 底栏交互逻辑 -->
     <script type="module" src="js/host/game-shell.js"></script>
 </body>
 </html>

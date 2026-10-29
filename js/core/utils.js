@@ -20,23 +20,21 @@
             .replace(/'/g, '&#39;');
 
     // 👈 修复：适配新的 state.time.day 和 state.log
+    // js/core/utils.js (节选，替换原有的 addLog)
     const addLog = (text, type = 'info') => {
         const s = Cake.store?.state;
         if (!s) return;
 
         s.log = s.log || [];
-        s.log.push({ 
-            day: s.time?.day ?? 1, 
-            time: Cake.getTimeString ? Cake.getTimeString() : '',
-            text: text,
-            type: type
-        });
-        
+        s.log.push({ day: s.time?.day ?? 1, time: Cake.getTimeString ? Cake.getTimeString() : '', text, type });
         if (s.log.length > 60) s.log.shift();
 
-        // 触发渲染刷新
-        if (typeof Cake.refreshPage === 'function') {
-            Cake.refreshPage();
+        // 存档
+        if (typeof Cake.saveState === 'function') Cake.saveState();
+        
+        // 👈 广播刷新：如果是父页面，直接刷新 UI；如果是子页面，发消息给父页面刷新
+        if (typeof Cake.emit === 'function') {
+            Cake.emit('refresh_ui');
         }
     };
 

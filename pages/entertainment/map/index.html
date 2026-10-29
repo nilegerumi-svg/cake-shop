@@ -118,7 +118,9 @@
 
             const html = regionList.map((region) => {
                 const regionKey = region.id || region.key || region.name || 'region';
-                const locIds = Array.isArray(region.locations) ? region.locations : [];
+                const locIds = Array.isArray(region.locations)
+                    ? region.locations
+                    : Object.keys(region.locations || {});
                 const items = locIds.map((locId) => {
                     const entry = locationList.find((item) => item.id === locId || item.key === locId) || {};
                     const cost = num(entry.cost, 0);

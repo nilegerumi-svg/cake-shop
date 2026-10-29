@@ -130,20 +130,30 @@
             if (!Cake || !Cake.store || !Cake.store.state) return;
             const params = new URLSearchParams(window.location.search);
             const key = params.get('id') || 'park';
-            const list = Array.isArray(Cake.LOCATIONS) ? Cake.LOCATIONS : Object.values(Cake.LOCATIONS || {});
-            const loc = list.find((item) => item.id === key || item.key === key) || {
-                id: key,
-                name: '未知地点',
-                emoji: '📍',
-                desc: '该地点目前尚未配置。',
-                actions: []
-            };
+
+            // 统一从区域配置取地点数据，并与动作接口保持一致
+            let loc = null;
+            const locs = (typeof Cake.getRegionLocations === 'function') ? Cake.getRegionLocations('town') : null;
+            loc = (locs && (locs[key] || (locs.find && locs.find((x) => x.id === key || x.key === key)))) || null;
+
+            // 兜底：从汇总 LOCATIONS 中查找
+            if (!loc) {
+                const list = Array.isArray(Cake.LOCATIONS) ? Cake.LOCATIONS : Object.values(Cake.LOCATIONS || {});
+                loc = list.find((item) => item.id === key || item.key === key) || null;
+            }
+
+            loc = loc || { id: key, name: '未知地点', emoji: '📍', desc: '该地点目前尚未配置。' };
             const state = Cake.store.state;
 
             $('pageTitle').textContent = `${loc.emoji || '📍'} ${loc.name || '地点'}`;
             $('energy').textContent = num(state.energy, 0);
 
-            const actions = Array.isArray(loc.actions) ? loc.actions : [];
+            // 动作列表：优先引擎接口，兜底 loc.actions
+            let actions = [];
+            if (typeof Cake.getLocationActions === 'function') {
+                try { actions = Cake.getLocationActions('town', key) || []; } catch (_) {}
+            }
+            if (actions.length === 0 && Array.isArray(loc.actions)) actions = loc.actions;
             const html = `
                 <div class="loc-head">
                     <div class="loc-emoji">${loc.emoji || '📍'}</div>

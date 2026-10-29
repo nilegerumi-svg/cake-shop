@@ -82,5 +82,8 @@
     window.Cake.saveState = window.Cake.store.saveState;
     window.Cake.loadStateFromStorage = window.Cake.store.loadStateFromStorage;
 
+    // 👈 将存档键也挂到顶层，供 storage 监听与重置游戏读取
+    window.Cake.SAVE_KEY = SAVE_KEY;
+
     console.log('📦 [Store] 状态容器与存档系统装载完毕');
 })();

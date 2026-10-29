@@ -60,7 +60,7 @@
 
         // 返回总地图
         $('btnBack').onclick = () => {
-            window.location.href = 'index.html';
+            window.history.length > 1 ? history.back() : (window.location.href = 'index.html');
         };
 
         // 渲染地点列表
@@ -71,9 +71,14 @@
                 $('energy').innerText = energy;
 
                 // 获取该区域的地点数据
-                const locs = (typeof Cake.getRegionLocations === 'function')
-                    ? Cake.getRegionLocations(REGION_ID)
-                    : Cake.REGION_TOWN;
+                let locs = null;
+                if (typeof Cake.getRegionLocations === 'function') {
+                    locs = Cake.getRegionLocations(REGION_ID);
+                }
+                if (!locs || Object.keys(locs).length === 0) {
+                    locs = Cake.REGION_TOWN || null;
+                }
+                if (typeof locs !== 'object') locs = null;
 
                 if (!locs || Object.keys(locs).length === 0) {
                     throw new Error('城镇地点数据为空！请检查地点文件的加载');

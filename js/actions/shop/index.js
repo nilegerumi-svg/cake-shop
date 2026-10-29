@@ -1,6 +1,11 @@
 (function () {
     'use strict';
 
+    // 先加载出售子模块（手动卖出 / 顾客结账 / 清理废品）
+    import('./sell.js').catch((err) => {
+        console.warn('⚠️ [Actions/Shop] 出售子模块加载失败:', err && err.message);
+    });
+
     function getCake() {
         return window.parent.Cake || window.Cake || null;
     }

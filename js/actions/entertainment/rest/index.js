@@ -156,8 +156,13 @@
         return Cake.triggerRest('town', 'home', 'nap');
     };
 
+    // 👈 小憩快捷接口：娱乐页「休息」按钮依赖它
+    Cake.nap = () => {
+        return Cake.triggerRest('town', 'home', 'nap');
+    };
+
     Cake.sleep = () => {
-        const isValid = Cake.ACTION_TYPES?.sleep?.isValid?.('town', 'home') ?? false;
+        const isValid = Cake.ACTION_TYPES?.sleep?.isValid?.('town', 'home') ?? true;
         if (!isValid) {
             Cake.addLog?.('❌ 这里无法睡觉。');
             Cake.refreshPage?.();

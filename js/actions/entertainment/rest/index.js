@@ -8,6 +8,13 @@ import './monitor.js';
 // 2. 引入区域注册表
 import './town/index.js';
 
+// 👈 核心修复：把 deepFreeze 加在外面，让整个文件都能用！
+const deepFreeze = (obj) => {
+    if (obj === null || typeof obj !== 'object' || Object.isFrozen(obj)) return obj;
+    for (const key of Object.keys(obj)) deepFreeze(obj[key]);
+    return Object.freeze(obj);
+};
+
 (() => {
     'use strict';
 
@@ -36,7 +43,6 @@ import './town/index.js';
     };
 
     /* ==================== 区域注册表 ==================== */
-    // ⚠️ 不覆盖已有区域：town/index.js 可能已经挂了 Cake.Actions.Rest.town
     Cake.Actions = Cake.Actions || {};
     Cake.Actions.Rest = Cake.Actions.Rest || {};
     if (Cake.TownRestConfig) {
@@ -133,23 +139,21 @@ import './town/index.js';
 
     /* ==================== 快捷接口 ==================== */
 
-    // 修改后（增加统一校验）：
-Cake.rest = () => {
-    const isValid = Cake.ACTION_TYPES?.nap?.isValid?.('town', 'home') ?? true; // nap 目前没限制，默认放行
-    if (!isValid) return;
-    return Cake.triggerRest('town', 'home', 'nap');
-};
+    Cake.rest = () => {
+        const isValid = Cake.ACTION_TYPES?.nap?.isValid?.('town', 'home') ?? true;
+        if (!isValid) return;
+        return Cake.triggerRest('town', 'home', 'nap');
+    };
 
-Cake.sleep = () => {
-    // 强制走 ACTION_TYPES 的白名单校验
-    const isValid = Cake.ACTION_TYPES?.sleep?.isValid?.('town', 'home') ?? false;
-    if (!isValid) {
-        Cake.addLog?.('❌ 这里无法睡觉。');
-        Cake.refreshPage?.();
-        return;
-    }
-    return Cake.triggerRest('town', 'home', 'sleep');
-};
+    Cake.sleep = () => {
+        const isValid = Cake.ACTION_TYPES?.sleep?.isValid?.('town', 'home') ?? false;
+        if (!isValid) {
+            Cake.addLog?.('❌ 这里无法睡觉。');
+            Cake.refreshPage?.();
+            return;
+        }
+        return Cake.triggerRest('town', 'home', 'sleep');
+    };
 
     console.log('🛌 事件驱动型休息系统注册表已装载！');
 })();

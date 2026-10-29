@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🛠️ 工具库</title>
+    <link rel="stylesheet" href="../../css/styles.css">
+    <style>
+        .tool-card { display: flex; align-items: center; gap: 15px; background: #fff; padding: 15px; border-radius: 12px; margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .tool-icon { font-size: 36px; }
+        .tool-name { font-weight: bold; font-size: 16px; color: var(--pink-600); }
+        .tool-meta { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+        .prof-bar { width: 100%; height: 6px; background: #ffe4e1; border-radius: 4px; margin-top: 8px; overflow: hidden; }
+        .prof-fill { height: 100%; background: var(--pink-400); }
+        .tech-tag { display: inline-block; font-size: 11px; padding: 2px 8px; background: #f0f0f0; border-radius: 10px; margin-left: 6px; color: #555; }
+        .back-btn { display: inline-block; margin-bottom: 15px; color: var(--pink-600); cursor: pointer; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="game-body" style="padding-top: 10px;">
+        <div class="back-btn" onclick="history.back()">← 返回个人中心</div>
+        <div class="content" id="content"></div>
+    </div>
+
+    <script type="module">
+        const Cake = window.parent.Cake || window.Cake;
+        if (!Cake) return;
+
+        const render = () => {
+            const state = Cake.store.state;
+            const contentEl = document.getElementById('content');
+            const ownedTools = Object.keys(state.tools || {}).filter(id => state.tools[id].owned);
+
+            if (ownedTools.length === 0) {
+                contentEl.innerHTML = '<div class="card text-center muted">你还没有任何工具，去采购中心看看吧！</div>';
+                return;
+            }
+
+            const cards = ownedTools.map(id => {
+                const t = state.tools[id];
+                const data = Cake.TOOLS[id] || { name: id, emoji: '❓', tech: null };
+                const profPct = Math.min(100, Math.round(((t.lv || 1) / 10) * 100));
+                const techTag = data.tech ? `<span class="tech-tag">技法: ${data.tech}</span>` : '';
+
+                return `
+                    <div class="tool-card">
+                        <div class="tool-icon">${data.emoji}</div>
+                        <div style="flex:1;">
+                            <div class="tool-name">${data.name} ${techTag}</div>
+                            <div class="tool-meta">熟练度 Lv.${t.lv || 1} · 经验 ${t.exp || 0}</div>
+                            <div class="prof-bar"><div class="prof-fill" style="width: ${profPct}%;"></div></div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            contentEl.innerHTML = `<div class="card"><h2>🛠️ 我的工具库</h2>${cards}</div>`;
+        };
+
+        Cake.initPage('profile', render, false);
+    </script>
+</body>
+</html>

@@ -2,122 +2,30 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>🍰 甜蜜物语</title>
-    <!-- 注意：如果这个文件在根目录，这里的路径是对的 -->
-    <link rel="stylesheet" href="css/styles.css">
-    <link rel="stylesheet" href="css/game-shell.css">
-    
-    <!-- 监视器接管全局 -->
-    <script type="module" src="js/host/monitor/index.js"></script>
-    <style>
-        /* 👈 超级硬核的布局修正：不依赖任何复杂的 Flex，直接用 Fixed 定死 */
-        body, html { margin: 0; padding: 0; height: 100%; background: #fff0f5; overflow: hidden; }
-        
-        #header {
-            position: fixed; top: 0; left: 0; right: 0; height: 70px;
-            background: #fff; z-index: 9999; border-bottom: 2px solid red;
-            box-sizing: border-box; display: flex; align-items: center; justify-content: center;
-        }
-
-        #navBar {
-            position: fixed; top: 70px; left: 0; right: 0; height: 50px;
-            background: #fff; display: flex; align-items: center; overflow-x: auto;
-            z-index: 9999; border-bottom: 2px solid blue; box-sizing: border-box;
-        }
-
-        .main-frame {
-            position: absolute; top: 120px; bottom: 120px;
-            left: 0; width: 100%; border: none; background: transparent; z-index: 10;
-        }
-
-        .log-frame {
-            position: absolute; bottom: 60px; left: 0; width: 100%; height: 120px;
-            border: none; background: #fff; border-top: 2px dashed #ffd1dc; z-index: 10;
-        }
-
-        .action-footer {
-            position: fixed; bottom: 0; left: 0; right: 0; height: 60px;
-            background: #fff; display: flex; z-index: 9999; border-top: 1px solid var(--pink-200);
-        }
-        
-        /* 底部按钮交互体验优化 */
-        .footer-btn:active { background-color: #f0f0f0; }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>店铺经营</title>
+    <!-- 🚨 注意这里：用 ../../ 退回根目录去找 css -->
+    <link rel="stylesheet" href="../../css/styles.css">
+    <!-- 如果有专门给商店写的 css，也可以在这里引入，比如 ../../css/shop.css -->
 </head>
-<body>
-    <!-- 加载遮罩 -->
-    <div id="app-loading" style="position: fixed; inset: 0; background: #fff0f5; z-index: 99999; display: flex; flex-direction: column; align-items: center; justify-content: center;">
-        <div class="loading-title" style="font-size: 24px; font-weight: bold; color: #d6336c; margin-bottom: 20px;">🍰 甜蜜物语</div>
-        <div id="loading-text" style="font-size: 14px; color: #888; margin-bottom: 15px;">正在准备启动...</div>
-        <div class="loading-bar-wrap" style="width: 200px; height: 10px; background: #ffe4e1; border-radius: 5px; overflow: hidden;">
-            <div id="loading-bar" style="width: 0%; height: 100%; background: #ff8fa3; transition: width 0.3s;"></div>
-        </div>
-    </div>
-
-    <!-- 主体区域 -->
-    <div class="app-wrapper" id="app-root">
-        <header id="header">Header 应该在这里</header>
-        <nav id="navBar">Nav 应该在这里</nav>
-        
-        <!-- ❗️修复 1：把 src 去掉，防止过早加载子页面导致找不到 Cake -->
-        <iframe id="mainFrame" class="main-frame"></iframe>
-        <iframe id="logFrame" class="log-frame"></iframe>
-        
-        <div class="action-footer" id="footer">
-            <!-- ❗️修复 2：加上了备用函数，防止报错 -->
-            <div class="footer-btn" onclick="handleFooterAction('sleep')" style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; border-right:1px solid #eee; cursor:pointer;">
-                <span class="icon">🛌</span><span style="font-size:12px;">睡觉</span>
-            </div>
-            <div class="footer-btn" onclick="handleFooterAction('shop')" style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; border-right:1px solid #eee; cursor:pointer;">
-                <span class="icon" id="f-icon-shop">🚪</span><span id="f-text-shop" style="font-size:12px;">营业</span>
-            </div>
-            <div class="footer-btn" style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;">
-                <span class="icon">📅</span><span class="footer-time" id="f-time" style="font-size:12px;">Day 1 08:00</span>
-            </div>
-        </div>
-    </div>
-
-    <script src="js/host/log-bridge.js"></script>
-    <script type="module" src="js/host/game-shell.js"></script>
+<body style="background: transparent; margin: 0; padding: 20px;">
     
+    <!-- 这里只写商店里面的内容 -->
+    <h2>🏪 营业中</h2>
+    <div id="shop-shelf">
+        <!-- 货架内容通过 JS 渲染 -->
+    </div>
+
+    <!-- 🚨 注意这里：用 ../../ 退回根目录去找 js -->
+    <script type="module" src="../../js/actions/shop/index.js"></script>
+    
+    <!-- 如果你想在这里写脚本，记得用 (() => {})(); 包裹 -->
     <script>
-        // 提供一个全局方法来安全移除 Loading（最好由 game-shell.js 在初始化完毕后调用）
-        window.hideLoading = function() {
-            const loadingEl = document.getElementById('app-loading');
-            if (loadingEl) {
-                loadingEl.style.opacity = '0';
-                loadingEl.style.transition = 'opacity 0.3s';
-                setTimeout(() => loadingEl.remove(), 300);
-            }
-        };
-
-        // ❗️修复 3：定义底栏点击动作，如果 game-shell.js 已经定义，优先用它的
-        window.handleFooterAction = function(action) {
-            if (window.footerAction && typeof window.footerAction === 'function') {
-                window.footerAction(action);
-            } else {
-                console.warn(`[Host] game-shell.js 还未就绪，但点击了: ${action}`);
-                // 兜底：先手动切换页面测试
-                if (action === 'shop') {
-                    document.getElementById('mainFrame').src = 'pages/shop/index.html';
-                }
-            }
-        };
-
-        // ❗️修复 4：核心逻辑，延迟加载 iframe
-        // 只有在引擎准备得差不多时（或者 DOM 加载完毕后稍微延迟），再去渲染子页面
-        document.addEventListener('DOMContentLoaded', () => {
-            // 给 game-shell.js 一点时间去创建 window.Cake
-            setTimeout(() => {
-                // 把之前写死在 HTML 里的 src 在这里赋上
-                document.getElementById('mainFrame').src = 'pages/home/index.html';
-                document.getElementById('logFrame').src = 'pages/log/index.html';
-            }, 100); 
-        });
-
-        // 兜底：3秒后如果还没调用 hideLoading，强制移除遮罩，防止卡死
-        setTimeout(() => { window.hideLoading(); }, 3000);
+        (() => {
+            // 如果这里有 return，现在就不会报错了
+            // if (!Cake) return;
+            console.log("Shop 页面加载完毕");
+        })();
     </script>
 </body>
 </html>

@@ -2,5 +2,6 @@
 import './error.js';
 import './sync.js';
 import './router.js';
+import './monitor/index.js'; 
 
 console.log('🏠 [Host] 宿主环境与路由系统装载完毕');

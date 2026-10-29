@@ -5,15 +5,15 @@
         'cake:muffin': {
             name: '经典麦芬蛋糕',
             skill: 'bakery',
+            size: 'small', // 👈 必须加上这个！
             energy: 5,
             ing: { flour_low: 1, sugar: 1, chicken_egg: 1, milk: 1 },
             tools: [{ tech: 'bake', role: 'required' }],
-            // 四维品质门槛
             qualityReq: {
-                minIngredientQuality: 50, // 食材品质
-                minSkillLevel: 1,         // 厨艺熟练度
-                minRecipeProf: 3,         // 配方熟练度
-                perfectTools: []          // 工具（无需特定神器）
+                minIngredientQuality: 50, 
+                minSkillLevel: 1,         
+                minRecipeProf: 3,         
+                perfectTools: []          
             },
             output: {
                 type: 'food', key: 'cake:muffin',
@@ -23,6 +23,7 @@
         'cake:cupcake': {
             name: '奶油纸杯蛋糕',
             skill: 'bakery',
+            size: 'small', // 👈 这里也要加上！
             energy: 8,
             ing: { flour_low: 1, sugar: 1, chicken_egg: 1, butter: 1, cream: 1 },
             tools: [{ tech: 'bake', role: 'required' }],

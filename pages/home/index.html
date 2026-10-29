@@ -3,34 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>主页</title>
-    <!-- 退两格找 css -->
+    <title>主页 · 甜蜜物语</title>
     <link rel="stylesheet" href="../../css/styles.css">
     <style>
-        body {
-            background: transparent;
-            padding: 16px;
-            margin: 0;
-            min-height: 100vh;
-            box-sizing: border-box;
-            display: block !important;
-        }
-        .render-error {
-            color: #b00;
-            padding: 16px;
-            background: #fff;
-            border-radius: 8px;
-        }
+        body { background: transparent; padding: 16px; margin: 0; min-height: 100vh; box-sizing: border-box; display: block !important; }
+        .room-card { display: flex; align-items: center; justify-content: space-between; padding: 20px; background: #fff; border-radius: 16px; margin-bottom: 15px; cursor: pointer; border: 1px solid var(--pink-100); box-shadow: 0 4px 10px rgba(0,0,0,0.03); transition: 0.2s; }
+        .room-card:active { transform: scale(0.98); background: #fff8fa; }
+        .room-left { display: flex; align-items: center; gap: 15px; }
+        .room-icon { font-size: 36px; }
+        .room-title { font-weight: bold; color: var(--pink-600); font-size: 18px; }
+        .room-desc { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
+        .arrow { color: var(--pink-300); font-size: 24px; font-weight: bold; }
     </style>
 </head>
 <body>
-    <!-- 之前你的 home 脚本里要用的容器 -->
     <div id="content"></div>
-
-    <!-- 
-      直接引入 home 专属的 index.js 
-      不要再走 router.js 了，router 是给外层 game.html 和 index.html 用的
-    -->
-    <script type="module" src="../../js/pages/home/index.js"></script>
+    <script type="module" src="index.js"></script>
 </body>
 </html>

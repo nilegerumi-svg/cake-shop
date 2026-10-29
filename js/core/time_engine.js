@@ -72,6 +72,11 @@
         if (rottenCount > 0) {
             Cake.addLog(`🤢 有 ${rottenCount} 份食材因为过期而腐烂了，记得清理！`, 'error');
         }
+
+        // 👈 调用社交引擎检查是否有新角色登场
+        if (Cake.Social && typeof Cake.Social.checkDailyMeet === 'function') {
+            Cake.Social.checkDailyMeet(state);
+        }
     };
 
     // 处理订单送达逻辑

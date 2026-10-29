@@ -4,20 +4,32 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>💕 缘分 · 甜蜜物语</title>
-    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="../../css/styles.css">
+    <style>
+        .char-card {
+            cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 12px;
+            padding: 15px; background: #fff; border-radius: 12px; border: 1px solid var(--pink-100);
+        }
+        .char-card:active { transform: scale(0.98); background: #fff8fa; }
+        .char-emoji { font-size: 40px; }
+        .char-info { flex: 1; }
+        .char-name { font-weight: bold; font-size: 16px; color: var(--text-main); }
+        .char-desc { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+    </style>
 </head>
 <body>
     <div class="game-body" style="padding-top: 10px;">
-        <div class="content" id="content"></div>
+        <div class="card">
+            <h2>💕 缘分相遇</h2>
+            <p class="muted" style="margin-bottom: 15px;">通过经营和散步邂逅的人，去看看他们吧。</p>
+            <div class="grid-2" id="content"></div>
+        </div>
     </div>
 
     <script type="module">
         const Cake = window.parent.Cake || window.Cake;
         if (!Cake) return;
 
-        const contentEl = document.getElementById('content');
-
-        // 渲染好感度等级
         const affLevel = (aff) => {
             if (aff >= 100) return '💖 挚爱';
             if (aff >= 80) return '💗 心动';
@@ -27,130 +39,48 @@
             return '🤍 陌生';
         };
 
-        const renderLove = () => {
+        const renderHub = () => {
             const state = Cake.store.state;
             const characters = Cake.CHARACTERS || {};
             const charState = state.characters || {};
 
-            // 收集玩家目前拥有的成品（用于送礼）
-            const availableFoods = [];
-            for (const [recipeKey, data] of Object.entries(state.foods || {})) {
-                const total = (data.perfect || 0) + (data.good || 0) + (data.normal || 0);
-                if (total > 0) availableFoods.push({ key: recipeKey, count: total });
-            }
-
-            const cards = Object.entries(characters).map(([cid, char]) => {
+            document.getElementById('content').innerHTML = Object.entries(characters).map(([cid, char]) => {
                 const cs = charState[cid] || { met: false, affection: 0 };
                 
-                // 未相遇状态
                 if (!cs.met) {
                     return `
-                    <div class="char-card" style="border-color:${char.color || '#ffe4e1'}33; opacity:0.82;">
-                        <div class="char-head">
-                            <span class="char-emoji">${char.emoji || '❓'}</span>
-                            <div>
-                                <div class="char-name">${char.name || '???'}</div>
-                                <div class="aff-text">🔒 尚未相遇</div>
-                            </div>
+                    <div class="char-card" style="opacity:0.6; cursor:not-allowed;">
+                        <div class="char-emoji">❓</div>
+                        <div class="char-info">
+                            <div class="char-name">???</div>
+                            <div class="char-desc">🔒 尚未相遇</div>
                         </div>
-                        <span class="char-desc">${char.desc || ''}</span>
-                        <p class="muted">继续经营，也许某天会遇到对方……</p>
                     </div>`;
                 }
 
-                // 已相遇状态
                 const aff = Math.max(0, Math.min(100, cs.affection || 0));
-                
-                // 送礼按钮列表
-                const giftBtns = availableFoods.map(f => {
-                    const recipe = Cake.RECIPES[f.key];
-                    const liked = (char.likes || []).includes(recipe.name) ? '💕' : '';
-                    return `<button class="small" onclick="giveGift('${cid}', '${f.key}')">${recipe.emoji}${recipe.name} ×${f.count} ${liked}</button>`;
-                }).join('');
-
                 return `
-                <div class="char-card" style="border-color:${char.color || '#ffe4e1'}66;">
-                    <div class="char-head">
-                        <span class="char-emoji">${char.emoji || '❓'}</span>
-                        <div>
-                            <div class="char-name">${char.name || '???'}</div>
-                            <div class="aff-text">${affLevel(aff)} ${aff}/100</div>
+                    <div class="char-card" onclick="goDetail('${cid}')">
+                        <div class="char-emoji">${char.emoji}</div>
+                        <div class="char-info">
+                            <div class="char-name">${char.name}</div>
+                            <div class="char-desc" style="color:var(--pink-600); font-weight:bold;">
+                                ${affLevel(aff)} ${aff}/100
+                            </div>
+                            <div class="aff-bar" style="height:4px; margin-top:6px;">
+                                <div class="aff-fill" style="width:${aff}%;"></div>
+                            </div>
                         </div>
                     </div>
-                    <div class="aff-bar"><div class="aff-fill" style="width:${aff}%;"></div></div>
-                    <span class="char-desc">${char.desc || ''}</span>
-                    <span class="char-desc">💝 喜欢：${(char.likes || []).join('、')}</span>
-                    <div class="char-actions">
-                        <button class="small" onclick="chatWith('${cid}')">💬 聊天</button>
-                        <button class="small secondary" onclick="dateWith('${cid}')">🌹 邀约</button>
-                    </div>
-                    <div class="gift-panel">
-                        ${giftBtns.length > 0 ? giftBtns : '<span class="muted">没有可送的蛋糕</span>'}
-                    </div>
-                </div>`;
+                `;
             }).join('');
-
-            contentEl.innerHTML = `
-                <div class="card">
-                    <h2>💕 缘分相遇</h2>
-                    <p class="muted">通过经营、散步与开店，你会邂逅不同的人。聊天、送礼、邀约可以提升好感度。</p>
-                    <div class="grid-2" style="margin-top:12px;">${cards}</div>
-                </div>`;
         };
 
-        // 挂载到全局，供按钮调用
-        window.chatWith = (cid) => {
-            const char = Cake.CHARACTERS[cid];
-            const chatList = Cake.CHAT_DIALOGUES[cid];
-            if (!chatList) return;
-            const text = Cake.randomPick ? Cake.randomPick(chatList) : chatList[0];
-            Cake.addLog(`💬 [${char.name}] ${text}`);
-            Cake.Social.addAffection({ [cid]: 2 }); // 聊天加 2 点好感
+        window.goDetail = (cid) => {
+            window.location.href = `detail.html?id=${cid}`;
         };
 
-        window.dateWith = (cid) => {
-            const state = Cake.store.state;
-            if (state.energy < 12) return alert('精力不足，无法邀约');
-            if (state.money < 50) return alert('金币不足，无法邀约');
-            
-            const char = Cake.CHARACTERS[cid];
-            const dateList = Cake.DATE_DIALOGUES[cid];
-            if (!dateList) return;
-            const text = Cake.randomPick ? Cake.randomPick(dateList) : dateList[0];
-
-            state.energy -= 12;
-            state.money -= 50;
-            Cake.addLog(`🌹 [${char.name}] ${text}`);
-            Cake.Social.addAffection({ [cid]: 10 }); // 邀约加 10 点好感
-            Cake.advanceTime(120); // 约会耗时 2 小时
-        };
-
-        window.giveGift = (cid, recipeKey) => {
-            const state = Cake.store.state;
-            const data = state.foods[recipeKey];
-            if (!data) return;
-            
-            const recipe = Cake.RECIPES[recipeKey];
-            const char = Cake.CHARACTERS[cid];
-            let affGain = 5;
-
-            // 如果是喜欢的食物，额外加好感
-            if ((char.likes || []).includes(recipe.name)) affGain += 10;
-
-            // 扣除一份蛋糕（优先扣普通的）
-            if (data.normal > 0) data.normal--;
-            else if (data.good > 0) data.good--;
-            else if (data.perfect > 0) data.perfect--;
-
-            Cake.addLog(`🎁 送给 ${char.name} 一份 ${recipe.name}，好感度提升！`);
-            Cake.Social.addAffection({ [cid]: affGain });
-            
-            renderLove(); // 刷新页面
-        };
-
-        if (typeof Cake.initPage === 'function') {
-            Cake.initPage('love', renderLove, false);
-        }
+        if (typeof Cake.initPage === 'function') Cake.initPage('love', renderHub, false);
     </script>
 </body>
 </html>

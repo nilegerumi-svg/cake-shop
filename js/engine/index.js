@@ -116,11 +116,19 @@ export async function initEngine(MODULES) {
             window.updateLoadingProgress?.(`${mod.name} (${mod.path})…`, percent);
             
             try {
-                await import(mod.path);
-            } catch (importErr) {
-                console.error(`❌ [Engine] 模块加载失败 -> ${mod.path}`, importErr);
-                throw new Error(`无法加载模块: ${mod.path} - ${importErr.message || '文件不存在'}`);
-            }
+                   await import(mod.path);
+                } catch (importErr) {
+           // 👈 终极放大镜：榨干 Error 对象里的所有信息
+                   console.error(`❌ [Engine] 模块加载失败 -> ${mod.path}`);
+                   console.error('错误类型:', importErr?.name || typeof importErr);
+                   console.error('错误信息:', importErr?.message || '没有 message 字段');
+                   console.error('错误堆栈:', importErr?.stack || '没有 stack 字段');
+                   console.dir(importErr); // 直接把对象打印出来
+    
+           // 把最详细的信息抛出去
+                   const errMsg = importErr?.message || importErr?.name || '未知加载异常(可能是文件不存在)';
+                   throw new Error(`无法加载模块: ${mod.path} 原因: ${errMsg}`);
+                 }
         }
 
         if (task.isCancelled()) return false;

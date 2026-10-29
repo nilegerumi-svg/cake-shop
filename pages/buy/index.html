@@ -4,15 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>🛒 采购中心 · 甜蜜物语</title>
+    <!-- 引入独立的样式 -->
+    <link rel="stylesheet" href="style.css">
+    <!-- 引入全局样式 -->
     <link rel="stylesheet" href="../../css/styles.css">
-    <style>
-        .cat-tabs { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 10px; }
-        .cat-btn { background: #fff; border: 1px solid #ddd; padding: 8px 15px; border-radius: 20px; white-space: nowrap; cursor: pointer; }
-        .cat-btn.active { background: var(--pink-400); color: #fff; border-color: var(--pink-400); }
-        .shop-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
-        .buy-btn-group { display: flex; gap: 5px; margin-top: 10px; width: 100%; }
-        .buy-btn-group button { flex: 1; padding: 6px 0; font-size: 12px; }
-    </style>
 </head>
 <body>
     <div class="game-body" style="padding-top: 10px;">
@@ -22,9 +17,9 @@
         </div>
 
         <div class="cat-tabs" id="categoryTabs">
-            <button class="cat-btn active" onclick="switchCat('ingredients')">🥩 基础食材</button>
-            <button class="cat-btn" onclick="switchCat('tools')">🛠️ 厨房工具</button>
-            <button class="cat-btn" onclick="switchCat('materials')">🪵 建造材料</button>
+            <button class="cat-btn active" data-cat="ingredients">🥩 基础食材</button>
+            <button class="cat-btn" data-cat="tools">🛠️ 厨房工具</button>
+            <button class="cat-btn" data-cat="materials">🪵 建造材料</button>
         </div>
 
         <div class="shop-grid" id="shopGrid">
@@ -32,67 +27,7 @@
         </div>
     </div>
 
-    <script type="module">
-        const Cake = window.parent.Cake || window.Cake;
-        if (!Cake) return;
-
-        let currentCat = 'ingredients';
-
-        const renderShop = () => {
-            const grid = document.getElementById('shopGrid');
-            
-            // 从我们的商店配置里获取
-            const shopItems = Cake.SHOP_ITEMS?.[currentCat] || {};
-            
-            // 转换成数组
-            const items = Object.keys(shopItems).map(id => {
-                return { id, data: Cake.INGREDIENTS[id] || Cake.TOOLS[id] };
-            }).filter(x => x.data); // 过滤掉找不到数据的
-
-            if (items.length === 0) {
-                grid.innerHTML = '<div class="muted" style="grid-column: span 3; text-align:center;">暂无商品</div>';
-                return;
-            }
-
-            grid.innerHTML = items.map(({ id, data }) => `
-                <div class="item-card" style="padding: 12px;">
-                    <div class="item-emoji">${data.emoji || '📦'}</div>
-                    <div class="item-name">${data.name}</div>
-                    <div class="item-meta"><span class="price-tag">💰 ${data.price}</span></div>
-                    
-                    <div class="buy-btn-group">
-                        <button class="small secondary" onclick="buyItem('${id}', 1)">买1个</button>
-                        <button class="small gold" onclick="buyItem('${id}', 10)">买10个</button>
-                    </div>
-                </div>
-            `).join('');
-        };
-
-        window.switchCat = (cat) => {
-            currentCat = cat;
-            // 更新 Tab UI
-            const tabs = document.getElementById('categoryTabs').children;
-            for (let i = 0; i < tabs.length; i++) {
-                tabs[i].classList.toggle('active', tabs[i].textContent.includes(cat === 'ingredients' ? '基础' : cat === 'tools' ? '工具' : '材料'));
-            }
-            renderShop();
-        };
-
-        window.buyItem = (id, qty) => {
-            const res = Cake.orderItem(id, qty);
-            if (res && res.success === false) {
-                alert(res.message);
-            } else {
-                // 轻提示
-                Cake.addLog(`✅ 成功订购 ${qty} 个 ${id}`, 'success');
-            }
-        };
-
-        if (typeof Cake.initPage === 'function') {
-            Cake.initPage('buy', () => {
-                renderShop();
-            }, false);
-        }
-    </script>
+    <!-- 引入独立的逻辑模块 -->
+    <script type="module" src="index.js"></script>
 </body>
 </html>

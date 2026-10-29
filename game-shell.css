@@ -1,0 +1,56 @@
+/* css/game-shell.css */
+body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; background: #fff0f5; }
+#app-loading {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: #fff0f5; z-index: 99999;
+    display: flex; flex-direction: column; justify-content: center; align-items: center;
+    transition: opacity 0.3s ease;
+}
+.loading-title { font-size: 24px; font-weight: bold; color: #d6336c; margin-bottom: 20px; }
+.loading-text { font-size: 14px; color: #888; margin-bottom: 15px; font-weight: bold; }
+.loading-bar-wrap { width: 80%; max-width: 300px; height: 12px; background: #ffe4e1; border-radius: 6px; overflow: hidden; box-shadow: inset 0 1px 3px rgba(0,0,0,0.1); }
+.loading-bar-fill { width: 0%; height: 100%; background: #ff8fa3; transition: width 0.2s ease; }
+
+.app-wrapper { display: flex; flex-direction: column; height: 100vh; height: 100dvh; }
+header, nav { flex: 0 0 auto; z-index: 10; }
+.split-container {
+    flex: 1; display: flex; flex-direction: column; overflow: hidden;
+    padding-bottom: calc(60px + env(safe-area-inset-bottom));
+}
+.main-frame { flex: 1; width: 100%; border: none; background: transparent; min-height: 240px; }
+.log-frame {
+    flex: 0 0 clamp(100px, 20vh, 160px);
+    width: 100%; border: none; background: #fff;
+    border-top: 2px dashed #ffd1dc;
+    box-shadow: 0 -4px 10px rgba(255, 143, 163, 0.1);
+}
+iframe { display: block; width: 100%; height: 100%; }
+
+/* 底部增强栏 */
+.action-footer {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    height: 60px;
+    background: #fff;
+    border-top: 1px solid var(--pink-200);
+    display: flex; align-items: center; justify-content: space-around;
+    padding-bottom: env(safe-area-inset-bottom);
+    z-index: 100;
+    box-shadow: 0 -2px 10px rgba(255, 143, 163, 0.15);
+}
+.footer-btn {
+    flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    cursor: pointer; color: var(--text-mid); font-size: 12px; font-weight: bold;
+    transition: 0.2s; border-right: 1px solid #f0f0f0;
+}
+.footer-btn:last-child { border-right: none; }
+.footer-btn:active { background: var(--pink-50); }
+.footer-btn .icon { font-size: 18px; margin-bottom: 2px; }
+.footer-time { color: var(--pink-600); font-size: 13px; }
+
+#error-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; z-index: 999999;
+    background: rgba(220, 38, 38, 0.95); color: white;
+    padding: 10px; font-size: 13px; line-height: 1.4;
+    word-break: break-all; pointer-events: none;
+    max-height: 40vh; overflow-y: auto; display: none;
+}

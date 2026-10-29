@@ -1,14 +1,27 @@
 // js/data/index.js
+(async () => {
+    'use strict';
+    
+    // 👈 只加载你现在真正需要的核心模块！
+    const DATA_MODULES = [
+        './attributes/index.js',   // 属性字典
+        './ingredients/index.js',  // 食材（肉、菜、面粉等）
+        './recipes/index.js',      // 菜谱（烘焙、料理）
+        './tool/index.js',         // 工具（烤箱、炒锅）
+        './characters/index.js'    // 角色（恋爱系统）
+    ];
 
-// 依次引入各个子目录的 index.js
-import './achievements/index.js';
-import './attributes/index.js';       // ⭐ 新增的属性目录
-import './bundles/index.js';
-import './characters/index.js';
-import './ingredients/index.js';
-import './recipes/index.js';
-import './shop/index.js';             // 以前叫 shop_config，现在统一为文件夹
-import './tool/index.js';
-import './usually_shop_events/index.js';
+    // 暂时没写的空文件夹：bundles, shop, achievements, usually_shop_events
+    // 我们先把它们注释掉，防止 404 崩溃！
 
-console.log('📦 [Data] 基础数据层装载完毕');
+    for (const path of DATA_MODULES) {
+        try {
+            await import(path);
+        } catch (err) {
+            console.error(`❌ [Data] 加载失败: ${path}`, err);
+            throw new Error(`Data 目录下的文件报错或找不到: ${path}`);
+        }
+    }
+
+    console.log('📦 [Data] 核心数据层装载完毕');
+})();

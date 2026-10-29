@@ -3,167 +3,161 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🎂 烘焙 · 甜蜜物语</title>
-    <link rel="stylesheet" href="../css/styles.css">
+    <title>🧂 烘焙工坊 · 甜蜜物语</title>
+    <!-- 注意：多了一层文件夹，引用 css 变成 ../../ -->
+    <link rel="stylesheet" href="../../css/styles.css">
+    <style>
+        .workshop-layout { display: flex; gap: 15px; flex-wrap: wrap; }
+        .recipe-menu { flex: 1 1 120px; display: flex; flex-direction: column; gap: 10px; }
+        .recipe-item {
+            padding: 12px; border-radius: 12px; background: #fff;
+            border: 2px solid transparent; text-align: center; cursor: pointer;
+            transition: 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .recipe-item.active {
+            border-color: var(--pink-400); background: var(--pink-50);
+            transform: scale(1.02);
+        }
+        .workbench {
+            flex: 2 1 200px; background: #fff; padding: 20px; border-radius: 16px;
+            box-shadow: var(--shadow-card); display: flex; flex-direction: column;
+        }
+        .big-craft-btn {
+            margin-top: auto; background: var(--pink-400); color: #fff; border: none;
+            padding: 15px; border-radius: 50px; font-size: 16px; font-weight: bold;
+            cursor: pointer; box-shadow: 0 4px 15px rgba(255, 107, 129, 0.4);
+            transition: 0.1s;
+        }
+        .big-craft-btn:active { transform: translateY(2px); box-shadow: 0 2px 5px rgba(255, 107, 129, 0.4); }
+        .big-craft-btn:disabled { background: #ccc; box-shadow: none; cursor: not-allowed; }
+    </style>
 </head>
 <body>
     <div class="game-body" style="padding-top: 10px;">
-        <div class="content" id="content"></div>
+        <h2>🧂 烘焙工坊</h2>
+        <div class="workshop-layout">
+            <!-- 左侧：配方选择栏 -->
+            <div class="recipe-menu" id="recipeMenu"></div>
+            <!-- 右侧：工作台 -->
+            <div class="workbench" id="workbench">
+                <div class="muted text-center" style="margin-top:50px;">👈 请在左侧选择配方</div>
+            </div>
+        </div>
     </div>
-    <script src="../js/core/store.js"></script>
-    <script src="../js/data/ingredients.js"></script>
-    <script src="../js/data/recipes.js"></script>
-    <script src="../js/data/bundles.js"></script>
-    <script src="../js/data/characters.js"></script>
-    <script src="../js/data/events.js"></script>
-    <script src="../js/data/shop-config.js"></script>
-    <script src="../js/data/achievements.js"></script>
-    <script src="../js/core/utils.js"></script>
-    <script src="../js/core/state.js"></script>
-    <script src="../js/core/modal.js"></script>
-    <script src="../js/core/effects.js"></script>
-    <script src="../js/core/render.js"></script>
-    <script src="../js/actions/bakery.js"></script>
-    <script src="../js/actions/shop.js"></script>
-    <script src="../js/actions/social.js"></script>
-    <script src="../js/actions/system.js"></script>
-    <script src="../js/shared.js"></script>
-    <script>
-    (() => {
-        'use strict';
 
-        const contentEl = document.getElementById('content');
-        const ENERGY_PER_BAKE = 20;
-        const MAX_BATCH = 5;
+    <script type="module">
+        const Cake = window.parent.Cake || window.Cake;
+        if (!Cake) return;
 
-        let Game = null;
-        let tries = 0;
-        const MAX_TRIES = 100;
+        let currentSelected = null;
 
-        /* ==================== 单个配方卡片 ==================== */
+        const renderMenu = () => {
+            const state = Cake.store.state;
+            const menuEl = document.getElementById('recipeMenu');
+            // 过滤出已解锁的烘焙配方
+            const unlocked = Object.keys(Cake.RECIPES).filter(k => 
+                state.unlockedRecipes[k] && Cake.RECIPES[k].skill === 'bakery'
+            );
 
-        const renderRecipeCard = (name, recipe, state) => {
-            const ingredients = state.ingredients || {};
-            const cakes = state.cakes || {};
-            const energy = Number(state.energy) || 0;
-            const ing = recipe.ing || {};
-            const ingKeys = Object.keys(ing);
+            if (unlocked.length === 0) {
+                menuEl.innerHTML = '<div class="muted">暂无解锁的配方</div>';
+                return;
+            }
 
-            const lackIng = ingKeys.some((k) => (ingredients[k] || 0) < ing[k]);
-            const lackEnergy = energy < ENERGY_PER_BAKE;
-            const canBake = !lackIng && !lackEnergy;
-
-            const maxByEnergy = Math.floor(energy / ENERGY_PER_BAKE);
-            const maxByIng = ingKeys.length > 0
-                ? Math.min(...ingKeys.map((k) => Math.floor((ingredients[k] || 0) / ing[k])))
-                : Infinity;
-            const batchCount = Math.min(MAX_BATCH, maxByEnergy, maxByIng);
-            const canBatch = batchCount >= 2;
-
-            const label = canBake
-                ? '🔥 烘焙'
-                : (lackEnergy && lackIng
-                    ? '⚡🌾 精力与食材不足'
-                    : (lackEnergy ? '⚡ 精力不足' : '🌾 食材不足'));
-
-            const stock = cakes[name] || 0;
-
-            const batchBtn = canBatch
-                ? `<button type="button" class="small secondary"
-                       data-bake="${name}" data-count="${batchCount}">🔥 批量×${batchCount}</button>`
-                : '';
-
-            return `<div class="item-card">
-                <span class="item-emoji">${recipe.emoji || '🍰'}</span>
-                <span class="item-name">${name} <span class="muted">（库存 ${stock}）</span></span>
-                <span class="item-desc">${recipe.desc || ''}</span>
-                <div class="ing-row">${Game.ingredientTags(ing)}</div>
-                <span class="item-meta">基础价 ${recipe.price}元 · 声望+${recipe.rep}</span>
-                <div style="display:flex;gap:6px;flex-wrap:wrap;">
-                    <button type="button" class="small"
-                        ${canBake ? '' : 'disabled'}
-                        data-bake="${name}">${label}</button>
-                    ${batchBtn}
-                </div>
-            </div>`;
-        };
-
-        /* ==================== 食材库存 ==================== */
-
-        const renderIngredientStock = (ingredients) =>
-            Object.entries(Game.INGREDIENTS || {}).map(([key, item]) => {
-                const count = ingredients[key] || 0;
-                return `<span class="ing-tag ${count > 0 ? 'ok' : 'lack'}">${item.emoji}${item.name} ×${count}</span>`;
+            menuEl.innerHTML = unlocked.map(key => {
+                const r = Cake.RECIPES[key];
+                return `
+                    <div class="recipe-item ${currentSelected === key ? 'active' : ''}" onclick="selectRecipe('${key}')">
+                        <div style="font-size: 24px;">${r.emoji || '🍰'}</div>
+                        <div style="font-weight: bold; font-size: 13px; margin-top: 5px;">${r.name}</div>
+                    </div>
+                `;
             }).join('');
-
-        /* ==================== 烘焙页渲染 ==================== */
-
-        const renderBake = () => {
-            const state = Game.state || {};
-            const recipes = state.recipes || {};
-            const ingredients = state.ingredients || {};
-
-            const unlocked = Object.keys(recipes)
-                .filter((name) => Game.RECIPES && Game.RECIPES[name]);
-
-            const cardsHtml = unlocked.length === 0
-                ? '<p class="muted">还没有解锁任何配方，先去「配方」页研发吧！</p>'
-                : unlocked.map((name) => renderRecipeCard(name, Game.RECIPES[name], state)).join('');
-
-            contentEl.innerHTML = `
-                <div class="card">
-                    <h2>🎂 烘焙蛋糕</h2>
-                    <p class="muted">每次烘焙消耗 <b>${ENERGY_PER_BAKE}</b> 精力。点击烘焙制作 1 个蛋糕用于售卖或送礼。</p>
-                    <div class="grid-2" style="margin-top:12px;">${cardsHtml}</div>
-                    <h3>📦 当前食材</h3>
-                    <div class="ing-row">${renderIngredientStock(ingredients)}</div>
-                </div>`;
         };
 
-        /* ==================== 事件委托 ==================== */
+        const renderWorkbench = () => {
+            const benchEl = document.getElementById('workbench');
+            if (!currentSelected) return;
 
-        const bindClick = () => {
-            contentEl.addEventListener('click', (e) => {
-                const btn = e.target.closest('button[data-bake]');
-                if (!btn || btn.disabled) return;
-
-                const { bake: name, count } = btn.dataset;
-                if (count !== undefined) {
-                    Game.bakeCake(name, Number(count));
-                } else {
-                    Game.bakeCake(name);
-                }
-            });
-        };
-
-        /* ==================== 启动 ==================== */
-
-        const boot = () => {
-            let G = null;
-            try {
-                if (window.parent && window.parent !== window && window.parent.Game) {
-                    G = window.parent.Game;
-                }
-            } catch (_) { /* 跨域 */ }
-            if (!G) G = window.Game || null;
-
-            if (G && G.state && typeof G.initPage === 'function') {
-                Game = G;
-                window.Game = G;          // 内联 onclick 等场景可用
-                bindClick();
-                G.initPage('bake', renderBake);
-                return;
+            const state = Cake.store.state;
+            const r = Cake.RECIPES[currentSelected];
+            
+            // 检查工具是否齐备
+            let hasAllTools = true;
+            if (r.tools) {
+                r.tools.forEach(t => {
+                    const owned = Object.keys(state.tools).some(id => {
+                        if (!state.tools[id].owned) return false;
+                        return t.id ? id === t.id : Cake.TOOLS[id]?.tech === t.tech;
+                    });
+                    if (t.role === 'required' && !owned) hasAllTools = false;
+                });
             }
 
-            if (++tries >= MAX_TRIES) {
-                contentEl.innerHTML = '<div style="color:red;padding:20px;text-align:center;">❌ 游戏引擎加载超时，请刷新重试</div>';
-                return;
-            }
-            setTimeout(boot, 100);
+            // 检查材料是否齐备
+            const hasIng = Cake.hasIngredients(r.ing);
+            
+            // 渲染材料标签
+            const ingHtml = Cake.ingredientTags(r.ing);
+            
+            // 按钮状态
+            let btnText = `开始制作 (⚡${r.energy})`;
+            let btnDisabled = false;
+            if (!hasAllTools) { btnText = '🛠️ 缺少必需工具'; btnDisabled = true; }
+            else if (!hasIng) { btnText = '❌ 材料不足'; btnDisabled = true; }
+            else if (state.energy < r.energy) { btnText = '⚡ 精力不足'; btnDisabled = true; }
+
+            benchEl.innerHTML = `
+                <div style="text-align: center; margin-bottom: 15px;">
+                    <div style="font-size: 50px; margin-bottom: 10px;">${r.emoji || '🍰'}</div>
+                    <h3 style="margin: 0; color: var(--pink-600);">${r.name}</h3>
+                    <div class="muted" style="font-size: 13px; margin-top: 5px;">${r.desc || '自制美味'}</div>
+                </div>
+                
+                <div style="background: #fff8fa; padding: 15px; border-radius: 12px; margin-bottom: 15px;">
+                    <div style="font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #d6336c;">所需材料：</div>
+                    <div class="ing-row" style="justify-content: flex-start;">${ingHtml}</div>
+                </div>
+
+                <button class="big-craft-btn" 
+                    ${btnDisabled ? 'disabled' : ''} 
+                    onclick="doCraft()">
+                    ${btnText}
+                </button>
+            `;
         };
 
-        boot();
-    })();
+        // 动作分发
+        window.selectRecipe = (key) => {
+            currentSelected = key;
+            renderMenu();
+            renderWorkbench();
+        };
+
+        window.doCraft = () => {
+            if (!currentSelected) return;
+            // 调用底层制作引擎
+            const res = Cake.craft(currentSelected, 1);
+            if (res && res.success === false) {
+                // 底层已经记日志了，这里可以弹个toast
+            } else {
+                // 成功后刷新工作台的材料显示
+                renderWorkbench();
+            }
+        };
+
+        if (typeof Cake.initPage === 'function') {
+            Cake.initPage('bake', () => {
+                renderMenu();
+                // 默认选中第一个
+                const state = Cake.store.state;
+                const first = Object.keys(Cake.RECIPES).find(k => state.unlockedRecipes[k] && Cake.RECIPES[k].skill === 'bakery');
+                if (first && !currentSelected) currentSelected = first;
+                
+                renderMenu();
+                renderWorkbench();
+            }, false);
+        }
     </script>
 </body>
 </html>

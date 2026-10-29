@@ -2,7 +2,42 @@
 (() => {
     'use strict';
 
-    window.Cake = window.Cake || {};
+    const defineGlobal = (key, value) => {
+        try {
+            const desc = Object.getOwnPropertyDescriptor(window, key);
+            if (desc && desc.configurable === false && desc.writable === false) {
+                console.warn(`[Shared] ${key} is read-only; skipping global assignment.`);
+                return false;
+            }
+        } catch (_) {}
+
+        try {
+            window[key] = value;
+            return true;
+        } catch (_) {
+            try {
+                Object.defineProperty(window, key, {
+                    value,
+                    configurable: true,
+                    writable: true,
+                    enumerable: true
+                });
+                return true;
+            } catch (err) {
+                console.warn(`[Shared] cannot define ${key}`, err);
+                return false;
+            }
+        }
+    };
+
+    const ensureCake = () => {
+        if (!window.Cake) {
+            window.Cake = {};
+        }
+        return window.Cake;
+    };
+
+    const Cake = ensureCake();
 
     // 子页面不需要父页面全局代理，直接退出
     if (window.self !== window.top) {
@@ -15,16 +50,14 @@
     window[bootKey] = true;
 
     const initShared = () => {
-        const Cake = window.Cake;
+        const Cake = ensureCake();
 
-        // store 还没准备好时，不要直接 fatal；等一轮再尝试
         if (!Cake.store) {
             console.warn('⚠️ [Shared] store 尚未准备好，稍后重试。');
             setTimeout(initShared, 100);
             return;
         }
 
-        // 1. 初始化状态（对齐 schema/store）
         const getDefaultState = () => {
             if (typeof Cake.createEmptyState === 'function') return Cake.createEmptyState();
             console.warn('⚠️ [Shared] 找不到 createEmptyState，使用极简兜底');
@@ -59,7 +92,6 @@
             Cake.store.state = Cake.loadStateFromStorage();
         }
 
-        // 2. Game 兼容层：动态 Proxy
         const Game = new Proxy({}, {
             get(target, prop) {
                 if (prop === 'state') return Cake.store ? Cake.store.state : undefined;
@@ -79,10 +111,9 @@
             }
         });
 
-        window.Game = Game;
+        defineGlobal('Game', Game);
         console.log('🧩 [Shared] 父页面 Game 动态代理已挂载');
 
-        // 3. 跨 iframe 状态同步 (适配新的 bridge.js)
         if (typeof Cake.on === 'function') {
             Cake.on('refresh_ui', () => {
                 if (typeof Cake.loadStateFromStorage === 'function') {

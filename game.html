@@ -82,25 +82,12 @@
         <header id="header"></header>
         <nav id="navBar"></nav>
         <div class="split-container">
-            <!-- 👈 改了这一行：直接加载我们的 home 页面 -->
-            <iframe id="mainFrame" src="pages/home.html" class="main-frame"></iframe>
+            <!-- monitor.js 会自动接管这里的 src -->
+            <iframe id="mainFrame" src="about:blank" class="main-frame"></iframe>
             <iframe id="logFrame" src="about:blank" class="log-frame"></iframe>
         </div>
         <div class="action-footer" id="footer"></div>
     </div>
-
-    <script>
-    (function () {
-        var f = document.getElementById('logFrame');
-        if (f) {
-            try { f.src = new URL('pages/log.html', document.baseURI).href; }
-            catch (_) { f.src = 'pages/log.html'; }
-        }
-    })();
-    </script>
-
-    <!-- 👈 注意：这里必须引入你的总引擎入口 -->
-    <script type="module" src="js/index.js"></script>
 
     <!-- 根目录启动器 -->
     <script src="monitor.js"></script>
@@ -142,26 +129,6 @@
                 toLogFrame(e.data);
             }
         });
-    })();
-    </script>
-
-    <!-- 12s 兜底 -->
-    <script>
-    (function () {
-        setTimeout(function () {
-            var el = document.getElementById('app-loading');
-            if (!el || el.style.display === 'none') return;
-            var err = document.getElementById('loading-error');
-            var msg = document.getElementById('loading-error-message');
-            var retry = document.getElementById('loading-retry');
-            if (msg) msg.textContent = '初始化超时，请检查网络后重试';
-            if (err) err.classList.add('show');
-            if (retry && !retry.__bound) {
-                retry.__bound = true;
-                retry.addEventListener('click', function () { location.reload(); });
-            }
-            if (window.sendLog) window.sendLog('⚠️ [Game] 12s 兜底触发：monitor.js 可能未完成初始化', 'warn');
-        }, 12000);
     })();
     </script>
 </body>

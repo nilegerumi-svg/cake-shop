@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="../../../css/styles.css">
     <style>
         body { background: transparent; font-family: sans-serif; padding: 16px; display: flex; justify-content: center; color: #4a3b3f; margin: 0; }
-        .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(255,182,193,0.2); width: 100%; max-width: 400px; }
+        .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(255,182,193,0.2); width: 100%; max-width: 400px; box-sizing: border-box; }
 
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px dashed #ffd1dc; padding-bottom: 12px; }
         .header h2 { color: #ff6b81; margin: 0; font-size: 18px; }
@@ -60,96 +60,50 @@
         </div>
     </div>
 
-    <script>
-    (() => {
-        'use strict';
+    <script type="module">
+        // 1. 直接获取引擎
+        const Cake = window.parent.Cake || window.Cake;
+        if (!Cake) return;
 
+        // 2. 解析 URL 参数
         const params = new URLSearchParams(location.search);
         const REGION_ID = params.get('region') || 'town';
         const LOC_KEY   = params.get('loc') || 'home';
 
         const $ = (id) => document.getElementById(id);
-        const locTitleEl   = $('locTitle');
-        const locHeadEl    = $('locHead');
-        const actionListEl = $('actionList');
-        const energyEl     = $('energy');
+        const num = (v, fallback = 0) => Number.isFinite(Number(v)) ? Number(v) : fallback;
 
-        let Cake = null;
-        let tries = 0;
-        const MAX_TRIES = 100;      // 100 × 100ms = 10s
-        const REFRESH_DELAY = 200;
-
-        const num = (v, fallback = 0) => {
-            const n = Number(v);
-            return Number.isFinite(n) ? n : fallback;
+        // 返回上一页（直接返回地图首页）
+        $('btnBack').onclick = () => {
+            window.location.href = 'index.html';
         };
 
-        const getCake = () => {
-            try {
-                if (window.parent && window.parent !== window && window.parent.Cake) {
-                    return window.parent.Cake;
-                }
-            } catch (_) { /* 跨域 */ }
-            return window.Cake || null;
-        };
-
-        const navigateTo = (fullPath, relativeFallback) => {
-            try {
-                if (window.parent && window.parent !== window &&
-                    window.parent.HostRouter &&
-                    typeof window.parent.HostRouter.navigateTo === 'function') {
-                    window.parent.HostRouter.navigateTo(fullPath);
-                    return;
-                }
-            } catch (_) { /* 跨域或未定义 */ }
-            window.location.href = relativeFallback || fullPath;
-        };
-
-        /* ==================== 返回城镇 ==================== */
-
-        const goBack = () => {
-            navigateTo(
-                `pages/entertainment/map/${REGION_ID}.html`,
-                `${REGION_ID}.html`
-            );
-        };
-
-        /* ==================== 渲染 ==================== */
-
+        // 渲染页面
         const renderAll = () => {
             try {
-                const state = Cake && Cake.store && Cake.store.state;
-                if (!state) throw new Error('无法读取当前游戏状态');
-
+                const state = Cake.store.state;
                 const energy = Math.max(0, Math.min(100, num(state.energy, 0)));
-                if (energyEl) energyEl.innerText = energy;
+                $('energy').innerText = energy;
 
-                // 地点基础信息
-                const regionLocs = (typeof Cake.getRegionLocations === 'function')
-                    ? Cake.getRegionLocations(REGION_ID)
-                    : null;
-                const locCfg = (regionLocs && regionLocs[LOC_KEY])
-                    || (Cake.LOCATIONS && Cake.LOCATIONS[LOC_KEY]);
+                // 获取地点配置
+                const regionLocs = Cake.getRegionLocations(REGION_ID);
+                const locCfg = (regionLocs && regionLocs[LOC_KEY]) || (Cake.LOCATIONS && Cake.LOCATIONS[LOC_KEY]);
 
                 if (!locCfg) throw new Error(`未知地点：${LOC_KEY}`);
 
-                if (locTitleEl) locTitleEl.textContent = `${locCfg.emoji || '📍'} ${locCfg.name || LOC_KEY}`;
-                if (locHeadEl) {
-                    locHeadEl.innerHTML = `
-                        <span class="loc-emoji">${locCfg.emoji || '📍'}</span>
-                        <div class="loc-meta">
-                            <span class="loc-name">${locCfg.name || LOC_KEY}</span>
-                            <span class="loc-desc">${locCfg.desc || '未知的区域'}</span>
-                        </div>
-                    `;
-                }
+                $('locTitle').textContent = `${locCfg.emoji || '📍'} ${locCfg.name || LOC_KEY}`;
+                $('locHead').innerHTML = `
+                    <span class="loc-emoji">${locCfg.emoji || '📍'}</span>
+                    <div class="loc-meta">
+                        <span class="loc-name">${locCfg.name || LOC_KEY}</span>
+                        <span class="loc-desc">${locCfg.desc || '未知的区域'}</span>
+                    </div>
+                `;
 
-                // 动作列表
-                const actions = (typeof Cake.getLocationActions === 'function')
-                    ? Cake.getLocationActions(REGION_ID, LOC_KEY)
-                    : [];
-
+                // 获取动作列表
+                const actions = Cake.getLocationActions(REGION_ID, LOC_KEY) || [];
                 let html = '';
+
                 for (const a of actions) {
                     let disabled = false;
                     let arrow = '▶';
@@ -161,7 +115,6 @@
                         disabled = energy >= 100;
                         arrow = disabled ? '精力已满' : '▶';
                     }
-                    // sleep 无限制
 
                     const restCls = (a.key === 'nap' || a.key === 'sleep') ? 'rest' : '';
                     html += `
@@ -182,83 +135,45 @@
                 if (html === '') {
                     html = '<div style="color:#888; text-align:center;">这里暂时没有可进行的活动...</div>';
                 }
-                actionListEl.innerHTML = html;
+                $('actionList').innerHTML = html;
 
             } catch (err) {
-                actionListEl.innerHTML = `
+                $('actionList').innerHTML = `
                     <div style="color: red; padding: 15px; background: #ffe4e1; border-radius: 10px;">
                         <strong>⚠️ 渲染失败：</strong><br>${err.message || err}
                     </div>`;
             }
         };
 
-        /* ==================== 事件绑定 ==================== */
+        // 事件委托绑定
+        $('actionList').addEventListener('click', (e) => {
+            const btn = e.target.closest('.action-item');
+            if (!btn || btn.disabled) return;
 
-        const bindClick = () => {
-            const btnBack = $('btnBack');
-            if (btnBack && !btnBack.dataset.bound) {
-                btnBack.dataset.bound = 'true';
-                btnBack.addEventListener('click', goBack);
-            }
-
-            if (actionListEl && !actionListEl.dataset.bound) {
-                actionListEl.dataset.bound = 'true';
-                actionListEl.addEventListener('click', (e) => {
-                    const btn = e.target.closest('.action-item');
-                    if (!btn || btn.disabled) return;
-
-                    const engine = Cake || getCake();
-                    if (!engine || !engine.store || !engine.store.state) return;
-
-                    const actionKey = btn.dataset.action;
-
-                    try {
-                        if (typeof engine.performLocationAction === 'function') {
-                            engine.performLocationAction(REGION_ID, LOC_KEY, actionKey);
-                        } else {
-                            alert('❌ 动作系统未就绪（performLocationAction）');
-                            return;
-                        }
-                    } catch (err) {
-                        console.error('[location] 动作执行失败:', err);
-                        alert('❌ 动作执行失败：' + (err && err.message || err));
-                        return;
-                    }
-
-                    // 动作会改变精力/时间，稍后重绘本页
-                    setTimeout(renderAll, REFRESH_DELAY);
-                });
-            }
-        };
-
-        /* ==================== 启动 ==================== */
-
-        const boot = () => {
-            const engine = getCake();
-
-            if (engine && engine.store && engine.store.state) {
-                Cake = engine;
-                window.Cake = engine;
-                bindClick();
-                renderAll();
-                return;
-            }
-
-            if (++tries >= MAX_TRIES) {
-                if (actionListEl) {
-                    actionListEl.innerHTML = `
-                        <div style="color: red; padding: 15px; background: #ffe4e1; border-radius: 10px;">
-                            <strong>⚠️ 无法连接游戏引擎：</strong><br>父页面 Cake 未就绪，请刷新重试。
-                        </div>`;
+            const actionKey = btn.dataset.action;
+            try {
+                // 👈 修复：拦截底层返回的错误提示（比如精力不足、限制地点等）
+                const res = Cake.performLocationAction(REGION_ID, LOC_KEY, actionKey);
+                if (res && res.success === false) {
+                    alert(res.message);
+                    return;
                 }
+            } catch (err) {
+                console.error('[location] 动作执行失败:', err);
+                alert('❌ 动作执行失败：' + (err && err.message || err));
                 return;
             }
 
-            setTimeout(boot, 100);
-        };
+            // 动作会改变精力/时间，稍后重绘本页
+            setTimeout(renderAll, 200);
+        });
 
-        boot();
-    })();
+        // 初始化
+        if (typeof Cake.initPage === 'function') {
+            Cake.initPage('fun', () => {
+                renderAll();
+            }, false);
+        }
     </script>
 </body>
 </html>

@@ -85,7 +85,6 @@ window.Cake = window.Cake || {};
         const state = Cake.store && Cake.store.state;
         if (!state) return;
 
-        // 这里对应了我们要改造的 addLog
         const logs = Array.isArray(state.log) ? state.log : [];
         if (logs.length === 0) {
             list.innerHTML = '<div class="muted">还没有记录，快去创造故事吧！</div>';
@@ -99,12 +98,84 @@ window.Cake = window.Cake || {};
         list.scrollTop = 0;
     };
 
+    // 👈 新增：渲染背包
+    const renderInventory = () => {
+        const el = Cake.$('ui-inventory');
+        if (!el) return;
+
+        const state = Cake.store && Cake.store.state;
+        if (!state || !state.inventory || state.inventory.length === 0) {
+            el.innerHTML = '<div class="muted">背包空空如也</div>';
+            return;
+        }
+
+        const summary = {};
+        state.inventory.forEach(item => {
+            if (!summary[item.id]) {
+                summary[item.id] = { count: 0, rotten: 0, name: '', emoji: '' };
+                const itemData = Cake.INGREDIENTS[item.id];
+                if (itemData) {
+                    summary[item.id].name = itemData.name;
+                    summary[item.id].emoji = itemData.emoji;
+                } else {
+                    summary[item.id].name = item.id;
+                    summary[item.id].emoji = '❓';
+                }
+            }
+            summary[item.id].count++;
+            if (item.isRotten) summary[item.id].rotten++;
+        });
+
+        const html = Object.values(summary).map(s => {
+            const rottenText = s.rotten > 0 ? `<span style="color:red; font-size:12px;">(腐烂 ${s.rotten})</span>` : '';
+            return `<span class="inv-item" style="display:inline-block; margin-right: 10px; margin-bottom: 5px; background:#f0f0f0; padding: 4px 8px; border-radius: 6px;">
+                ${s.emoji} ${s.name} ×${s.count} ${rottenText}
+            </span>`;
+        }).join('');
+        
+        el.innerHTML = html;
+    };
+
+    // 👈 新增：渲染成品
+    const renderFoods = () => {
+        const el = Cake.$('ui-foods');
+        if (!el) return;
+
+        const state = Cake.store && Cake.store.state;
+        if (!state || !state.foods || Object.keys(state.foods).length === 0) {
+            el.innerHTML = '<div class="muted">货架上还没有成品</div>';
+            return;
+        }
+
+        let html = '';
+        for (const [recipeKey, data] of Object.entries(state.foods)) {
+            const recipe = Cake.RECIPES[recipeKey];
+            const name = recipe ? recipe.name : recipeKey;
+            
+            const parts = [];
+            if (data.perfect > 0) parts.push(`<span style="color:#ff8fa3">✨完美 ${data.perfect}</span>`);
+            if (data.good > 0) parts.push(`<span style="color:#52c41a">👍优良 ${data.good}</span>`);
+            if (data.normal > 0) parts.push(`普通 ${data.normal}`);
+            if (data.failed > 0) parts.push(`<span style="color:#888">💀失败 ${data.failed}</span>`);
+
+            if (parts.length > 0) {
+                html += `<div class="food-item" style="margin-bottom: 5px;">
+                    <strong>${name}</strong>: ${parts.join(' | ')}
+                </div>`;
+            }
+        }
+        
+        el.innerHTML = html || '<div class="muted">货架上还没有成品</div>';
+    };
+
     const renderAll = () => {
         try {
             renderHeader();
             renderNav(currentActiveTab);
             renderFooter();
             renderLog();
+            renderInventory();
+            renderFoods();
         } catch (err) {
             console.error('[Render] 主页面渲染失败:', err);
         }
@@ -125,7 +196,6 @@ window.Cake = window.Cake || {};
         renderAll();
     };
 
-    // 这是供子页面调用的核心接口！
     const initPage = (activeTab, renderFn, showLog = false) => {
         currentActiveTab = activeTab || 'home';
         currentRender = typeof renderFn === 'function' ? renderFn : null;
@@ -134,7 +204,6 @@ window.Cake = window.Cake || {};
         refreshPage();
     };
 
-    // 监听跨 iframe 的存档同步
     window.addEventListener('storage', (e) => {
         if (!Cake.SAVE_KEY || (e.key && e.key !== Cake.SAVE_KEY)) return;
         try {
@@ -148,12 +217,13 @@ window.Cake = window.Cake || {};
         Cake.__syncing = false;
     });
 
-    // 绑定到全局
     Object.assign(Cake, {
         renderHeader,
         renderNav,
         renderFooter,
         renderLog,
+        renderInventory,
+        renderFoods,
         refreshPage,
         initPage,
     });

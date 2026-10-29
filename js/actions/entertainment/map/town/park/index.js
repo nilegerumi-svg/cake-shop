@@ -14,7 +14,6 @@
     const Cake = getCake();
     if (!Cake) return;
 
-    // 防重复挂载
     if (Cake.__mapDataParkLoaded) return;
     Cake.__mapDataParkLoaded = true;
 
@@ -28,13 +27,14 @@
         id: 'park',
         name: '街心公园',
         emoji: '🌳',
-        cost: 8,
-        time: 45,   // ⭐ 散步耗时（分钟）
-        desc: '绿树成荫，适合放松心情。',
+        cost: 6,
+        time: 20,
+        desc: '散步放松，也许会触发随机事件。',
         events: [
-            { text: '你在长椅上休息了一会儿，看着喷泉发呆。', energy: 5 },
-            { text: '帮一位老奶奶找回了跑丢的小狗，她连连道谢。', rep: 3 },
-            { text: '你在公园的角落里，遇到了一位正在画画的人。', linmo: 2 },
-        ],
+            { text: '你坐在长椅上，看到一只小松鼠掉下了一颗苹果。', ing: { apple: 1 } },
+            { text: '微风吹过，听着鸟鸣，你觉得十分惬意。', energy: 5 },
+            { text: '你在草丛里走，不小心被蚊子咬了几个包。', energy: -2 },
+            { text: '你帮一位迷路的老奶奶指了路，她夸你真懂事。', rep: 2 }
+        ]
     });
 })();

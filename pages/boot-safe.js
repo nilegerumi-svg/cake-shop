@@ -2,10 +2,32 @@
     'use strict';
 
     function getCake() {
-        if (window.parent && window.parent !== window) {
-            return window.parent.Cake || window.Cake || null;
-        }
+        try {
+            if (window.parent && window.parent !== window && window.parent.Cake) {
+                return window.parent.Cake;
+            }
+        } catch (_) {}
         return window.Cake || null;
+    }
+
+    async function ensureCakeRuntime() {
+        const existing = getCake();
+        if (existing && existing.store && existing.store.state) {
+            return existing;
+        }
+
+        try {
+            const coreEntry = new URL('../../js/core/index.js', window.location.href).href;
+            await import(coreEntry);
+        } catch (err) {
+            console.warn('[boot-safe] fallback import core/index.js failed:', err);
+        }
+
+        const next = getCake();
+        if (next && next.store && next.store.state) {
+            return next;
+        }
+        return null;
     }
 
     function showFatalError(message, targetId = 'content') {
@@ -40,28 +62,41 @@
         } = opts;
 
         const startedAt = Date.now();
+        let settled = false;
 
-        function tick() {
+        const tick = async () => {
+            if (settled) return;
+
             const Cake = getCake();
             if (required(Cake)) {
+                settled = true;
                 onReady(Cake);
                 return;
             }
 
             if (Date.now() - startedAt >= timeout) {
+                const fallback = await ensureCakeRuntime();
+                if (required(fallback)) {
+                    settled = true;
+                    onReady(fallback);
+                    return;
+                }
+
                 const msg = onTimeout ? onTimeout() : '游戏引擎或数据未加载完成，请刷新页面重试。';
                 showFatalError(msg, targetId);
+                settled = true;
                 return;
             }
 
-            setTimeout(tick, interval);
-        }
+            setTimeout(() => { tick(); }, interval);
+        };
 
         tick();
     }
 
     window.safePageBoot = {
         getCake,
+        ensureCakeRuntime,
         showFatalError,
         waitForCake
     };

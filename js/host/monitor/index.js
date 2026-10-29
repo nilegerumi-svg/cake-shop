@@ -15,29 +15,46 @@ import './error-ui.js';
         window.CakeMonitorUI.showError(e.reason?.message || '未处理的 Promise 异常');
     });
 
-    // 2. 👈 核心：监听子页面 iframe 发来的错误消息
+    // 2. 监听子页面 iframe 发来的错误消息
     window.addEventListener('message', (e) => {
-        // 处理子页面发来的崩溃报错
         if (e.data && e.data.type === 'page-error') {
             window.CakeMonitorUI.showError(`[子页面] ${e.data.msg}`);
         }
     });
 
-    // 3. 加载核心引擎 js/main.js
-    const script = document.createElement('script');
-    script.type = 'module';
-    script.src = new URL('js/main.js', document.baseURI).href;
-    
-    // 监听进度条（如果你是用的之前那个带有 DOM 的 monitor）
-    const loadingText = document.getElementById('loading-text');
-    if (loadingText) loadingText.innerText = '正在加载引擎...';
-
-    script.onload = () => {
+    // 👈 3. 核心新增：监听引擎完全就绪的信号！
+    window.addEventListener('game-ready', () => {
+        console.log('🎨 [Monitor] 收到引擎就绪信号，开始渲染主界面...');
+        
+        // 隐藏 Loading 屏
         const loadingEl = document.getElementById('app-loading');
         if (loadingEl) {
             loadingEl.style.opacity = '0';
             setTimeout(() => loadingEl.style.display = 'none', 300);
         }
+
+        // 触发 UI 渲染
+        if (window.Cake && typeof window.Cake.renderAll === 'function') {
+            try {
+                window.Cake.renderAll();
+                console.log('✅ [Monitor] 主界面渲染成功');
+            } catch (err) {
+                console.error('❌ [Monitor] 主界面渲染失败:', err);
+            }
+        }
+    });
+
+    // 4. 加载核心引擎 js/main.js
+    const script = document.createElement('script');
+    script.type = 'module';
+    script.src = new URL('js/main.js', document.baseURI).href;
+    
+    const loadingText = document.getElementById('loading-text');
+    if (loadingText) loadingText.innerText = '正在加载引擎...';
+
+    script.onload = () => {
+        // main.js 加载完了，什么都不用做，安静等待它内部的 game-ready 事件即可。
+        console.log('📦 [Monitor] main.js 脚本已加载，等待引擎初始化...');
     };
     
     script.onerror = () => {

@@ -1,26 +1,32 @@
 // js/data/index.js
 (async () => {
     'use strict';
+    console.log('🟢 [Data] 开始加载 Data 模块...');
     
     const DATA_MODULES = [
-        './attributes/index.js',          // 属性字典
-        './ingredients/index.js',         // 食材（肉、菜、面粉等）
-        './recipes/index.js',             // 菜谱（烘焙、料理）
-        './tool/index.js',                // 工具（烤箱、炒锅）
-        './characters/index.js',          // 角色（恋爱系统） 👈 注意这里加了逗号！
-        './seasons/index.js',             // 季节白名单系统
-        './achievements/index.js',        // 成就系统
-        './bundles/index.js',             // 材料包系统
-        './usually_shop_events/index.js', // 随机事件与散步事件
-        './shop/index.js'                 // 商店配置与货架
+        './attributes/index.js',
+        './ingredients/index.js',
+        './recipes/index.js',
+        './tool/index.js',
+        './characters/index.js',
+        './seasons/index.js',
+        './achievements/index.js',
+        './bundles/index.js',
+        './usually_shop_events/index.js',
+        './shop/index.js'
     ];
 
     for (const path of DATA_MODULES) {
         try {
+            console.log(`⏳ [Data] 准备加载: ${path}`);
             await import(path);
+            console.log(`✅ [Data] 加载成功: ${path}`);
         } catch (err) {
-            console.error(`❌ [Data] 加载失败: ${path}`, err);
-            throw new Error(`Data 目录下的文件报错或找不到: ${path}`);
+            // 如果这里报错，说明是这个具体的文件404或者有语法错误
+            console.error(`❌ [Data] 致命错误！加载 ${path} 失败:`);
+            console.error(err);
+            // 抛出带有文件名的错误
+            throw new Error(`Data 目录下的文件报错或找不到: ${path} (${err.message || '未知错误'})`);
         }
     }
 

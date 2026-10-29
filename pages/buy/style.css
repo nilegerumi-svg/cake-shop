@@ -1,0 +1,45 @@
+/* pages/buy/style.css */
+.cat-tabs { 
+    display: flex; 
+    gap: 10px; 
+    overflow-x: auto; 
+    padding-bottom: 10px; 
+    margin-bottom: 10px; 
+}
+
+.cat-btn { 
+    background: #fff; 
+    border: 1px solid #ddd; 
+    padding: 8px 15px; 
+    border-radius: 20px; 
+    white-space: nowrap; 
+    cursor: pointer; 
+    color: var(--text-mid);
+    transition: 0.2s;
+}
+
+.cat-btn.active { 
+    background: var(--pink-400); 
+    color: #fff; 
+    border-color: var(--pink-400); 
+    font-weight: bold;
+}
+
+.shop-grid { 
+    display: grid; 
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); 
+    gap: 10px; 
+}
+
+.buy-btn-group { 
+    display: flex; 
+    gap: 5px; 
+    margin-top: 10px; 
+    width: 100%; 
+}
+
+.buy-btn-group button { 
+    flex: 1; 
+    padding: 6px 0; 
+    font-size: 12px; 
+}

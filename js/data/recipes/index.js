@@ -1,7 +1,10 @@
 // js/data/recipes/index.js
-
-// 引入各个国家/地区的菜谱（注意大小写，要和文件夹名字完全一致）
-import './China_reciped/index.js';
 import './bakery/index.js';
+import './China_reciped/index.js'; // 👈 引入中国菜
 
-console.log('📦 [Data/Recipes] 菜谱数据装载完毕');
+window.Cake = window.Cake || {};
+window.Cake.RECIPES = Object.assign(
+    {},
+    window.Cake.RECIPES_BAKERY,
+    window.Cake.RECIPES_CHINA // 👈 合并到全局菜谱
+);

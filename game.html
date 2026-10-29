@@ -82,7 +82,8 @@
         <header id="header"></header>
         <nav id="navBar"></nav>
         <div class="split-container">
-            <iframe id="mainFrame" src="about:blank" class="main-frame"></iframe>
+            <!-- 👈 改了这一行：直接加载我们的 home 页面 -->
+            <iframe id="mainFrame" src="pages/home.html" class="main-frame"></iframe>
             <iframe id="logFrame" src="about:blank" class="log-frame"></iframe>
         </div>
         <div class="action-footer" id="footer"></div>
@@ -97,6 +98,9 @@
         }
     })();
     </script>
+
+    <!-- 👈 注意：这里必须引入你的总引擎入口 -->
+    <script type="module" src="js/index.js"></script>
 
     <!-- 根目录启动器 -->
     <script src="monitor.js"></script>
@@ -141,7 +145,7 @@
     })();
     </script>
 
-    <!-- 12s 兜底：monitor.js 未完成初始化时给用户明确提示 -->
+    <!-- 12s 兜底 -->
     <script>
     (function () {
         setTimeout(function () {

@@ -1,6 +1,5 @@
 // monitor.js — 根目录启动器（game.html 使用）
-// 定位：只负责「启动编排」——加载 js/main.js、等待 game-ready + home-ready、错误兜底、loading 收尾。
-// 它不参与任何模块注册（LIVE_KEYS/REQUIRED/folderRegistry 已废除），所以不受区块自治改造影响。
+// 职责：加载 js/main.js、等待 game-ready、错误兜底、loading 收尾、iframe 监控。
 (() => {
     'use strict';
 
@@ -10,15 +9,7 @@
     }
     window.__rootMonitorLoaded = true;
 
-    window.updateLoadingProgress = (text, percent) => {
-        const textEl = document.getElementById('loading-text');
-        const barEl = document.getElementById('loading-bar');
-        const p = Math.max(0, Math.min(100, Number(percent) || 0));
-        if (textEl) textEl.innerText = text;
-        if (barEl) barEl.style.width = p + '%';
-    };
-
-    // 开始页防御：即使被误加载也绝不替换开始页
+    // 1. 开始页防御：检测到开始页（比如 index.html）直接跳过外壳初始化
     const IS_START_PAGE = (() => {
         try {
             return !!document.querySelector('.start-card') || !!document.getElementById('btnStart');
@@ -38,19 +29,11 @@
     window.addEventListener('game-ready', () => { gameReadyFired = true; }, { once: true });
 
     const state = {
-        booted: false, fatal: false, engineReady: false, homeReady: false,
+        booted: false, fatal: false, engineReady: false,
         failReason: null, startedAt: Date.now(),
-        initAt: 0, engineReadyAt: 0, bootedAt: 0,
     };
-    window.__rootMonitorState = () => ({
-        booted: state.booted, fatal: state.fatal,
-        engineReady: state.engineReady, homeReady: state.homeReady,
-        failReason: state.failReason,
-        elapsed: Date.now() - state.startedAt,
-        initAt: state.initAt, engineReadyAt: state.engineReadyAt, bootedAt: state.bootedAt,
-    });
 
-    /* ---------- 错误通道 ---------- */
+    /* ==================== 错误捕获系统 ==================== */
     const MAX_ERRORS = 20, MAX_PENDING = 100, MAX_DISPLAY_COUNT = 999;
     const pendingErrors = [];
     const errorCounts = new Map();
@@ -77,7 +60,6 @@
             return true;
         }
         const div = document.createElement('div');
-        div.className = 'root-monitor-error-item root-monitor-error-item--runtime';
         div.style.cssText = 'border-bottom:1px solid #fff; padding:5px 0;';
         div.textContent = '🚨 系统异常: ' + msg;
         overlayEl.appendChild(div);
@@ -91,49 +73,29 @@
         while (pendingErrors.length && renderError(pendingErrors[0])) pendingErrors.shift();
     };
 
-    const createOverlay = () => {
-        const el = document.createElement('div');
-        el.id = 'error-overlay';
-        el.style.cssText = [
-            'display:none', 'position:fixed', 'top:0', 'left:0', 'right:0',
-            'max-height:40vh', 'overflow:auto', 'z-index:9999',
-            'background:rgba(200,0,0,0.9)', 'color:#fff',
-            'font:12px/1.5 monospace', 'padding:8px 12px'
-        ].join(';');
-        (document.body || document.documentElement).appendChild(el);
-        return el;
-    };
-
     const ensureOverlay = () => {
         if (overlayEl && overlayEl.isConnected) return true;
-        const existing = document.getElementById('error-overlay');
+        let existing = document.getElementById('error-overlay');
         if (existing) {
-            const root = document.getElementById('app-root');
-            if (root && root.contains(existing) && document.body) document.body.appendChild(existing);
             overlayEl = existing;
-            for (const [k, v] of errorCounts) {
-                if (!v || !v.el || !v.el.isConnected) errorCounts.delete(k);
-            }
-            return overlayEl.isConnected;
+            return true;
         }
-        overlayEl = createOverlay();
-        errorCounts.clear();
-        return overlayEl.isConnected;
+        const el = document.createElement('div');
+        el.id = 'error-overlay';
+        el.style.cssText = 'display:none; position:fixed; top:0; left:0; right:0; max-height:40vh; overflow:auto; z-index:9999; background:rgba(200,0,0,0.9); color:#fff; font:12px/1.5 monospace; padding:8px 12px;';
+        (document.body || document.documentElement).appendChild(el);
+        overlayEl = el;
+        return true;
     };
 
     const showError = (msg) => {
         const text = (msg === undefined || msg === null || msg === '') ? '(未知错误)' : String(msg);
+        ensureOverlay();
         if (renderError(text)) return;
-        ensureOverlay(); flushErrors();
+        flushErrors();
         if (renderError(text)) return;
         pendingErrors.push(text);
-        if (pendingErrors.length > MAX_PENDING) {
-            pendingErrors.shift();
-            if (!pendingDropWarned) {
-                pendingDropWarned = true;
-                console.warn(`⚠️ [Root Monitor] 待渲染错误超过 ${MAX_PENDING} 条，最早的条目开始被丢弃`);
-            }
-        }
+        if (pendingErrors.length > MAX_PENDING) pendingErrors.shift();
     };
 
     const formatReason = (reason) => {
@@ -143,30 +105,18 @@
         try { return JSON.stringify(reason); } catch { return String(reason); }
     };
 
-    const isMainJsUrl = (src) => /(^|\/)js\/main\.js(?:[?#]|$)/.test(src);
-
-    let failEngine = null;
-
     window.addEventListener('error', (e) => {
         const t = e.target;
-        const isRuntimeFromMain =
-            typeof e.filename === 'string' &&
-            isMainJsUrl(e.filename) &&
-            !(t && t !== window && (t.src || t.href));
-        if (isRuntimeFromMain) {
-            console.error('❌ [Root Monitor] main.js 运行异常:', e.message);
-            if (failEngine) failEngine('核心引擎运行异常: ' + (e.message || '未知错误'));
-            return;
-        }
         let msg;
         if (t && t !== window && (t.src || t.href)) {
-            const src = t.src || t.href;
-            if (isMainJsUrl(src)) return;
-            try { if (new URL(src).origin !== location.origin) return; } catch (_) {}
-            msg = '资源加载失败: ' + src;
-        } else if (e.message) { msg = e.message; }
-        else if (e.error && e.error.message) { msg = e.error.message; }
-        else { msg = '未知脚本错误'; }
+            msg = '资源加载失败: ' + (t.src || t.href);
+        } else if (e.message) {
+            msg = e.message;
+        } else if (e.error && e.error.message) {
+            msg = e.error.message;
+        } else {
+            msg = '未知脚本错误';
+        }
         console.error('❌ [Root Monitor] 捕获到全局错误:', msg);
         showError(msg);
     }, true);
@@ -177,7 +127,7 @@
         showError(reason);
     });
 
-    /* ---------- iframe 错误监控 ---------- */
+    /* ==================== iframe 错误监控 ==================== */
     const frameHandlers = new WeakMap();
     const attachFrameMonitor = (frame) => {
         if (!frame) return;
@@ -189,6 +139,7 @@
                 void w.location.href;
             } catch (_) { return; }
             try { if (w.location.href === 'about:blank') return; } catch (_) {}
+            
             const prev = frameHandlers.get(frame);
             if (prev) {
                 try {
@@ -198,45 +149,34 @@
             }
             const onError = (e) => {
                 const t = e.target;
-                let msg;
-                if (t && t !== w && (t.src || t.href)) msg = '资源加载失败: ' + (t.src || t.href);
-                else msg = e.message || (e.error && e.error.message) || '子页面脚本错误';
+                let msg = (t && t !== w && (t.src || t.href)) ? '资源加载失败: ' + (t.src || t.href) : (e.message || '子页面脚本错误');
                 showError('[iframe] ' + msg);
             };
             const onRejection = (e) => showError('[iframe] Promise: ' + formatReason(e.reason));
+            
             w.addEventListener('error', onError, true);
             w.addEventListener('unhandledrejection', onRejection);
             frameHandlers.set(frame, { win: w, onError, onRejection });
         };
         frame.addEventListener('load', bind);
         const srcAttr = frame.getAttribute('src');
-        if (srcAttr && srcAttr !== 'about:blank' &&
-            frame.contentDocument && frame.contentDocument.readyState === 'complete') {
+        if (srcAttr && srcAttr !== 'about:blank' && frame.contentDocument && frame.contentDocument.readyState === 'complete') {
             bind();
         }
     };
 
-    /* ---------- 主流程 ---------- */
+    /* ==================== 主流程 ==================== */
     const init = () => {
-        state.initAt = Date.now() - state.startedAt;
-
         let tries = 0;
         const MAX_TRIES = 150;
-        let fallbackTimer = null, homeFallbackTimer = null, softReadyTimer = null, homeLoadTimer = null;
+        let fallbackTimer = null, softReadyTimer = null;
         let loadingScreen = null, mainFrame = null, logFrame = null;
-        let onHomeMessage = null;
 
         const clearTimers = () => {
-            if (fallbackTimer)     { clearInterval(fallbackTimer);   fallbackTimer = null; }
-            if (homeFallbackTimer) { clearTimeout(homeFallbackTimer); homeFallbackTimer = null; }
-            if (softReadyTimer)    { clearTimeout(softReadyTimer);    softReadyTimer = null; }
-            if (homeLoadTimer)     { clearTimeout(homeLoadTimer);     homeLoadTimer = null; }
-        };
-        const clearHomeMessage = () => {
-            if (onHomeMessage) { window.removeEventListener('message', onHomeMessage); onHomeMessage = null; }
+            if (fallbackTimer)  { clearInterval(fallbackTimer);  fallbackTimer = null; }
+            if (softReadyTimer) { clearTimeout(softReadyTimer); softReadyTimer = null; }
         };
 
-        // 实时查 DOM，避免 loadingScreen 未初始化时卡死
         const finishLoading = () => {
             const el = loadingScreen || document.getElementById('app-loading');
             if (!el) return;
@@ -246,7 +186,7 @@
             }, 300);
         };
 
-        // 动态设置 --footer-h
+        // 动态设置 --footer-h 适配新的底部栏高度
         const setupFooterHeight = () => {
             const footer = document.getElementById('footer');
             if (!footer) return;
@@ -257,32 +197,24 @@
             update();
             if (window.ResizeObserver) {
                 try { new ResizeObserver(update).observe(footer); } catch (_) {}
-            } else {
-                setInterval(update, 500);
             }
         };
 
         const fail = (reason) => {
             if (state.booted || state.fatal) return;
             state.fatal = true; state.failReason = reason;
-            clearTimers(); clearHomeMessage();
-            const elapsed = Date.now() - state.startedAt;
-            console.error(`❌ [Root Monitor] 启动失败 @${elapsed}ms:`, reason);
-            ensureOverlay(); flushErrors(); showError(reason);
+            clearTimers();
+            console.error(`❌ [Root Monitor] 启动失败 @${Date.now() - state.startedAt}ms:`, reason);
+            showError(reason);
             if (mainFrame) { try { mainFrame.src = 'about:blank'; } catch (_) {} }
             finishLoading();
         };
-        failEngine = fail;
 
         const tryBoot = () => {
-            if (state.booted || state.fatal || !state.engineReady || !state.homeReady) return;
+            if (state.booted || state.fatal || !state.engineReady) return;
             state.booted = true;
-            state.bootedAt = Date.now() - state.startedAt;
-            clearTimers(); clearHomeMessage();
-            console.log(
-                `%c✅ [Root Monitor] 核心引擎及所有模块加载完毕！总耗时 ${state.bootedAt}ms（init ${state.initAt}ms，引擎 ${state.engineReadyAt}ms 就绪）`,
-                'color: #4caf50; font-weight: bold;'
-            );
+            clearTimers();
+            console.log(`%c✅ [Root Monitor] 核心引擎就绪，耗时 ${Date.now() - state.startedAt}ms`, 'color: #4caf50; font-weight: bold;');
             finishLoading();
         };
 
@@ -290,7 +222,6 @@
             if (softReadyTimer) { clearTimeout(softReadyTimer); softReadyTimer = null; }
             if (state.engineReady || state.fatal) return;
             state.engineReady = true;
-            state.engineReadyAt = Date.now() - state.startedAt;
             tryBoot();
         };
 
@@ -299,152 +230,46 @@
             if (!root) { fail('未找到 #app-root，页面结构异常'); return; }
 
             loadingScreen = document.getElementById('app-loading');
-            if (loadingScreen && root.contains(loadingScreen) && document.body) {
-                if (window.getComputedStyle(loadingScreen).position === 'static') {
-                    loadingScreen.style.position = 'fixed';
-                    loadingScreen.style.top = '0'; loadingScreen.style.left = '0';
-                    loadingScreen.style.right = '0'; loadingScreen.style.bottom = '0';
-                    loadingScreen.style.zIndex = '9998';
-                }
-                document.body.appendChild(loadingScreen);
-            }
-
             ensureOverlay(); flushErrors();
 
-            // 外壳（幂等）
-            if (!document.getElementById('mainFrame')) {
-                root.innerHTML = `
-                    <div class="app-wrapper" style="display:flex; flex-direction:column; height:100vh; height:100dvh;">
-                        <header id="header"></header>
-                        <nav id="navBar"></nav>
-                        <div class="split-container" style="flex:1; display:flex; flex-direction:column; overflow:hidden; padding-bottom: calc(var(--footer-h, 70px) + env(safe-area-inset-bottom));">
-                            <iframe id="mainFrame" src="about:blank" class="main-frame" style="flex:1; width:100%; border:none; background:transparent; min-height:240px;"></iframe>
-                            <iframe id="logFrame" src="${url('pages/log.html')}" class="log-frame" style="flex:0 0 clamp(110px, 22vh, 180px); width:100%; border:none; background:#fff; border-top:2px dashed #ffd1dc;"></iframe>
-                        </div>
-                        <div class="action-footer" id="footer" style="position:fixed; bottom:0; left:50%; transform:translateX(-50%); width:100%; max-width:500px; z-index:100;"></div>
-                    </div>
-                `;
-            }
-
+            // 👈 简化：直接抓取 game.html 里已经写好的静态框架
             mainFrame = document.getElementById('mainFrame');
-            logFrame  = document.getElementById('logFrame');
-            if (!mainFrame) { fail('未找到 #mainFrame，无法加载主页'); return; }
-
-            attachFrameMonitor(mainFrame);
-            attachFrameMonitor(logFrame);
+            logFrame = document.getElementById('logFrame');
+            
+            if (mainFrame) attachFrameMonitor(mainFrame);
+            if (logFrame) attachFrameMonitor(logFrame);
             setupFooterHeight();
 
-            /* 主页预加载 */
-            const markHomeReady = (force = false) => {
-                if (state.homeReady || state.fatal) return;
-                if (homeLoadTimer) { clearTimeout(homeLoadTimer); homeLoadTimer = null; }
-                if (!force) {
-                    let w = null;
-                    try { w = mainFrame.contentWindow; } catch (_) { w = null; }
-                    if (!w) return;
-                    try {
-                        if (w.location.href === 'about:blank') return;
-                        const doc = mainFrame.contentDocument;
-                        if (doc && doc.readyState !== 'complete') return;
-                    } catch (_) {}
-                }
-                state.homeReady = true;
-                if (homeFallbackTimer) { clearTimeout(homeFallbackTimer); homeFallbackTimer = null; }
-                clearHomeMessage();
-                tryBoot();
-            };
-
-            const currentSrc = mainFrame.getAttribute('src');
-            const alreadyNavigated = !!(currentSrc && currentSrc !== 'about:blank');
-
-            mainFrame.addEventListener('load', () => {
-                if (state.homeReady || state.fatal || state.booted) return;
-                if (homeLoadTimer) clearTimeout(homeLoadTimer);
-                homeLoadTimer = setTimeout(() => { homeLoadTimer = null; markHomeReady(false); }, 300);
-            });
-
-            onHomeMessage = (e) => {
-                if (e.origin !== location.origin) return;
-                if (!mainFrame || e.source !== mainFrame.contentWindow) return;
-                if (e.data && e.data.type === 'home-ready') {
-                    markHomeReady(true);
-                    try {
-                        const targetOrigin = location.origin === 'null' ? '*' : location.origin;
-                        e.source.postMessage({ type: 'home-ready-ack' }, targetOrigin);
-                    } catch (_) {}
-                }
-            };
-            window.addEventListener('message', onHomeMessage);
-
-            if (alreadyNavigated) {
-                console.log('🖼️ [Root Monitor] #mainFrame 已有内容，跳过导航');
-                try {
-                    const doc = mainFrame.contentDocument;
-                    if (doc && doc.readyState === 'complete') markHomeReady(false);
-                } catch (_) {}
-            } else {
-                console.log('🖼️ [Root Monitor] 预加载主页 iframe...');
-                mainFrame.src = url('pages/home/index.html');
-            }
-
-            if (!state.homeReady) {
-                homeFallbackTimer = setTimeout(() => {
-                    if (state.homeReady || state.fatal) return;
-                    try {
-                        const href = mainFrame.contentWindow.location.href;
-                        const doc = mainFrame.contentDocument;
-                        const notComplete = !doc || doc.readyState !== 'complete';
-                        if ((href === 'about:blank' || notComplete) && doc && doc.body) {
-                            doc.body.style.cssText = 'margin:0;padding:20px;font:14px/1.6 sans-serif;color:#c00;background:#fff;';
-                            const p = doc.createElement('p');
-                            p.style.margin = '0';
-                            p.textContent = href === 'about:blank'
-                                ? '⚠️ 主页加载超时（10s）。请检查 pages/home/index.html 路径与网络。'
-                                : '⚠️ 主页加载超时（10s）。pages/home/index.html 可能仍在加载或存在错误。';
-                            doc.body.appendChild(p);
-                        }
-                    } catch (_) {}
-                    markHomeReady(true);
-                }, 10000);
-            }
-
+            // 监听引擎状态
             window.addEventListener('game-ready', markEngineReady, { once: true });
-
-            // ⭐ 新增：引擎一旦标记失败（main.js 会置 __engineFailed 并发 game-error），
-            //        立刻失败，而不是等到 15s 超时。
             window.addEventListener('game-error', (e) => {
                 const d = e.detail || {};
                 fail(d.message || '核心引擎初始化失败');
             });
 
             if (gameReadyFired) markEngineReady();
-
             if (state.booted || state.fatal) return;
 
+            // 轮询检测引擎是否就绪（兜底）
             fallbackTimer = setInterval(() => {
                 if (state.booted || state.fatal) { clearTimers(); return; }
                 if (state.engineReady) { clearInterval(fallbackTimer); fallbackTimer = null; return; }
                 if (window.__engineReady) { markEngineReady(); return; }
+                if (window.__engineFailed) { fail(window.__engineError || '核心引擎初始化失败'); return; }
 
-                // ⭐ 引擎失败早退（main.js 通过 defGlobal 写入 __engineFailed / __engineError）
-                if (window.__engineFailed) {
-                    fail(window.__engineError || '核心引擎初始化失败');
-                    return;
-                }
-
-                // window.Game 现在是 Proxy（shared.js 挂载），typeof 仍为 object，软就绪照常工作
                 if (typeof window.Game !== 'undefined' && !softReadyTimer) {
                     softReadyTimer = setTimeout(() => {
                         softReadyTimer = null;
                         if (state.booted || state.fatal || state.engineReady) return;
                         if (window.__engineReady) { markEngineReady(); return; }
-                        console.warn('⚠️ [Root Monitor] game-ready 迟迟未到，使用 window.Game 软就绪');
+                        console.warn('⚠️ [Root Monitor] game-ready 迟到，使用 window.Game 软就绪');
                         markEngineReady();
                     }, 3000);
                 }
                 if (++tries > MAX_TRIES) fail('核心引擎加载超时，请检查网络或 js/main.js 路径');
             }, 100);
 
+            // 动态加载引擎
             console.log('⏳ [Root Monitor] 准备加载 js/main.js 引擎...');
             const script = document.createElement('script');
             script.type = 'module';
@@ -453,10 +278,7 @@
             document.body.appendChild(script);
 
         } catch (err) {
-            const reason = 'Monitor init 异常: ' + formatReason(err);
-            console.error('❌ [Root Monitor] init 异常:', err);
-            if (state.booted || state.fatal) { ensureOverlay(); flushErrors(); showError(reason); }
-            else { fail(reason); }
+            fail('Monitor init 异常: ' + formatReason(err));
         }
     };
 

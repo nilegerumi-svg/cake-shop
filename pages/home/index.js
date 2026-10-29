@@ -10,6 +10,43 @@
         return window.Cake || null;
     }
 
+    function escapeHtml(value) {
+        return String(value ?? '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
+    function switchMainFrame(target) {
+        try {
+            const parentWindow = (window.parent && window.parent !== window) ? window.parent : null;
+            const frame = parentWindow && parentWindow.document
+                ? parentWindow.document.getElementById('mainFrame')
+                : null;
+
+            if (frame) {
+                frame.src = target === 'bake' ? 'pages/bake/index.html' : 'pages/home/index.html';
+                return true;
+            }
+        } catch (_) {
+            // cross-origin or no parent page is safe to ignore
+        }
+
+        try {
+            const currentPath = window.location.pathname || '';
+            const isHomePage = currentPath.includes('/pages/home/') || currentPath.endsWith('/pages/home/index.html');
+
+            if (target === 'bake' && isHomePage) {
+                window.location.href = '../bake/index.html';
+                return true;
+            }
+        } catch (_) {}
+
+        return false;
+    }
+
     function renderHome() {
         const Cake = getCake();
         if (!Cake || !Cake.store || !Cake.store.state) return;
@@ -18,12 +55,12 @@
         const contentEl = document.getElementById('content');
         if (!contentEl) return;
 
-        const shopName = state.shop?.name || '甜蜜小屋';
-        const day = state.time?.day || 1;
-        const money = state.money || 0;
-        const reputation = state.shop?.stats?.reputation || 0;
-        const energy = state.energy || 0;
-        const maxEnergy = state.maxEnergy || 100;
+        const shopName = escapeHtml(state.shop?.name || '甜蜜小屋');
+        const day = Number(state.time?.day) || 1;
+        const money = Number(state.money) || 0;
+        const reputation = Number(state.shop?.stats?.reputation) || 0;
+        const energy = Number(state.energy) || 0;
+        const maxEnergy = Number(state.maxEnergy) || 100;
 
         contentEl.innerHTML = `
             <div class="card" style="text-align: center; background: linear-gradient(135deg, #fff, #fff0f5);">
@@ -39,7 +76,7 @@
 
             <h3>🚪 小屋房间</h3>
 
-            <div class="room-card" onclick="go('bake')">
+            <div class="room-card" onclick="window.go && window.go('bake')">
                 <div class="room-left">
                     <span class="room-icon">🍳</span>
                     <div>
@@ -50,7 +87,7 @@
                 <span class="arrow">→</span>
             </div>
 
-            <div class="room-card" onclick="openBedroom()">
+            <div class="room-card" onclick="window.openBedroom && window.openBedroom()">
                 <div class="room-left">
                     <span class="room-icon">🛏️</span>
                     <div>
@@ -72,14 +109,12 @@
 
     window.go = (target) => {
         if (target === 'bake') {
-            try {
-                const frame = window.parent && window.parent.document
-                    ? window.parent.document.getElementById('mainFrame')
-                    : null;
-                if (frame) frame.src = 'pages/bake/index.html';
-            } catch (_) {
-                console.warn('go(): cannot switch frame');
-            }
+            switchMainFrame('bake');
+            return;
+        }
+
+        if (target === 'home') {
+            switchMainFrame('home');
         }
     };
 
@@ -89,10 +124,14 @@
 
         const shouldSleep = window.confirm('要睡觉进入下一天吗？点击取消可以小憩1小时。');
         if (shouldSleep) {
-            if (typeof Cake.sleep === 'function') Cake.sleep();
-        } else {
-            if (typeof Cake.nap === 'function') Cake.nap();
+            if (typeof Cake.sleep === 'function') {
+                Cake.sleep();
+            }
+        } else if (typeof Cake.nap === 'function') {
+            Cake.nap();
         }
+
+        renderHome();
     };
 
     if (window.safePageBoot && typeof window.safePageBoot.waitForCake === 'function') {

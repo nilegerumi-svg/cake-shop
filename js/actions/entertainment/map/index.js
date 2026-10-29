@@ -4,34 +4,25 @@
     console.log('🗺️ [Map] 开始加载总地图子模块...');
 
     const MAP_MODULES = [
-        './monitor.js',
         './town/index.js',
         './location_actions.js'
     ];
 
     for (const path of MAP_MODULES) {
         try {
-            // 👈 核心：加个 3 秒的加载超时限制，防止某个烂文件卡死整个引擎
             const timeout = new Promise((_, reject) => 
-                setTimeout(() => reject(new Error('加载超时 (3s)')), 3000)
+                setTimeout(() => reject(new Error('加载超时')), 3000)
             );
-            
             await Promise.race([import(path), timeout]);
-            console.log(`✅ [Map] 成功加载: ${path}`);
-            
         } catch (err) {
             console.warn(`⚠️ [Map] 子模块加载失败或超时，已跳过 -> ${path}`);
-            console.warn(`原因: ${err.message}`);
         }
     }
 
-    // ==== 下面是原有的挂载逻辑 ====
     const getCake = () => {
         try {
-            if (window.parent && window.parent !== window && window.parent.Cake) {
-                return window.parent.Cake;
-            }
-        } catch (_) { /* 跨域忽略 */ }
+            if (window.parent && window.parent !== window && window.parent.Cake) return window.parent.Cake;
+        } catch (_) {}
         return window.Cake || null;
     };
 
@@ -41,40 +32,35 @@
         return;
     }
 
-    if (Cake.__mapLocationsLoaded) {
-        console.log('🗺️ [Map] 总地图已汇总，跳过重复初始化');
-        return;
-    }
+    if (Cake.__mapLocationsLoaded) return;
     Cake.__mapLocationsLoaded = true;
 
     Cake.LOCATIONS = Cake.LOCATIONS || {};
-
     const regions = Cake.REGIONS || {};
-    if (Object.keys(regions).length === 0) {
-        console.error('❌ [Map] 严重错误：REGIONS 为空，没有任何区域注册！');
-        return;
-    }
 
     for (const [regionId, region] of Object.entries(regions)) {
         if (!region) continue;
-        const locs = region.locationsKey ? Cake[region.locationsKey] : null;
+        
+        // 👈 究极防呆：不管 locationsKey 有没有被覆盖，强行算出应该去拿哪个数据
+        let locKey = region.locationsKey || `REGION_${regionId.toUpperCase()}`;
+        
+        const locs = Cake[locKey];
         if (!locs || typeof locs !== 'object') {
-            console.warn(`⚠️ [Map] 区域 [${regionId}] 地点数据缺失（${region.locationsKey}）`);
+            console.warn(`⚠️ [Map] 区域 [${regionId}] 地点数据缺失（${locKey}）`);
             continue;
         }
+
         for (const [key, loc] of Object.entries(locs)) {
-            if (loc) {
-                Cake.LOCATIONS[key] = loc;
-            } else {
-                console.warn(`⚠️ [Map] 地点 [${key}] 数据为 undefined，已被过滤。`);
-            }
+            if (loc) Cake.LOCATIONS[key] = loc;
         }
     }
 
+    // 供外部调用的接口，也加上同样的兜底
     Cake.getRegionLocations = (regionId) => {
         const region = Cake.REGIONS && Cake.REGIONS[regionId];
-        if (!region || !region.locationsKey) return null;
-        return Cake[region.locationsKey] || null;
+        if (!region) return null;
+        const locKey = region.locationsKey || `REGION_${regionId.toUpperCase()}`;
+        return Cake[locKey] || null;
     };
 
     console.log(

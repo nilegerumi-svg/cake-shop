@@ -68,6 +68,9 @@
             // 成品库存：存 { 'cake:muffin': { perfect: 0, good: 0, normal: 0, failed: 0 } }
             foods: {},
 
+            // 👈 社交系统的专属容器，里面存 { linmo: { met: false, affection: 0 } }
+            characters: {},
+
             // 已解锁的配方
             unlockedRecipes: {
                 'cake:muffin': true // 开局送一个基础麦芬配方

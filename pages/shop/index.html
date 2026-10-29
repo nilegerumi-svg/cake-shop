@@ -4,27 +4,275 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>店铺经营</title>
-    <!-- 🚨 注意这里：用 ../../ 退回根目录去找 css -->
     <link rel="stylesheet" href="../../css/styles.css">
-    <!-- 如果有专门给商店写的 css，也可以在这里引入，比如 ../../css/shop.css -->
+    <style>
+        body {
+            background: transparent;
+            margin: 0;
+            padding: 16px;
+            color: var(--text-main);
+            font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+        }
+
+        .shop-shell {
+            width: 100%;
+            max-width: 760px;
+            margin: 0 auto;
+        }
+
+        .shop-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .shop-header h2 {
+            margin: 0;
+            font-size: 24px;
+        }
+
+        .shop-status {
+            margin-bottom: 12px;
+            min-height: 20px;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .shop-status.error {
+            color: #d9363e;
+            font-weight: bold;
+        }
+
+        .shop-status.success {
+            color: #1f9d67;
+            font-weight: bold;
+        }
+
+        .shop-card {
+            background: rgba(255,255,255,0.9);
+            border: 1px solid rgba(255, 186, 205, 0.6);
+            border-radius: 16px;
+            padding: 16px;
+            box-shadow: 0 4px 14px rgba(255, 144, 170, 0.08);
+        }
+
+        .shelf-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+        }
+
+        .shelf-item {
+            padding: 12px;
+            border: 1px solid var(--pink-100);
+            border-radius: 12px;
+            background: #fff;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-height: 150px;
+        }
+
+        .shelf-item .emoji {
+            font-size: 28px;
+            text-align: center;
+        }
+
+        .shelf-item .name {
+            font-weight: 700;
+            text-align: center;
+            color: var(--pink-600);
+        }
+
+        .shelf-item .meta {
+            text-align: center;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .shelf-item .actions {
+            margin-top: auto;
+            display: flex;
+            gap: 6px;
+            justify-content: center;
+        }
+
+        .small-btn {
+            border: none;
+            border-radius: 999px;
+            padding: 7px 12px;
+            font-size: 12px;
+            cursor: pointer;
+            background: var(--pink-100);
+            color: var(--pink-700);
+            transition: 0.2s;
+        }
+
+        .small-btn:hover {
+            filter: brightness(0.98);
+        }
+
+        .small-btn.primary {
+            background: var(--pink-500);
+            color: white;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 28px 12px;
+            color: var(--text-muted);
+        }
+    </style>
 </head>
-<body style="background: transparent; margin: 0; padding: 20px;">
-    
-    <!-- 这里只写商店里面的内容 -->
-    <h2>🏪 营业中</h2>
-    <div id="shop-shelf">
-        <!-- 货架内容通过 JS 渲染 -->
+<body>
+    <div class="shop-shell">
+        <div class="shop-header">
+            <h2>🏪 店铺经营</h2>
+            <button id="toggleShopBtn" class="small-btn primary" type="button">加载中...</button>
+        </div>
+
+        <div id="shopStatus" class="shop-status">⏳ 正在加载店铺数据...</div>
+
+        <div id="shop-shelf" class="shop-card">
+            <div class="empty-state">正在等待引擎加载...</div>
+        </div>
     </div>
 
-    <!-- 🚨 注意这里：用 ../../ 退回根目录去找 js -->
     <script type="module" src="../../js/actions/shop/index.js"></script>
-    
-    <!-- 如果你想在这里写脚本，记得用 (() => {})(); 包裹 -->
+
     <script>
         (() => {
-            // 如果这里有 return，现在就不会报错了
-            // if (!Cake) return;
-            console.log("Shop 页面加载完毕");
+            'use strict';
+
+            const getCake = () => window.parent.Cake || window.Cake;
+
+            const shopStatusEl = () => document.getElementById('shopStatus');
+            const shelfEl = () => document.getElementById('shop-shelf');
+            const toggleBtnEl = () => document.getElementById('toggleShopBtn');
+
+            function setStatus(msg, type = '') {
+                const el = shopStatusEl();
+                if (!el) return;
+                el.textContent = msg;
+                el.className = 'shop-status';
+                if (type) el.classList.add(type);
+            }
+
+            function renderEmptyState(message = '当前暂无货架商品') {
+                const el = shelfEl();
+                if (!el) return;
+                el.innerHTML = `<div class="empty-state">${message}</div>`;
+            }
+
+            function renderShopPage() {
+                try {
+                    const Cake = getCake();
+                    if (!Cake || !Cake.store || !Cake.store.state) {
+                        renderEmptyState('等待游戏引擎加载中...');
+                        return;
+                    }
+
+                    const state = Cake.store.state;
+                    const shop = state.shop || {};
+                    const inventory = Array.isArray(state.inventory) ? state.inventory : [];
+
+                    const isOpen = !!shop.isOpen;
+                    const toggleBtn = toggleBtnEl();
+                    if (toggleBtn) {
+                        toggleBtn.textContent = isOpen ? '打烊' : '开始营业';
+                        toggleBtn.disabled = false;
+                        toggleBtn.onclick = () => {
+                            if (typeof Cake.toggleShopStatus === 'function') {
+                                const res = Cake.toggleShopStatus();
+                                if (res && res.success === false) {
+                                    alert(res.message);
+                                }
+                                renderShopPage();
+                            } else {
+                                alert('营业控制器还未加载');
+                            }
+                        };
+                    }
+
+                    const shelf = shelfEl();
+                    if (!shelf) return;
+
+                    if (!inventory.length) {
+                        renderEmptyState('货架上还没有商品，先去采购吧～');
+                        setStatus(isOpen ? '店铺正在营业中' : '店铺已休息，等待开店', isOpen ? 'success' : '');
+                        return;
+                    }
+
+                    const items = inventory.map((item, idx) => {
+                        const name = item.name || '未知商品';
+                        const emoji = item.emoji || '📦';
+                        const price = item.price || item.cost || 0;
+                        const qty = item.quantity ?? 1;
+                        return `
+                            <div class="shelf-item">
+                                <div class="emoji">${emoji}</div>
+                                <div class="name">${name}</div>
+                                <div class="meta">库存：${qty} / 单价：${price}</div>
+                                <div class="actions">
+                                    <button class="small-btn primary" type="button" data-sell="${idx}">卖出</button>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+
+                    shelf.innerHTML = `<div class="shelf-grid">${items}</div>`;
+
+                    shelf.querySelectorAll('[data-sell]').forEach((btn) => {
+                        btn.addEventListener('click', () => {
+                            const index = Number(btn.dataset.sell);
+                            if (!Number.isInteger(index)) return;
+
+                            if (typeof Cake.sellItem === 'function') {
+                                const res = Cake.sellItem(index);
+                                if (res && res.success === false) {
+                                    alert(res.message || '出售失败');
+                                } else {
+                                    renderShopPage();
+                                }
+                            } else {
+                                alert('卖出功能未加载');
+                            }
+                        });
+                    });
+
+                    setStatus(isOpen ? '店铺正在营业中' : '店铺已休息，等待开店', isOpen ? 'success' : '');
+                } catch (err) {
+                    console.error('[Shop Page] 渲染失败:', err);
+                    setStatus(`渲染失败：${err.message || '未知错误'}`, 'error');
+                    renderEmptyState('页面发生异常，请刷新后重试');
+                }
+            }
+
+            let checkCount = 0;
+
+            function waitForEngine() {
+                const Cake = getCake();
+                if (Cake && Cake.store && Cake.store.state) {
+                    renderShopPage();
+                    return;
+                }
+
+                checkCount++;
+                if (checkCount < 150) {
+                    setTimeout(waitForEngine, 100);
+                    return;
+                }
+
+                setStatus('游戏引擎加载超时，请刷新页面重试', 'error');
+                renderEmptyState('游戏引擎加载超时，请刷新页面重试');
+            }
+
+            window.addEventListener('refresh_ui', renderShopPage);
+            window.addEventListener('storage', renderShopPage);
+
+            waitForEngine();
         })();
     </script>
 </body>

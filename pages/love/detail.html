@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>💕 详情 · 甜蜜物语</title>
+    <link rel="stylesheet" href="../../css/styles.css">
+    <style>
+        .back-btn { display: inline-block; margin-bottom: 15px; color: var(--pink-600); cursor: pointer; font-weight: bold; }
+        .char-header { text-align: center; padding: 20px; background: #fff; border-radius: 16px; margin-bottom: 15px; box-shadow: var(--shadow-card); }
+        .char-emoji-large { font-size: 64px; margin-bottom: 10px; }
+        .char-name-large { font-size: 24px; font-weight: bold; color: var(--pink-600); margin-bottom: 5px; }
+        .char-desc-large { font-size: 14px; color: var(--text-muted); line-height: 1.6; }
+        .gift-panel { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+        .gift-btn { background: #fff; border: 1px solid var(--pink-200); border-radius: 8px; padding: 6px 12px; font-size: 13px; cursor: pointer; color: var(--text-mid); }
+        .gift-btn:active { background: var(--pink-50); }
+    </style>
+</head>
+<body>
+    <div class="game-body" style="padding-top: 10px;">
+        <div class="back-btn" onclick="history.back()">← 返回缘分大厅</div>
+        <div id="content"></div>
+    </div>
+
+    <script type="module">
+        const Cake = window.parent.Cake || window.Cake;
+        if (!Cake) return;
+
+        // 解析 URL 中的角色 ID
+        const params = new URLSearchParams(window.location.search);
+        const cid = params.get('id');
+        
+        if (!cid || !Cake.CHARACTERS[cid]) {
+            document.getElementById('content').innerHTML = '<div class="muted text-center">未找到该角色</div>';
+            throw new Error('Character not found');
+        }
+
+        const char = Cake.CHARACTERS[cid];
+
+        const affLevel = (aff) => {
+            if (aff >= 100) return '💖 挚爱';
+            if (aff >= 80) return '💗 心动';
+            if (aff >= 60) return '💞 亲密';
+            if (aff >= 40) return '🤝 朋友';
+            if (aff >= 20) return '👋 相识';
+            return '🤍 陌生';
+        };
+
+        const renderDetail = () => {
+            const state = Cake.store.state;
+            const cs = state.characters[cid] || { met: false, affection: 0 };
+            const aff = Math.max(0, Math.min(100, cs.affection || 0));
+
+            // 收集可送的食物
+            const availableFoods = [];
+            for (const [recipeKey, data] of Object.entries(state.foods || {})) {
+                const total = (data.perfect || 0) + (data.good || 0) + (data.normal || 0);
+                if (total > 0) availableFoods.push({ key: recipeKey, count: total });
+            }
+
+            const giftBtns = availableFoods.map(f => {
+                const recipe = Cake.RECIPES[f.key];
+                const liked = (char.likes || []).includes(recipe.name) ? '💕' : '';
+                return `<button class="gift-btn" onclick="giveGift('${f.key}')">${recipe.emoji}${recipe.name} ×${f.count} ${liked}</button>`;
+            }).join('');
+
+            document.getElementById('content').innerHTML = `
+                <div class="char-header">
+                    <div class="char-emoji-large">${char.emoji}</div>
+                    <div class="char-name-large">${char.name}</div>
+                    <div class="char-desc-large">${char.desc}</div>
+                    <div style="margin-top: 15px; font-weight: bold; color: var(--pink-500);">
+                        ${affLevel(aff)} (${aff}/100)
+                    </div>
+                    <div class="aff-bar" style="margin-top: 10px; height: 8px;">
+                        <div class="aff-fill" style="width: ${aff}%;"></div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>💝 喜好</h3>
+                    <p class="muted">喜欢的食物：${(char.likes || []).join('、') || '暂未发现'}</p>
+                </div>
+
+                <div class="card">
+                    <h3>💬 互动</h3>
+                    <div class="char-actions" style="margin-bottom: 15px;">
+                        <button class="small" style="flex: 1;" onclick="chatWith()">💬 聊天</button>
+                        <button class="small secondary" style="flex: 1;" onclick="dateWith()">🌹 邀约</button>
+                    </div>
+                    
+                    <h3>🎁 赠送蛋糕</h3>
+                    <div class="gift-panel">
+                        ${giftBtns || '<span class="muted">没有可送的蛋糕，先去烘焙吧</span>'}
+                    </div>
+                </div>
+            `;
+        };
+
+        window.chatWith = () => {
+            const chatList = Cake.CHAT_DIALOGUES[cid];
+            if (!chatList) return;
+            const text = Cake.randomPick ? Cake.randomPick(chatList) : chatList[0];
+            Cake.addLog(`💬 [${char.name}] ${text}`);
+            Cake.Social.addAffection({ [cid]: 2 });
+        };
+
+        window.dateWith = () => {
+            const state = Cake.store.state;
+            if (state.energy < 12) return alert('精力不足，无法邀约');
+            if (state.money < 50) return alert('金币不足，无法邀约');
+            
+            const dateList = Cake.DATE_DIALOGUES[cid];
+            if (!dateList) return;
+            const text = Cake.randomPick ? Cake.randomPick(dateList) : dateList[0];
+
+            state.energy -= 12;
+            state.money -= 50;
+            Cake.addLog(`🌹 [${char.name}] ${text}`);
+            Cake.Social.addAffection({ [cid]: 10 });
+            Cake.advanceTime(120);
+        };
+
+        window.giveGift = (recipeKey) => {
+            const state = Cake.store.state;
+            const data = state.foods[recipeKey];
+            if (!data) return;
+            
+            const recipe = Cake.RECIPES[recipeKey];
+            let affGain = 5;
+
+            if ((char.likes || []).includes(recipe.name)) affGain += 10;
+
+            if (data.normal > 0) data.normal--;
+            else if (data.good > 0) data.good--;
+            else if (data.perfect > 0) data.perfect--;
+
+            Cake.addLog(`🎁 送给 ${char.name} 一份 ${recipe.name}，好感度提升！`);
+            Cake.Social.addAffection({ [cid]: affGain });
+            
+            renderDetail(); // 刷新当前详情页
+        };
+
+        if (typeof Cake.initPage === 'function') Cake.initPage('love', renderDetail, false);
+    </script>
+</body>
+</html>

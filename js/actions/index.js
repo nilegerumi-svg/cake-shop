@@ -1,9 +1,26 @@
 // js/actions/index.js
+(async () => {
+    'use strict';
+    console.log('🎮 [Actions] 开始逐个加载行为子模块...');
 
-import './system.js';              // 1. 系统底层（最先加载）
-import './craft/index.js';         // 核心制作
-import './entertainment/index.js'; // 地图与探索
-import './shop/index.js';          // 店铺开关与打扫
-import './social/index.js';        // 社交互动
+    const ACTION_MODULES = [
+        './system.js',
+        './craft/index.js',
+        './entertainment/index.js',
+        './shop/index.js',
+        './social/index.js'
+    ];
 
-console.log('⚙️ [Actions] 所有行为操作层装载完毕');
+    for (const path of ACTION_MODULES) {
+        try {
+            await import(path);
+            console.log(`✅ [Actions] 加载成功: ${path}`);
+        } catch (err) {
+            // 👈 放大镜：谁报错就打印谁
+            console.warn(`⚠️ [Actions] 子模块加载失败，已跳过 -> ${path}`);
+            console.warn(`原因: ${err.message}`);
+        }
+    }
+
+    console.log('⚙️ [Actions] 所有行为操作层处理完毕');
+})();

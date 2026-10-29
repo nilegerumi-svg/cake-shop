@@ -6,8 +6,28 @@
     <title>主页 · 甜蜜物语</title>
     <link rel="stylesheet" href="../../css/styles.css">
     <style>
-        body { background: transparent; padding: 16px; margin: 0; min-height: 100vh; box-sizing: border-box; display: block !important; }
-        .room-card { display: flex; align-items: center; justify-content: space-between; padding: 20px; background: #fff; border-radius: 16px; margin-bottom: 15px; cursor: pointer; border: 1px solid var(--pink-100); box-shadow: 0 4px 10px rgba(0,0,0,0.03); transition: 0.2s; }
+        body {
+            background: transparent;
+            padding: 16px;
+            margin: 0;
+            min-height: 100vh;
+            box-sizing: border-box;
+            display: block !important;
+            font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+        }
+        .room-card {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px;
+            background: #fff;
+            border-radius: 16px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            border: 1px solid rgba(255, 175, 200, 0.55);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+            transition: 0.2s;
+        }
         .room-card:active { transform: scale(0.98); background: #fff8fa; }
         .room-left { display: flex; align-items: center; gap: 15px; }
         .room-icon { font-size: 36px; }
@@ -17,7 +37,11 @@
     </style>
 </head>
 <body>
-    <div id="content"></div>
+    <div id="content">
+        <div class="muted text-center" style="margin-top:50px;">⏳ 正在等待引擎加载...</div>
+    </div>
+
+    <script src="../boot-safe.js"></script>
     <script type="module" src="index.js"></script>
 </body>
 </html>

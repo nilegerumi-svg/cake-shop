@@ -12,7 +12,7 @@
             version: window.Cake.SCHEMA_VERSION,
             
             // ================= 基础资源 =================
-            money: 100,          // 初始金币
+            money: 200,          // 👈 初始金币改为 200
             energy: 100,         // 初始精力
             maxEnergy: 100,      // 精力上限
 
@@ -46,18 +46,24 @@
             // 2. 配方专属熟练度
             recipeProf: {}, 
 
-            // 3. 工具状态（初始为空，需购买）
-            tools: {},
+            // 3. 工具状态（👈 新手礼包：送一台基础烤箱）
+            tools: {
+                'oven_basic': { owned: true, lv: 1, exp: 0 }
+            },
 
             // ================= 资产与背包 =================
-            // 背包数组：存 { id: 'chicken_egg', quality: 50, expireDay: 5 }
-            inventory: [],
+            // 背包数组（👈 新手礼包：送刚好够烤一炉麦芬的材料）
+            inventory: [
+                { id: 'flour_low', quality: 50, expireDay: 5 },
+                { id: 'sugar', quality: 50, expireDay: 30 },
+                { id: 'chicken_egg', quality: 50, expireDay: 3 },
+                { id: 'milk', quality: 50, expireDay: 4 }
+            ],
 
-            // 👈 新增：未送达的订单
-            // 结构：{ itemId: 'chicken_egg', quantity: 5, arriveTime: 1440, isTool: false }
+            // 未送达的订单
             orders: [],
 
-            // 成品库存：存 { 'cake:muffin': { total: 2, perfect: 0, good: 0, normal: 0, failed: 0 } }
+            // 成品库存：存 { 'cake:muffin': { perfect: 0, good: 0, normal: 0, failed: 0 } }
             foods: {},
 
             // 已解锁的配方
@@ -67,5 +73,5 @@
         };
     };
 
-    console.log('🧱 [Schema] 玩家初始存档结构定义完毕（含时间与店铺）');
+    console.log('🧱 [Schema] 玩家初始存档结构定义完毕（含新手礼包）');
 })();

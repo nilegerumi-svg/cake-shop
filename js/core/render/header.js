@@ -5,12 +5,20 @@ window.Cake = window.Cake || {};
     const num = (v, fallback = 0) => Number.isFinite(Number(v)) ? Number(v) : fallback;
 
     Cake.renderHeader = () => {
+        console.log('👉 [Header] 开始渲染顶部状态栏...');
         const el = Cake.$('header');
-        // 如果是 iframe 或者没有元素，直接返回
-        if (!el || window.self !== window.top) return;
+        
+        // 👈 删掉了 window.self !== window.top，只要找不到元素才返回
+        if (!el) {
+            console.error('❌ [Header] 找不到 #header 元素！');
+            return;
+        }
 
         const state = Cake.store?.state;
-        if (!state) return;
+        if (!state) {
+            console.error('❌ [Header] 游戏状态数据为空！');
+            return;
+        }
 
         const energy = Math.max(0, Math.min(100, num(state.energy, 80)));
         const pct = Math.round(energy);
@@ -28,7 +36,6 @@ window.Cake = window.Cake || {};
                     <span>${esc(state.shop?.name ?? '甜蜜小屋')}</span>
                 </div>
                 <div class="header-stats" style="display: flex; gap: 8px; font-size: 13px; color: var(--text-mid); font-weight: bold;">
-                    <!-- 👈 修改：把季节 Emoji 插在时间前面 -->
                     <span>${seasonData.emoji} ${num(state.time?.day, 1)}天 ${timeStr}</span>
                     <span>💰 ${num(state.money, 100)}</span>
                     <span>🧹 ${num(state.shop?.stats?.cleanliness, 100)}%</span>
@@ -41,5 +48,6 @@ window.Cake = window.Cake || {};
                 </div>
                 <span style="color: var(--text-muted); width: 45px; text-align: right;">${pct}/${state.maxEnergy || 100}</span>
             </div>`;
+        console.log('✅ [Header] 顶部状态栏渲染完成！');
     };
 })();

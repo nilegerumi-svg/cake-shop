@@ -3,7 +3,7 @@
     'use strict';
 
     const CRAFT_MODULES = [
-        '../../shared.js',
+        './shared.js',
         './quality.js',
         './buy.js',
         './research.js',

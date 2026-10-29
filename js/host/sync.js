@@ -1,4 +1,4 @@
-// js/host/sync.js
+// js/host/sync.js (重写对齐)
 (function () {
     'use strict';
     const Cake = window.Cake;
@@ -7,23 +7,21 @@
         if (!Cake.store || !Cake.store.state) return;
         try {
             localStorage.setItem('cake_shop_save', JSON.stringify(Cake.store.state));
-            console.log('💾 [Host/Sync] 游戏已自动保存');
         } catch (e) {
-            console.error('❌ [Host/Sync] 保存失败', e);
+            console.error('❌ 保存失败', e);
         }
     };
 
-    Cake.loadGame = function () {
+    // 👈 对齐 main.js 的接口名
+    Cake.loadStateFromStorage = function () {
         try {
             const raw = localStorage.getItem('cake_shop_save');
             if (raw) {
-                const parsed = JSON.parse(raw);
-                // 使用 migrate 处理旧存档
-                return Cake.migrateState ? Cake.migrateState(parsed) : parsed;
+                return Cake.migrateState(JSON.parse(raw));
             }
         } catch (e) {
-            console.error('❌ [Host/Sync] 读取存档失败', e);
+            console.error('❌ 读取存档失败', e);
         }
-        return null;
+        return Cake.createEmptyState();
     };
 })();

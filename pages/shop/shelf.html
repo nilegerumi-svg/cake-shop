@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🍰 成品货架</title>
+    <link rel="stylesheet" href="../../css/styles.css">
+    <style>
+        .back-btn { display: inline-block; margin-bottom: 15px; color: var(--pink-600); cursor: pointer; font-weight: bold; }
+        /* 金币飘字特效 */
+        .coin-float { position: fixed; top: 40px; left: 50%; transform: translateX(-50%); color: #ff9800; font-size: 28px; font-weight: 900; text-shadow: 0 2px 4px rgba(0,0,0,0.2); pointer-events: none; z-index: 9999; opacity: 0; animation: floatUp 1.2s ease-out forwards; }
+        @keyframes floatUp { 0% { opacity: 0; transform: translate(-50%, 20px) scale(0.8); } 20% { opacity: 1; transform: translate(-50%, 0) scale(1.1); } 80% { opacity: 1; transform: translate(-50%, -20px) scale(1); } 100% { opacity: 0; transform: translate(-50%, -40px) scale(0.9); } }
+    </style>
+</head>
+<body>
+    <div class="game-body" style="padding-top: 10px;">
+        <div class="back-btn" onclick="history.back()">← 返回店铺</div>
+        <div class="content" id="content"></div>
+    </div>
+    <script type="module">
+        const Cake = window.parent.Cake || window.Cake;
+        if (!Cake) return;
+
+        let lastMoney = -1;
+
+        function showCoinFloat(amount) {
+            const el = document.createElement('div');
+            el.className = 'coin-float';
+            el.textContent = `+${amount} 💰`;
+            document.body.appendChild(el);
+            setTimeout(() => el.remove(), 1500);
+        }
+
+        const checkMoneyDelta = () => {
+            const currentMoney = Number(Cake.store.state.money) || 0;
+            if (lastMoney !== -1 && currentMoney > lastMoney) {
+                showCoinFloat(currentMoney - lastMoney);
+            }
+            lastMoney = currentMoney;
+        };
+
+        const render = () => {
+            const state = Cake.store.state;
+            const priceRate = state.shop.priceRate || 1.0;
+            const reputation = state.shop.stats.reputation || 0;
+
+            let foodHtml = '<p class="muted text-center" style="margin-top:20px;">货架空空如也</p>';
+            let hasFailed = false;
+            let hasFood = false;
+            let foodList = '';
+
+            for (const [recipeKey, data] of Object.entries(state.foods || {})) {
+                const recipe = Cake.RECIPES[recipeKey];
+                if (!recipe) continue;
+
+                const total = (data.perfect || 0) + (data.good || 0) + (data.normal || 0) + (data.failed || 0);
+                if (total <= 0) continue;
+
+                if (data.failed > 0) hasFailed = true;
+                if (total - (data.failed || 0) > 0) hasFood = true;
+
+                const basePrice = recipe.size === 'large' ? 200 : recipe.size === 'medium' ? 50 : 15;
+                const unitPrice = Math.floor(basePrice * priceRate * (1 + reputation / 100));
+
+                const parts = [];
+                if (data.perfect > 0) parts.push(`<span style="color:#ff8fa3">✨完美 ${data.perfect}</span>`);
+                if (data.good > 0) parts.push(`<span style="color:#52c41a">👍优良 ${data.good}</span>`);
+                if (data.normal > 0) parts.push(`<span>普通 ${data.normal}</span>`);
+                if (data.failed > 0) parts.push(`<span style="color:#888">💀失败 ${data.failed}</span>`);
+
+                foodList += `
+                    <div class="item-card">
+                        <span class="item-emoji">${recipe.emoji || '🍰'}</span>
+                        <span class="item-name">${recipe.name}</span>
+                        <div class="item-desc" style="margin-top:6px; font-size:12px; display:flex; flex-direction:column; gap:2px;">${parts.join('')}</div>
+                        <span class="item-meta" style="color:var(--pink-600); margin-top:4px;">预计售: ${unitPrice} 元</span>
+                    </div>
+                `;
+            }
+
+            if (hasFood) foodHtml = `<div class="grid-2">${foodList}</div>`;
+
+            document.getElementById('content').innerHTML = `
+                <div class="card">
+                    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px dashed var(--pink-100); padding-bottom:8px; margin-bottom:15px;">
+                        <h2 style="margin:0; border:none; padding:0;">🍰 当前货架</h2>
+                        ${hasFailed ? `<button class="small secondary" style="padding:4px 8px; font-size:12px;" onclick="clearFailed()">🗑️ 清理废品</button>` : ''}
+                    </div>
+                    ${foodHtml}
+                </div>
+            `;
+        };
+
+        window.clearFailed = () => {
+            const res = Cake.clearFailedFoods();
+            if (res && res.success === false) alert(res.message);
+        };
+
+        if (typeof Cake.initPage === 'function') {
+            Cake.initPage('shop', () => {
+                checkMoneyDelta();
+                render();
+                // 轮询监控金币变化，实现丝滑飘字
+                setInterval(() => {
+                    checkMoneyDelta();
+                }, 1000);
+            }, false);
+        }
+    </script>
+</body>
+</html>

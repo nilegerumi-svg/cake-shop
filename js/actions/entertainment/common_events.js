@@ -42,15 +42,21 @@
         // 4. 结算食材获得
         if (evt.ing) {
             for (const [itemId, qty] of Object.entries(evt.ing)) {
-                const itemData = Cake.INGREDIENTS[itemId];
-                const shelfLife = Cake.getRandomShelfLife((itemData && itemData.tags && itemData.tags[0]) || 'default');
-                
                 for (let i = 0; i < qty; i++) {
-                    state.inventory.push({
-                        id: itemId,
-                        quality: 50,
-                        expireDay: state.time.day + shelfLife
-                    });
+                    // 统一走 createInventoryItem，确保记录 shelfLife 供分级变质计算
+                    if (typeof Cake.createInventoryItem === 'function') {
+                        state.inventory.push(Cake.createInventoryItem(itemId, { day: state.time.day }));
+                    } else {
+                        const itemData = Cake.INGREDIENTS[itemId];
+                        const shelfLife = Cake.getRandomShelfLife((itemData && itemData.tags && itemData.tags[0]) || 'default');
+                        state.inventory.push({
+                            id: itemId,
+                            quality: 50,
+                            shelfLife: shelfLife,
+                            expireDay: state.time.day + shelfLife,
+                            isRotten: false
+                        });
+                    }
                 }
             }
         }

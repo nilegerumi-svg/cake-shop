@@ -22,9 +22,11 @@
         <div class="content" id="content"></div>
     </div>
 
+    <!-- 引擎等待器（与配方页/采购页一致） -->
+    <script src="../boot-safe.js"></script>
     <script type="module">
-        const Cake = window.parent.Cake || window.Cake;
-        if (!Cake) return;
+        // 引擎由父页面异步注入，不能在此同步取用
+        let Cake = null;
 
         const render = () => {
             const state = Cake.store.state;
@@ -57,7 +59,28 @@
             contentEl.innerHTML = `<div class="card"><h2>🛠️ 我的工具库</h2>${cards}</div>`;
         };
 
-        Cake.initPage('profile', render, false);
+        const start = () => {
+            if (typeof Cake.initPage === 'function') {
+                Cake.initPage('profile', render, false);
+            } else {
+                render();
+            }
+        };
+
+        if (window.safePageBoot && typeof window.safePageBoot.waitForCake === 'function') {
+            window.safePageBoot.waitForCake((readyCake) => {
+                Cake = readyCake;
+                start();
+            }, {
+                timeout: 15000,
+                // 需等工具数据到位，否则工具名会显示成原始 id
+                required: (game) => !!(game && game.store && game.store.state && game.TOOLS),
+                onTimeout: () => '工具库：游戏引擎或工具数据加载超时，请刷新页面重试。'
+            });
+        } else {
+            Cake = window.parent.Cake || window.Cake;
+            if (Cake && Cake.store && Cake.store.state) start();
+        }
     </script>
 </body>
 </html>

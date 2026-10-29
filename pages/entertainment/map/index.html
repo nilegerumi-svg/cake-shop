@@ -33,6 +33,10 @@
             max-width: 100%;
             aspect-ratio: 4 / 5;
             box-sizing: border-box;
+            /* 矮屏下卡片高度受视口限制，超出部分内部滚动，避免地点列表被裁掉 */
+            max-height: calc(100vh - 32px);
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
         }
 
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px dashed #ffd1dc; padding-bottom: 12px; }

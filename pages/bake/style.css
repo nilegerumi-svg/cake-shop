@@ -63,3 +63,72 @@
     box-shadow: none; 
     cursor: not-allowed; 
 }
+
+/* ===== 熟练度面板 ===== */
+.prof-panel {
+    background: #fff8fa;
+    border: 1px solid var(--pink-100);
+    border-radius: 12px;
+    padding: 12px 14px;
+    margin-bottom: 15px;
+}
+
+.prof-title {
+    font-size: 13px;
+    font-weight: bold;
+    color: #d6336c;
+    margin-bottom: 8px;
+}
+
+.prof-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+}
+
+.prof-label {
+    flex: 0 0 auto;
+    width: 52px;
+    font-size: 12px;
+    color: var(--text-mid);
+}
+
+.prof-lv {
+    flex: 0 0 auto;
+    width: 42px;
+    font-size: 12px;
+    font-weight: bold;
+    color: var(--pink-600);
+}
+
+/* 进度条用百分比宽度，窄屏也能自适应 */
+.prof-track {
+    flex: 1 1 auto;
+    min-width: 0;
+    height: 8px;
+    background: #ffe4e8;
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.prof-bar-fill {
+    height: 100%;
+    width: 0%;
+    background: var(--pink-400);
+    border-radius: 999px;
+    transition: width 0.3s ease;
+}
+
+.prof-exp {
+    flex: 0 0 auto;
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+.prof-hint {
+    margin-top: 8px;
+    font-size: 11px;
+    line-height: 1.5;
+    color: var(--text-muted);
+}

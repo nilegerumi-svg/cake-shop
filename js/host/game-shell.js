@@ -27,10 +27,15 @@ window.footerAction = (action) => {
     if (!Cake) return;
     
     if (action === 'sleep' && Cake.sleep) {
-        Cake.sleep();
-        const mainFrame = document.getElementById('mainFrame');
-        if (mainFrame && mainFrame.contentWindow) {
-            mainFrame.contentWindow.location.reload();
+        const res = Cake.sleep();
+        // 睡觉失败（例如人不在家）时提示原因，且不重载页面
+        if (res && res.success === false) {
+            alert(res.message || '现在还不能睡觉');
+        } else {
+            const mainFrame = document.getElementById('mainFrame');
+            if (mainFrame && mainFrame.contentWindow) {
+                mainFrame.contentWindow.location.reload();
+            }
         }
     } 
     else if (action === 'shop' && Cake.toggleShopStatus) {

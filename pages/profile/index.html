@@ -19,6 +19,30 @@
         .nav-desc { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
         .arrow { color: var(--pink-300); font-size: 20px; font-weight: bold; }
         .fatal-error { background: #ff4d4f; color: white; padding: 20px; border-radius: 10px; font-family: monospace; font-size: 14px; word-break: break-all; margin: 20px; }
+
+        /* ===== 技能熟练度面板 ===== */
+        .skill-panel {
+            background: #fff8fa; border: 1px solid var(--pink-100);
+            border-radius: 12px; padding: 12px 14px; margin-bottom: 16px;
+        }
+        .skill-row {
+            display: flex; align-items: center; flex-wrap: wrap;
+            gap: 8px; margin-bottom: 8px;
+        }
+        .skill-label { flex: 0 0 auto; min-width: 88px; font-size: 12px; color: var(--text-mid); }
+        .skill-lv { flex: 0 0 auto; width: 42px; font-size: 12px; font-weight: bold; color: var(--pink-600); }
+        /* 进度条按百分比伸缩，窄屏自动占满剩余宽度 */
+        .skill-track {
+            flex: 1 1 60px; min-width: 40px; height: 8px;
+            background: #ffe4e8; border-radius: 999px; overflow: hidden;
+        }
+        .skill-fill { height: 100%; width: 0%; background: var(--pink-400); border-radius: 999px; }
+        .skill-exp { flex: 0 0 auto; font-size: 11px; color: var(--text-muted); }
+        .skill-sub {
+            font-size: 11px; font-weight: bold; color: #d6336c;
+            margin: 10px 0 6px; padding-top: 8px; border-top: 1px dashed var(--pink-100);
+        }
+        .skill-sub.muted { color: var(--text-muted); font-weight: normal; }
     </style>
 </head>
 <body>
@@ -68,6 +92,40 @@
                 const toolCount = Object.keys(s.tools || {}).filter(id => s.tools[id].owned).length;
                 const invCount = (s.inventory || []).length;
 
+                // 技能与配方熟练度总览（每 100 经验升 1 级）
+                const EXP_PER_LEVEL = 100;
+                const skills = s.skills || {};
+                const SKILL_LABELS = { bakery: '🍰 烘焙', cook: '🍳 料理' };
+                const profBar = (label, lv, exp) => {
+                    const pct = Math.min(100, Math.round((num(exp, 0) / EXP_PER_LEVEL) * 100));
+                    return `
+                        <div class="skill-row">
+                            <span class="skill-label">${label}</span>
+                            <span class="skill-lv">Lv.${num(lv, 1)}</span>
+                            <div class="skill-track"><div class="skill-fill" style="width:${pct}%;"></div></div>
+                            <span class="skill-exp">${num(exp, 0)}/${EXP_PER_LEVEL}</span>
+                        </div>
+                    `;
+                };
+
+                const skillRows = Object.keys(SKILL_LABELS)
+                    .map(key => {
+                        const sk = skills[key] || { lv: 1, exp: 0 };
+                        return profBar(SKILL_LABELS[key], sk.lv, sk.exp);
+                    })
+                    .join('');
+
+                // 已解锁配方的熟练度（取有记录的，最多显示 6 条）
+                const profEntries = Object.entries(s.recipeProf || {})
+                    .filter(([, v]) => v && num(v.lv, 1) > 1)
+                    .sort((a, b) => num(b[1].lv, 1) - num(a[1].lv, 1))
+                    .slice(0, 6)
+                    .map(([key, v]) => {
+                        const r = (Cake.RECIPES || {})[key];
+                        return profBar((r && r.name) || key, v.lv, v.exp);
+                    })
+                    .join('');
+
                 contentEl.innerHTML = `
                     <div class="card">
                         <h2>📊 我的档案</h2>
@@ -83,6 +141,14 @@
                                 <span class="item-name">经营数据</span>
                                 <span class="item-desc">余额：${money}元<br>累计卖出：${num(s.totalCakes, 0)}个<br>累计收入：${num(s.totalEarned, 0)}元<br>声望：${reputation}</span>
                             </div>
+                        </div>
+
+                        <h3>📈 技能熟练度</h3>
+                        <div class="skill-panel">
+                            ${skillRows}
+                            ${profEntries
+                                ? `<div class="skill-sub">已掌握的配方</div>${profEntries}`
+                                : '<div class="skill-sub muted">尚无配方达到 2 级，多做几次就能升级</div>'}
                         </div>
 
                         <h3>📂 我的收藏与资产</h3>

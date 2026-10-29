@@ -32,6 +32,14 @@
         .loc-desc { font-size: 12px; color: #888; margin-top: 4px; }
 
         .loc-meta { font-size: 12px; color: #ff8fa3; font-weight: bold; text-align: right; white-space: nowrap; }
+
+        /* 地点内嵌商店徽标 */
+        .loc-shop {
+            display: inline-block; margin-top: 4px;
+            padding: 1px 7px; border-radius: 999px;
+            font-size: 11px; font-weight: bold;
+            background: #fff5f7; color: #d85c74; border: 1px solid #ffd1dc;
+        }
     </style>
 </head>
 <body>
@@ -47,20 +55,24 @@
         </div>
     </div>
 
+    <script src="../../boot-safe.js"></script>
     <script type="module">
-        // 1. 直接获取最新的引擎
-        const Cake = window.parent.Cake || window.Cake;
-        if (!Cake) return;
+        // 引擎由父页面异步注入，不能在此同步取用
+        let Cake = null;
 
         const $ = (id) => document.getElementById(id);
         const num = (v, fallback = 0) => Number.isFinite(Number(v)) ? Number(v) : fallback;
-        
-        // 本页固定属于 town 区域
-        const REGION_ID = 'town'; 
 
-        // 返回总地图
-        $('btnBack').onclick = () => {
-            window.history.length > 1 ? history.back() : (window.location.href = 'index.html');
+        // 本页固定属于 town 区域
+        const REGION_ID = 'town';
+
+        const bindBack = () => {
+            const backBtn = $('btnBack');
+            if (!backBtn || backBtn.dataset.bound === 'true') return;
+            backBtn.dataset.bound = 'true';
+            backBtn.onclick = () => {
+                window.history.length > 1 ? history.back() : (window.location.href = 'index.html');
+            };
         };
 
         // 渲染地点列表
@@ -78,7 +90,7 @@
                 if (!locs || Object.keys(locs).length === 0) {
                     locs = Cake.REGION_TOWN || null;
                 }
-                if (typeof locs !== 'object') locs = null;
+                if (!locs || typeof locs !== 'object') locs = null;
 
                 if (!locs || Object.keys(locs).length === 0) {
                     throw new Error('城镇地点数据为空！请检查地点文件的加载');
@@ -88,13 +100,22 @@
                 for (const [key, loc] of Object.entries(locs)) {
                     if (!loc) continue;
 
+                    // 该地点是否内嵌商店（到达即可购物）
+                    const shop = (typeof Cake.getLocationShop === 'function')
+                        ? Cake.getLocationShop(REGION_ID, key)
+                        : null;
+                    const shopBadge = (shop && shop.items && shop.items.length > 0)
+                        ? `<span class="loc-shop">${shop.shop.emoji || '🏪'} 可购物</span>`
+                        : '';
+
                     html += `
-                        <div class="loc-item" onclick="goLocation('${key}')">
+                        <div class="loc-item" data-loc="${key}">
                             <div class="loc-info">
                                 <span class="loc-emoji">${loc.emoji || '📍'}</span>
                                 <div class="loc-text">
                                     <span class="loc-name">${loc.name || key}</span>
                                     <span class="loc-desc">${loc.desc || '未知的区域'}</span>
+                                    ${shopBadge}
                                 </div>
                             </div>
                             <span class="loc-meta">进入 ▶</span>
@@ -102,7 +123,18 @@
                     `;
                 }
 
-                $('locList').innerHTML = html || '<div style="color:#888; text-align:center;">当前没有可去的地点...</div>';
+                const listEl = $('locList');
+                listEl.innerHTML = html || '<div style="color:#888; text-align:center;">当前没有可去的地点...</div>';
+
+                // 用事件委托绑定，避免依赖全局函数
+                if (!listEl.dataset.bound) {
+                    listEl.dataset.bound = 'true';
+                    listEl.addEventListener('click', (e) => {
+                        const item = e.target.closest('[data-loc]');
+                        if (!item) return;
+                        goLocation(item.dataset.loc);
+                    });
+                }
 
             } catch (err) {
                 $('locList').innerHTML = `
@@ -113,15 +145,35 @@
         };
 
         // 跳转到具体的地点页
-        window.goLocation = (locKey) => {
-            window.location.href = `location.html?region=${REGION_ID}&loc=${locKey}`;
+        // 参数名必须是 id —— location.html 通过 params.get('id') 读取
+        const goLocation = (locKey) => {
+            window.location.href = `location.html?id=${encodeURIComponent(locKey)}`;
+        };
+        window.goLocation = goLocation;
+
+        const start = () => {
+            bindBack();
+            if (typeof Cake.initPage === 'function') {
+                Cake.initPage('fun', () => {
+                    renderList();
+                }, false);
+            } else {
+                renderList();
+            }
         };
 
-        // 初始化
-        if (typeof Cake.initPage === 'function') {
-            Cake.initPage('fun', () => {
-                renderList();
-            }, false);
+        if (window.safePageBoot && typeof window.safePageBoot.waitForCake === 'function') {
+            window.safePageBoot.waitForCake((readyCake) => {
+                Cake = readyCake;
+                start();
+            }, {
+                timeout: 15000,
+                required: (game) => !!(game && game.store && game.store.state),
+                onTimeout: () => '城镇地图：游戏引擎加载超时，请刷新页面重试。'
+            });
+        } else {
+            Cake = window.parent.Cake || window.Cake;
+            if (Cake && Cake.store && Cake.store.state) start();
         }
     </script>
 </body>

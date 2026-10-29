@@ -26,9 +26,11 @@
         </div>
     </div>
 
+    <!-- 引擎等待器（与配方页/采购页一致） -->
+    <script src="../boot-safe.js"></script>
     <script type="module">
-        const Cake = window.parent.Cake || window.Cake;
-        if (!Cake) return;
+        // 引擎由父页面异步注入，不能在此同步取用
+        let Cake = null;
 
         const affLevel = (aff) => {
             if (aff >= 100) return '💖 挚爱';
@@ -43,10 +45,11 @@
             const state = Cake.store.state;
             const characters = Cake.CHARACTERS || {};
             const charState = state.characters || {};
+            const contentEl = document.getElementById('content');
 
-            document.getElementById('content').innerHTML = Object.entries(characters).map(([cid, char]) => {
+            contentEl.innerHTML = Object.entries(characters).map(([cid, char]) => {
                 const cs = charState[cid] || { met: false, affection: 0 };
-                
+
                 if (!cs.met) {
                     return `
                     <div class="char-card" style="opacity:0.6; cursor:not-allowed;">
@@ -60,7 +63,7 @@
 
                 const aff = Math.max(0, Math.min(100, cs.affection || 0));
                 return `
-                    <div class="char-card" onclick="goDetail('${cid}')">
+                    <div class="char-card" data-cid="${cid}">
                         <div class="char-emoji">${char.emoji}</div>
                         <div class="char-info">
                             <div class="char-name">${char.name}</div>
@@ -74,13 +77,40 @@
                     </div>
                 `;
             }).join('');
+
+            // 事件委托绑定，避免依赖全局函数
+            if (!contentEl.dataset.bound) {
+                contentEl.dataset.bound = 'true';
+                contentEl.addEventListener('click', (e) => {
+                    const card = e.target.closest('[data-cid]');
+                    if (!card) return;
+                    window.location.href = `detail.html?id=${encodeURIComponent(card.dataset.cid)}`;
+                });
+            }
         };
 
-        window.goDetail = (cid) => {
-            window.location.href = `detail.html?id=${cid}`;
+        const start = () => {
+            if (typeof Cake.initPage === 'function') {
+                Cake.initPage('love', renderHub, false);
+            } else {
+                renderHub();
+            }
         };
 
-        if (typeof Cake.initPage === 'function') Cake.initPage('love', renderHub, false);
+        if (window.safePageBoot && typeof window.safePageBoot.waitForCake === 'function') {
+            window.safePageBoot.waitForCake((readyCake) => {
+                Cake = readyCake;
+                start();
+            }, {
+                timeout: 15000,
+                // 需等角色数据到位，否则列表恒为空
+                required: (game) => !!(game && game.store && game.store.state && game.CHARACTERS),
+                onTimeout: () => '缘分：游戏引擎或角色数据加载超时，请刷新页面重试。'
+            });
+        } else {
+            Cake = window.parent.Cake || window.Cake;
+            if (Cake && Cake.store && Cake.store.state) start();
+        }
     </script>
 </body>
 </html>

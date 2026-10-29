@@ -1,13 +1,21 @@
+// 顶层 await：确保卖出子模块（手动卖出 / 顾客结账 / 清理废品）已挂载
+try {
+    await import('./sell.js');
+} catch (err) {
+    console.warn('⚠️ [Actions/Shop] 出售子模块加载失败:', err && err.message);
+}
+
 (function () {
     'use strict';
 
-    // 先加载出售子模块（手动卖出 / 顾客结账 / 清理废品）
-    import('./sell.js').catch((err) => {
-        console.warn('⚠️ [Actions/Shop] 出售子模块加载失败:', err && err.message);
-    });
-
     function getCake() {
-        return window.parent.Cake || window.Cake || null;
+        // 防御：某些环境下 window.parent 不可用，直接取属性会抛错导致整个模块失效
+        try {
+            if (window.parent && window.parent !== window && window.parent.Cake) {
+                return window.parent.Cake;
+            }
+        } catch (_) { /* 跨域忽略 */ }
+        return window.Cake || null;
     }
 
     function ensureStateShape(Cake) {

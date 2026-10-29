@@ -65,6 +65,9 @@
                     groupItems.forEach(([recipeKey, recipe]) => {
                         const isUnlocked = !!state.unlockedRecipes[recipeKey];
                         const ingHtml = (typeof Cake.ingredientTags === 'function') ? Cake.ingredientTags(recipe.ing) : '';
+                        const attrHtml = (typeof Cake.describeAttrs === 'function')
+                            ? Cake.describeAttrs(recipe.output && recipe.output.attrs)
+                            : '';
                         const costMoney = 50;
                         const canResearch = !isUnlocked && state.money >= costMoney && state.energy >= 15;
 
@@ -74,6 +77,7 @@
                                 <span class="item-name">${recipe.name || recipeKey}</span>
                                 <span class="item-desc" style="color:var(--text-muted); font-size:12px; margin: 4px 0;">⚡ ${recipe.energy}</span>
                                 <div class="ing-row">${ingHtml}</div>
+                                ${attrHtml ? `<div class="ing-row" style="margin-top:4px;">${attrHtml}</div>` : ''}
                                 <div style="margin-top: 15px; width: 100%;">
                                     ${isUnlocked
                                         ? '<span class="ing-tag ok" style="width: 100%; justify-content: center;">✅ 已掌握</span>'

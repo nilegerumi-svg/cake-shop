@@ -149,8 +149,11 @@ h3 {
     gap: 10px;
 }
 
-.grid-2 { grid-template-columns: 1fr 1fr; }
-.grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+/* 列宽全部用比例单位（fr），不用固定像素：
+   容器变窄时等比收缩，天然适配各种机型，不会出现横向溢出。
+   minmax(0, 1fr) 让子项可以收缩到小于内容宽度，避免长文本撑破网格。 */
+.grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 
 /* 防止长内容撑破网格 */
 .grid-2 > *,
@@ -158,8 +161,17 @@ h3 {
     min-width: 0;
 }
 
-@media (max-width: 360px) {
-    .grid-3 { grid-template-columns: 1fr 1fr; }
+/* 窄屏：三列降为两列，并收紧间距 */
+@media (max-width: 420px) {
+    .grid-2,
+    .grid-3 { gap: 8px; }
+    .grid-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* 极窄屏（≤340px）：统一降为单列，保证内容可读 */
+@media (max-width: 340px) {
+    .grid-2,
+    .grid-3 { grid-template-columns: minmax(0, 1fr); }
 }
 
 /* 7. 物品卡 */
@@ -223,6 +235,21 @@ h3 {
     color: var(--red-lack);
     background: var(--red-bg);
     border-color: var(--red-line);
+}
+
+/* 属性标签（配方图鉴的风味/口感画像） */
+.attr-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    line-height: 1.5;
+    border: 1px solid var(--pink-100);
+    background: #fff5f7;
+    color: var(--text-mid);
+    white-space: nowrap;
 }
 
 /* 9. 按钮系统 */

@@ -112,6 +112,76 @@
         return parts.join('');
     };
 
+    /* ==================== 保质期系统接线 ==================== */
+
+    // 统一创建库存项：记录总保质期 shelfLife，分级变质才计算得出来
+    const createInventoryItem = (itemId, opts = {}) => {
+        const state = Cake.store?.state;
+        const day = Number.isFinite(Number(opts.day))
+            ? Number(opts.day)
+            : ((state && state.time && state.time.day) || 1);
+        const quality = Number.isFinite(Number(opts.quality)) ? Number(opts.quality) : 50;
+
+        const itemData = (Cake.INGREDIENTS || {})[itemId];
+        // 保质期分类优先取合并时打好的 shelfCategory，
+        // 旧数据没有该字段时退回首个 tag，最后兜底 default
+        const category = (itemData && itemData.shelfCategory)
+            || (itemData && itemData.tags && itemData.tags[0])
+            || 'default';
+        const shelfLife = (typeof Cake.getRandomShelfLife === 'function')
+            ? Cake.getRandomShelfLife(category)
+            : 7;
+
+        return {
+            id: itemId,
+            quality: quality,
+            shelfLife: shelfLife,               // 总保质期（天），用于分级变质
+            expireDay: day + shelfLife,         // 绝对到期日
+            isRotten: false
+        };
+    };
+
+    // 计算某库存项当前的变质状态（fresh / warning / spoiled / rotten）
+    const getItemSpoilage = (item) => {
+        if (!item) return null;
+        if (typeof Cake.getSpoilageState !== 'function') return null;
+
+        const state = Cake.store?.state;
+        const day = (state && state.time && state.time.day) || 1;
+        const remaining = Number(item.expireDay) - Number(day);
+
+        // 旧存档没有 shelfLife 字段：退化为「过期即腐烂」的二元判断
+        const total = Number(item.shelfLife);
+        if (!Number.isFinite(total) || total <= 0) {
+            return Cake.getSpoilageState(1, remaining > 0 ? 1 : 0);
+        }
+        return Cake.getSpoilageState(total, remaining);
+    };
+
+    /* ==================== 属性系统接线 ==================== */
+
+    // 把配方的 output.attrs 渲染成可读标签（使用 ATTRIBUTES 字典的中文名与 emoji）
+    const describeAttrs = (attrs) => {
+        if (!attrs || typeof attrs !== 'object') return '';
+
+        const DICT = Cake.ATTRIBUTES || {};
+        const parts = [];
+
+        for (const [dim, values] of Object.entries(attrs)) {
+            if (!values || typeof values !== 'object') continue;
+            const dict = DICT[dim] || {};
+
+            for (const [key, score] of Object.entries(values)) {
+                const num = Math.round(Number(score) || 0);
+                if (num <= 0) continue;
+                const meta = dict[key];
+                const label = meta ? `${meta.emoji || ''}${meta.name || key}` : key;
+                parts.push(`<span class="attr-tag" title="${dim}">${label} ${num}</span>`);
+            }
+        }
+        return parts.join('');
+    };
+
     /* ==================== 补充缺失的渲染工具 ==================== */
     
     const getTimeString = () => {
@@ -136,6 +206,11 @@
         consumeIngredients,
         ingredientTags,
         getTimeString,
+        // 👈 保质期系统
+        createInventoryItem,
+        getItemSpoilage,
+        // 👈 属性系统
+        describeAttrs,
     });
 
     if (typeof window.$ === 'undefined') {

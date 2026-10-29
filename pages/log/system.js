@@ -6,7 +6,8 @@
     const RUNTIME_DISPLAY_MAX = 100;
     
     let runtimeLogs = [];
-    let runtimeCollapsed = false;
+    // 默认折叠：系统日志只在需要排查问题时才展开查看
+    let runtimeCollapsed = true;
     const runtimeBody = document.getElementById('runtimeBody');
 
     function el(tag, cls) {

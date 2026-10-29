@@ -7,8 +7,8 @@
     <title>总地图</title>
     <link rel="stylesheet" href="../../../css/styles.css">
     <style>
-        body { background: transparent; font-family: sans-serif; padding: 16px; display: flex; justify-content: center; color: #4a3b3f; margin: 0; }
-        .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(255,182,193,0.2); width: 100%; max-width: 400px; }
+        body { background: transparent; padding: 16px; display: flex; justify-content: center; color: #4a3b3f; margin: 0; }
+        .map-card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(255,182,193,0.2); width: 100%; max-width: 400px; box-sizing: border-box; }
 
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px dashed #ffd1dc; padding-bottom: 12px; }
         .header h2 { color: #ff6b81; margin: 0; font-size: 18px; }
@@ -17,186 +17,107 @@
 
         .energy-badge { background: #fff9fa; padding: 4px 10px; border-radius: 20px; font-size: 13px; border: 1px solid #ffd1dc; font-weight: bold; }
 
-        .region-list { display: flex; flex-direction: column; gap: 12px; }
-        .region-item {
+        .region-title { margin: 20px 0 10px 0; font-size: 15px; color: var(--pink-600); border-left: 4px solid var(--pink-400); padding-left: 8px; }
+
+        .loc-list { display: flex; flex-direction: column; gap: 12px; }
+        .loc-item {
             display: flex; align-items: center; justify-content: space-between;
             background: #fff5f7; border: 1px solid #ffb6c1; border-radius: 12px;
-            padding: 18px; cursor: pointer; transition: all 0.2s;
+            padding: 15px; cursor: pointer; transition: all 0.2s;
         }
-        .region-item:active { transform: scale(0.98); background: #ffe4e8; }
+        .loc-item:active { transform: scale(0.98); background: #ffe4e8; }
+        .loc-item.disabled { background: #f5f5f5; border-color: #ddd; opacity: 0.6; pointer-events: none; }
 
-        .region-info { display: flex; align-items: center; gap: 14px; }
-        .region-emoji { font-size: 32px; }
-        .region-text { display: flex; flex-direction: column; text-align: left; }
-        .region-name { font-size: 17px; font-weight: bold; color: #4a3b3f; }
-        .region-desc { font-size: 12px; color: #888; margin-top: 4px; }
-        .region-arrow { font-size: 16px; color: #ffb6c1; }
+        .loc-info { display: flex; align-items: center; gap: 14px; }
+        .loc-emoji { font-size: 32px; }
+        .loc-text { display: flex; flex-direction: column; text-align: left; }
+        .loc-name { font-size: 16px; font-weight: bold; color: #4a3b3f; }
+        .loc-desc { font-size: 12px; color: #888; margin-top: 4px; }
+        .loc-cost { font-size: 12px; color: var(--pink-600); font-weight: bold; margin-top: 4px; }
+        .loc-arrow { font-size: 16px; color: #ffb6c1; }
     </style>
 </head>
 <body>
-    <div class="card">
+    <div class="map-card">
         <div class="header">
             <button class="back-btn" id="btnBack" type="button">◀ 返回</button>
-            <h2>🗺️ 总地图</h2>
+            <h2>🗺️ 城镇地图</h2>
             <div class="energy-badge">⚡<span id="energy">--</span></div>
         </div>
 
-        <div class="region-list" id="regionList">
-            <!-- 动态生成的区域卡片 -->
+        <div id="mapContent">
+            <!-- 动态生成的区域与地点列表 -->
         </div>
     </div>
 
-    <script>
-    (() => {
-        'use strict';
+    <script type="module">
+        // 直接使用最新的 Cake 引擎
+        const Cake = window.parent.Cake || window.Cake;
+        if (!Cake) return;
 
         const $ = (id) => document.getElementById(id);
-        const regionListEl = $('regionList');
-        const energyEl    = $('energy');
+        const num = (v, fallback = 0) => Number.isFinite(Number(v)) ? Number(v) : fallback;
 
-        let Cake = null;
-        let tries = 0;
-        const MAX_TRIES = 100;      // 100 × 100ms = 10s
-
-        const num = (v, fallback = 0) => {
-            const n = Number(v);
-            return Number.isFinite(n) ? n : fallback;
+        // 返回娱乐首页
+        $('btnBack').onclick = () => {
+            window.location.href = '../index.html';
         };
 
-        const getCake = () => {
-            try {
-                if (window.parent && window.parent !== window && window.parent.Cake) {
-                    return window.parent.Cake;
-                }
-            } catch (_) { /* 跨域 */ }
-            return window.Cake || null;
-        };
+        // 渲染地图上的所有地点
+        const renderMap = () => {
+            const state = Cake.store.state;
+            const currentEnergy = num(state.energy, 0);
+            $('energy').innerText = currentEnergy;
 
-        /* 区域 id → 页面路径（约定：pages/entertainment/map/<id>.html） */
-        const regionPage = (id) => `pages/entertainment/map/${id}.html`;
+            const regions = Cake.REGIONS || {};
+            const contentEl = $('mapContent');
+            let html = '';
 
-        const navigateTo = (fullPath, relativeFallback) => {
-            try {
-                if (window.parent && window.parent !== window &&
-                    window.parent.HostRouter &&
-                    typeof window.parent.HostRouter.navigateTo === 'function') {
-                    window.parent.HostRouter.navigateTo(fullPath);
-                    return;
-                }
-            } catch (_) { /* 跨域或未定义 */ }
-            window.location.href = relativeFallback || fullPath;
-        };
+            // 遍历所有区域，比如 'town'
+            for (const [rId, region] of Object.entries(regions)) {
+                const locations = Cake.getRegionLocations(rId);
+                if (!locations) continue;
 
-        /* ==================== 返回娱乐首页 ==================== */
+                html += `<div class="region-title">${region.emoji || '📍'} ${region.name}</div>`;
+                html += `<div class="loc-list">`;
 
-        const goBack = () => {
-            navigateTo('pages/entertainment/index.html', '../index.html');
-        };
-
-        /* ==================== 渲染区域列表 ==================== */
-
-        const renderRegions = () => {
-            try {
-                const state = Cake && Cake.store && Cake.store.state;
-                if (!state) throw new Error('无法读取当前游戏状态');
-
-                const energy = Math.max(0, Math.min(100, num(state.energy, 0)));
-                if (energyEl) energyEl.innerText = energy;
-
-                const regions = Cake.REGIONS;
-                if (!regions || Object.keys(regions).length === 0) {
-                    throw new Error('REGIONS 数据为空！请检查区域文件的加载');
-                }
-
-                let html = '';
-                for (const [id, region] of Object.entries(regions)) {
-                    if (!region) continue;
-
-                    const locs = (typeof Cake.getRegionLocations === 'function')
-                        ? Cake.getRegionLocations(id)
-                        : null;
-                    const locCount = locs ? Object.keys(locs).length : 0;
-
+                // 遍历区域内的所有地点，如 'street', 'park'
+                for (const [lId, loc] of Object.entries(locations)) {
+                    const cost = num(loc.cost, 0);
+                    const isDisabled = currentEnergy < cost;
+                    
                     html += `
-                        <div class="region-item" data-region="${id}">
-                            <div class="region-info">
-                                <span class="region-emoji">${region.emoji || '🗺️'}</span>
-                                <div class="region-text">
-                                    <span class="region-name">${region.name || id}</span>
-                                    <span class="region-desc">${region.desc || ''}（${locCount} 个地点）</span>
+                        <div class="loc-item ${isDisabled ? 'disabled' : ''}" onclick="goLocation('${rId}', '${lId}')">
+                            <div class="loc-info">
+                                <span class="loc-emoji">${loc.emoji || '🏠'}</span>
+                                <div class="loc-text">
+                                    <span class="loc-name">${loc.name}</span>
+                                    <span class="loc-desc">${loc.desc}</span>
+                                    <span class="loc-cost">消耗精力: ⚡${cost} · 耗时: ${loc.time}分</span>
                                 </div>
                             </div>
-                            <span class="region-arrow">▶</span>
+                            <span class="loc-arrow">▶</span>
                         </div>
                     `;
                 }
-
-                if (html === '') {
-                    html = '<div style="color:#888; text-align:center;">当前没有可前往的区域...</div>';
-                }
-                regionListEl.innerHTML = html;
-
-            } catch (err) {
-                regionListEl.innerHTML = `
-                    <div style="color: red; padding: 15px; background: #ffe4e1; border-radius: 10px;">
-                        <strong>⚠️ 渲染失败：</strong><br>${err.message || err}
-                    </div>`;
+                html += `</div>`;
             }
+
+            contentEl.innerHTML = html;
         };
 
-        /* ==================== 事件绑定 ==================== */
-
-        const bindClick = () => {
-            const btnBack = $('btnBack');
-            if (btnBack && !btnBack.dataset.bound) {
-                btnBack.dataset.bound = 'true';
-                btnBack.addEventListener('click', goBack);
-            }
-
-            if (regionListEl && !regionListEl.dataset.bound) {
-                regionListEl.dataset.bound = 'true';
-                regionListEl.addEventListener('click', (e) => {
-                    const item = e.target.closest('.region-item');
-                    if (!item) return;
-
-                    const id = item.dataset.region;
-                    const region = (Cake && Cake.REGIONS && Cake.REGIONS[id]) || null;
-                    if (!region) return;
-
-                    // 进入该区域的地点页
-                    navigateTo(regionPage(id), `${id}.html`);
-                });
-            }
+        // 跳转到具体地点页面
+        window.goLocation = (regionId, locId) => {
+            // 页面跳转，带上参数
+            window.location.href = `location.html?region=${regionId}&loc=${locId}`;
         };
 
-        /* ==================== 启动 ==================== */
-
-        const boot = () => {
-            const engine = getCake();
-
-            if (engine && engine.store && engine.store.state && engine.REGIONS) {
-                Cake = engine;
-                window.Cake = engine;
-                bindClick();
-                renderRegions();
-                return;
-            }
-
-            if (++tries >= MAX_TRIES) {
-                if (regionListEl) {
-                    regionListEl.innerHTML = `
-                        <div style="color: red; padding: 15px; background: #ffe4e1; border-radius: 10px;">
-                            <strong>⚠️ 无法连接游戏引擎：</strong><br>父页面 Cake 未就绪，请刷新重试。
-                        </div>`;
-                }
-                return;
-            }
-
-            setTimeout(boot, 100);
-        };
-
-        boot();
-    })();
+        // 初始化
+        if (typeof Cake.initPage === 'function') {
+            Cake.initPage('fun', () => {
+                renderMap();
+            }, false);
+        }
     </script>
 </body>
 </html>

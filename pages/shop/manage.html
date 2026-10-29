@@ -19,35 +19,13 @@
             <div class="muted text-center" style="margin-top:50px;">⏳ 正在加载经营数据...</div>
         </div>
     </div>
-    
+
+    <script src="../boot-safe.js"></script>
     <script type="module">
-        // 👈 引入全局报错护盾（可选，如果你有这个文件的话）
-        // import '../../js/pages/error-handler.js';
-
         let Cake = null;
-        let checkCount = 0;
 
-        // 👈 1. 引擎轮询等待器
-        function waitForEngine() {
-            Cake = window.parent.Cake || window.Cake;
-            if (Cake && Cake.store && Cake.store.state) {
-                renderPage();
-            } else {
-                checkCount++;
-                if (checkCount < 100) {
-                    setTimeout(waitForEngine, 100);
-                } else {
-                    showFatalError('游戏引擎加载超时！请刷新页面。');
-                }
-            }
-        }
-
-        // 👈 2. 满屏红字报错器
         function showFatalError(msg) {
-            const content = document.getElementById('content');
-            if (content) {
-                content.innerHTML = `<div class="fatal-error"><h3>🚨 致命错误</h3><div>${msg}</div></div>`;
-            }
+            window.safePageBoot?.showFatalError(msg, 'content');
         }
 
         const num = (v, fallback = 0) => Number.isFinite(Number(v)) ? Number(v) : fallback;
@@ -56,7 +34,6 @@
             try {
                 const state = Cake.store.state;
                 const shop = state.shop || {};
-                // 👈 防御：加可选链 ?. 防止 stats 未定义报错
                 const priceRate = num(shop.priceRate, 1.0);
                 const cleanliness = num(shop.stats?.cleanliness, 100);
 
@@ -90,7 +67,6 @@
                     </div>
                 `;
 
-                // 👈 3. 给打扫按钮绑定安全事件
                 const cleanBtn = document.getElementById('btn-clean');
                 if (cleanBtn && cleanliness < 100) {
                     cleanBtn.onclick = () => {
@@ -100,7 +76,7 @@
                                 if (res && res.success === false) {
                                     alert(res.message);
                                 } else {
-                                    render(); // 打扫成功，局部重绘刷新数值
+                                    render();
                                 }
                             } else {
                                 alert('打扫功能未加载');
@@ -122,8 +98,8 @@
             try {
                 Cake.store.state.shop.priceRate = val;
                 if (Cake.saveState) Cake.saveState();
-                render(); // 局部刷新
-                if (Cake.emit) Cake.emit('refresh_ui'); // 通知全局
+                render();
+                if (Cake.emit) Cake.emit('refresh_ui');
             } catch (e) {
                 console.error('设置定价失败:', e);
                 alert('设置定价失败: ' + e.message);
@@ -138,8 +114,14 @@
             }
         }
 
-        // 启动等待
-        waitForEngine();
+        window.safePageBoot.waitForCake((readyCake) => {
+            Cake = readyCake;
+            renderPage();
+        }, {
+            timeout: 15000,
+            required: (game) => !!(game && game.store && game.store.state),
+            onTimeout: () => '游戏引擎加载超时！请刷新页面。'
+        });
     </script>
 </body>
 </html>

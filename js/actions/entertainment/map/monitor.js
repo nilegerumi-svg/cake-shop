@@ -1,14 +1,25 @@
-<!-- 上半部分 HTML 保持不变，直接替换下面的 script 即可 -->
 <script type="module">
-    // 引入全局防崩溃护盾（如果还没加的话）
-    import '../error-handler.js';
+    // 👈 1. 移除那个容易报错的 error-handler 引入（防崩溃已由父页面的 monitor 接管）
 
-    const Cake = window.parent.Cake || window.Cake;
-    if (!Cake) {
-        document.body.innerHTML = '<h3 style="color:red; text-align:center; margin-top:50px;">❌ 游戏引擎未就绪，请刷新重试</h3>';
-        throw new Error('Cake engine not found');
+    // 2. 增加引擎就绪轮询：如果父页面没加载完，我们就等它一下
+    let Cake = null;
+    let checkCount = 0;
+
+    function waitForEngine() {
+        Cake = window.parent.Cake || window.Cake;
+        // 必须确保核心方法也挂载了才能开始渲染
+        if (Cake && typeof Cake.getRegionLocations === 'function') {
+            initPage();
+        } else {
+            checkCount++;
+            if (checkCount < 50) { // 最多等 5 秒
+                setTimeout(waitForEngine, 100);
+            } else {
+                document.body.innerHTML = '<h3 style="color:red; text-align:center; margin-top:50px;">❌ 游戏引擎加载超时，请刷新重试</h3>';
+            }
+        }
     }
-    
+
     // 当前所在的区域和地点
     const REGION_ID = 'town';
     let currentLocId = 'home'; 
@@ -18,7 +29,6 @@
         const grid = document.getElementById('nav-grid');
         if (!grid) return;
 
-        // 👈 优化：直接用 Object.entries 拿到 key 和 value，不用再通过名字反查！
         grid.innerHTML = Object.entries(locations).map(([key, loc]) => {
             const isActive = (key === currentLocId);
             return `
@@ -38,12 +48,6 @@
     // === 渲染主界面 ===
     function renderUI() {
         try {
-            // 👈 防御：如果底层的 getRegionLocations 没加载好，直接退出
-            if (typeof Cake.getRegionLocations !== 'function') {
-                console.error('❌ 找不到 getRegionLocations 方法');
-                return;
-            }
-
             const locations = Cake.getRegionLocations(REGION_ID);
             if (!locations || Object.keys(locations).length === 0) {
                 console.warn('⚠️ 城镇地点数据为空！');
@@ -51,20 +55,16 @@
                 return;
             }
 
-            // 1. 重新渲染导航高亮
             renderNav(locations);
 
-            // 2. 更新地点信息卡
             const locConfig = locations[currentLocId];
             if (!locConfig) return;
 
             document.getElementById('loc-title').textContent = (locConfig.emoji || '📍') + ' ' + locConfig.name;
             document.getElementById('loc-desc').textContent = locConfig.desc || '';
 
-            // 3. 渲染动作按钮
-            const actions = (typeof Cake.getLocationActions === 'function') 
-                ? Cake.getLocationActions(REGION_ID, currentLocId) 
-                : [];
+            // 渲染动作
+            const actions = Cake.getLocationActions(REGION_ID, currentLocId) || [];
             const actionsGrid = document.getElementById('actions-grid');
             
             if (actions.length === 0) {
@@ -79,18 +79,16 @@
                 `).join('');
             }
 
-            // 4. 商店面板
+            // 渲染商店
             const shopPanel = document.getElementById('shop-panel');
             if (locConfig.type === 'shop') {
                 shopPanel.style.display = 'block';
                 document.getElementById('shop-title').textContent = (locConfig.emoji || '🏪') + ' ' + locConfig.name;
                 
-                const items = (typeof Cake.getShopItems === 'function') 
-                    ? Cake.getShopItems(currentLocId) 
-                    : [];
+                const items = Cake.getShopItems(currentLocId) || [];
                 const itemsGrid = document.getElementById('shop-items');
                 
-                if (items && items.length > 0) {
+                if (items.length > 0) {
                     itemsGrid.innerHTML = items.map(item => `
                         <div class="item-card">
                             <div class="item-emoji">${item.emoji || '📦'}</div>
@@ -119,10 +117,8 @@
     window.doAction = (actionKey) => {
         if (typeof Cake.performLocationAction !== 'function') return;
         const res = Cake.performLocationAction(REGION_ID, currentLocId, actionKey);
-        if (res && res.success === false) {
-            alert(res.message);
-        }
-        setTimeout(renderUI, 100); // 稍后重绘更新状态
+        if (res && res.success === false) alert(res.message);
+        setTimeout(renderUI, 100);
     };
 
     // === 购买物品 ===
@@ -136,12 +132,17 @@
         }
     };
 
-    // === 初始化 ===
-    if (typeof Cake.initPage === 'function') {
-        Cake.initPage('fun', () => {
+    // === 初始化页面 ===
+    function initPage() {
+        if (typeof Cake.initPage === 'function') {
+            Cake.initPage('fun', () => {
+                renderUI();
+            }, false);
+        } else {
             renderUI();
-        }, false);
-    } else {
-        renderUI();
+        }
     }
+
+    // 启动等待机制
+    waitForEngine();
 </script>

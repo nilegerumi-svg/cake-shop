@@ -9,22 +9,17 @@
     <style>
         body { background: transparent; font-family: sans-serif; padding: 16px; display: flex; justify-content: center; color: #4a3b3f; margin: 0; }
         .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(255,182,193,0.2); width: 100%; max-width: 400px; box-sizing: border-box; }
-
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px dashed #ffd1dc; padding-bottom: 12px; }
         .header h2 { color: #ff6b81; margin: 0; font-size: 18px; }
         .back-btn { background: none; border: none; color: #888; font-size: 15px; cursor: pointer; padding: 4px 8px; font-weight: bold; }
         .back-btn:active { color: #ff6b81; }
-
         .energy-badge { background: #fff9fa; padding: 4px 10px; border-radius: 20px; font-size: 13px; border: 1px solid #ffd1dc; font-weight: bold; }
-
         .loc-head { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
         .loc-emoji { font-size: 40px; }
         .loc-meta { display: flex; flex-direction: column; text-align: left; }
         .loc-name { font-size: 20px; font-weight: bold; color: #4a3b3f; }
         .loc-desc { font-size: 13px; color: #888; margin-top: 4px; line-height: 1.5; }
-
         .section-title { color: #d85c74; font-size: 14px; font-weight: bold; margin: 16px 0 10px; text-align: left; border-left: 4px solid #ffb6c1; padding-left: 8px; }
-
         .action-list { display: flex; flex-direction: column; gap: 10px; }
         .action-item {
             display: flex; align-items: center; justify-content: space-between;
@@ -36,7 +31,6 @@
         .action-item.rest { background: #fff0f5; border-color: #ffb6c1; }
         .action-item.rest:active { background: #ffe4e8; }
         .action-item.disabled { background: #f5f5f5; border-color: #ddd; color: #aaa; cursor: not-allowed; }
-
         .action-info { display: flex; align-items: center; gap: 12px; }
         .action-emoji { font-size: 24px; }
         .action-text { display: flex; flex-direction: column; text-align: left; }
@@ -49,130 +43,112 @@
     <div class="card">
         <div class="header">
             <button class="back-btn" id="btnBack" type="button">◀ 返回</button>
-            <h2 id="locTitle">📍 地点</h2>
+            <h2 id="pageTitle">📍 地点</h2>
             <div class="energy-badge">⚡<span id="energy">--</span></div>
         </div>
 
-        <div class="loc-head" id="locHead"></div>
-        <div class="section-title">🎬 可进行的活动</div>
-        <div class="action-list" id="actionList">
-            <!-- 动态生成的动作按钮 -->
-        </div>
+        <div id="locationContent"></div>
     </div>
 
+    <script src="../../../pages/boot-safe.js"></script>
     <script type="module">
-        // 1. 直接获取引擎
-        const Cake = window.parent.Cake || window.Cake;
-        if (!Cake) return;
-
-        // 2. 解析 URL 参数
-        const params = new URLSearchParams(location.search);
-        const REGION_ID = params.get('region') || 'town';
-        const LOC_KEY   = params.get('loc') || 'home';
-
+        let Cake = null;
         const $ = (id) => document.getElementById(id);
         const num = (v, fallback = 0) => Number.isFinite(Number(v)) ? Number(v) : fallback;
 
-        // 返回上一页（直接返回地图首页）
-        $('btnBack').onclick = () => {
-            window.location.href = 'index.html';
-        };
-
-        // 渲染页面
-        const renderAll = () => {
+        function getCake() {
             try {
-                const state = Cake.store.state;
-                const energy = Math.max(0, Math.min(100, num(state.energy, 0)));
-                $('energy').innerText = energy;
+                if (window.parent && window.parent !== window && window.parent.Cake) return window.parent.Cake;
+            } catch (_) {}
+            return window.Cake || null;
+        }
 
-                // 获取地点配置
-                const regionLocs = Cake.getRegionLocations(REGION_ID);
-                const locCfg = (regionLocs && regionLocs[LOC_KEY]) || (Cake.LOCATIONS && Cake.LOCATIONS[LOC_KEY]);
+        function renderLocation() {
+            Cake = getCake();
+            if (!Cake || !Cake.store || !Cake.store.state) return;
+            const params = new URLSearchParams(window.location.search);
+            const key = params.get('id') || 'park';
+            const list = Array.isArray(Cake.LOCATIONS) ? Cake.LOCATIONS : [];
+            const loc = list.find((item) => item.id === key || item.key === key) || {
+                id: key,
+                name: '未知地点',
+                emoji: '📍',
+                desc: '该地点目前尚未配置。',
+                actions: []
+            };
+            const state = Cake.store.state;
 
-                if (!locCfg) throw new Error(`未知地点：${LOC_KEY}`);
+            $('pageTitle').textContent = `${loc.emoji || '📍'} ${loc.name || '地点'}`;
+            $('energy').textContent = num(state.energy, 0);
 
-                $('locTitle').textContent = `${locCfg.emoji || '📍'} ${locCfg.name || LOC_KEY}`;
-                $('locHead').innerHTML = `
-                    <span class="loc-emoji">${locCfg.emoji || '📍'}</span>
+            const actions = Array.isArray(loc.actions) ? loc.actions : [];
+            const html = `
+                <div class="loc-head">
+                    <div class="loc-emoji">${loc.emoji || '📍'}</div>
                     <div class="loc-meta">
-                        <span class="loc-name">${locCfg.name || LOC_KEY}</span>
-                        <span class="loc-desc">${locCfg.desc || '未知的区域'}</span>
+                        <div class="loc-name">${loc.name || '地点'}</div>
+                        <div class="loc-desc">${loc.desc || '探索与互动'}</div>
                     </div>
-                `;
-
-                // 获取动作列表
-                const actions = Cake.getLocationActions(REGION_ID, LOC_KEY) || [];
-                let html = '';
-
-                for (const a of actions) {
-                    let disabled = false;
-                    let arrow = '▶';
-
-                    if (a.key === 'walk') {
-                        disabled = energy < num(a.energyCost, 0);
-                        arrow = disabled ? '精力不足' : '▶';
-                    } else if (a.key === 'nap') {
-                        disabled = energy >= 100;
-                        arrow = disabled ? '精力已满' : '▶';
-                    }
-
-                    const restCls = (a.key === 'nap' || a.key === 'sleep') ? 'rest' : '';
-                    html += `
-                        <button class="action-item ${restCls} ${disabled ? 'disabled' : ''}"
-                                data-action="${a.key}" ${disabled ? 'disabled' : ''}>
-                            <div class="action-info">
-                                <span class="action-emoji">${a.emoji}</span>
-                                <div class="action-text">
-                                    <span class="action-name">${a.name}</span>
-                                    <span class="action-desc">${a.desc}</span>
+                </div>
+                <div class="section-title">可执行动作</div>
+                <div class="action-list">
+                    ${actions.map((action) => {
+                        const disabled = num(action.cost, 0) > num(state.energy, 0);
+                        return `
+                            <button class="action-item ${action.type === 'rest' ? 'rest' : ''} ${disabled ? 'disabled' : ''}" type="button" data-action="${action.key || action.id || action.name || 'action'}" ${disabled ? 'disabled' : ''}>
+                                <div class="action-info">
+                                    <div class="action-emoji">${action.emoji || '✨'}</div>
+                                    <div class="action-text">
+                                        <div class="action-name">${action.name || '动作'}</div>
+                                        <div class="action-desc">${action.desc || '进行一次活动'}${action.cost ? ` · 消耗 ${action.cost} 精力` : ''}</div>
+                                    </div>
                                 </div>
-                            </div>
-                            <span class="action-arrow">${arrow}</span>
-                        </button>
-                    `;
-                }
+                                <div class="action-arrow">${disabled ? '锁定' : '执行'}</div>
+                            </button>
+                        `;
+                    }).join('') || '<div class="muted text-center">暂无可执行动作</div>' }
+                </div>
+            `;
+            $('locationContent').innerHTML = html;
 
-                if (html === '') {
-                    html = '<div style="color:#888; text-align:center;">这里暂时没有可进行的活动...</div>';
-                }
-                $('actionList').innerHTML = html;
+            $('locationContent').querySelectorAll('[data-action]').forEach((btn) => {
+                btn.addEventListener('click', () => {
+                    const actionKey = btn.dataset.action;
+                    if (!actionKey) return;
+                    if (typeof Cake.walk === 'function') {
+                        Cake.walk(actionKey, key);
+                    } else if (typeof Cake.triggerRest === 'function') {
+                        Cake.triggerRest(actionKey);
+                    }
+                    setTimeout(renderLocation, 200);
+                });
+            });
+        }
 
-            } catch (err) {
-                $('actionList').innerHTML = `
-                    <div style="color: red; padding: 15px; background: #ffe4e1; border-radius: 10px;">
-                        <strong>⚠️ 渲染失败：</strong><br>${err.message || err}
-                    </div>`;
+        function bindPage() {
+            const backBtn = $('btnBack');
+            if (backBtn && backBtn.dataset.bound !== 'true') {
+                backBtn.dataset.bound = 'true';
+                backBtn.addEventListener('click', () => history.back());
             }
-        };
-
-        // 事件委托绑定
-        $('actionList').addEventListener('click', (e) => {
-            const btn = e.target.closest('.action-item');
-            if (!btn || btn.disabled) return;
-
-            const actionKey = btn.dataset.action;
-            try {
-                // 👈 修复：拦截底层返回的错误提示（比如精力不足、限制地点等）
-                const res = Cake.performLocationAction(REGION_ID, LOC_KEY, actionKey);
-                if (res && res.success === false) {
-                    alert(res.message);
-                    return;
-                }
-            } catch (err) {
-                console.error('[location] 动作执行失败:', err);
-                alert('❌ 动作执行失败：' + (err && err.message || err));
-                return;
+            renderLocation();
+            if (typeof Cake?.initPage === 'function') {
+                Cake.initPage('fun', renderLocation, false);
             }
+        }
 
-            // 动作会改变精力/时间，稍后重绘本页
-            setTimeout(renderAll, 200);
-        });
-
-        // 初始化
-        if (typeof Cake.initPage === 'function') {
-            Cake.initPage('fun', () => {
-                renderAll();
-            }, false);
+        if (window.safePageBoot && typeof window.safePageBoot.waitForCake === 'function') {
+            window.safePageBoot.waitForCake((readyCake) => {
+                Cake = readyCake;
+                bindPage();
+            }, {
+                timeout: 15000,
+                required: (game) => !!(game && game.store && game.store.state),
+                onTimeout: () => '地图地点数据加载超时，请刷新页面'
+            });
+        } else {
+            Cake = getCake();
+            if (Cake && Cake.store && Cake.store.state) bindPage();
         }
     </script>
 </body>

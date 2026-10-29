@@ -9,16 +9,12 @@
     <style>
         body { background: transparent; padding: 16px; display: flex; justify-content: center; color: #4a3b3f; margin: 0; }
         .map-card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(255,182,193,0.2); width: 100%; max-width: 400px; box-sizing: border-box; }
-
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px dashed #ffd1dc; padding-bottom: 12px; }
         .header h2 { color: #ff6b81; margin: 0; font-size: 18px; }
         .back-btn { background: none; border: none; color: #888; font-size: 15px; cursor: pointer; padding: 4px 8px; font-weight: bold; }
         .back-btn:active { color: #ff6b81; }
-
         .energy-badge { background: #fff9fa; padding: 4px 10px; border-radius: 20px; font-size: 13px; border: 1px solid #ffd1dc; font-weight: bold; }
-
         .region-title { margin: 20px 0 10px 0; font-size: 15px; color: var(--pink-600); border-left: 4px solid var(--pink-400); padding-left: 8px; }
-
         .loc-list { display: flex; flex-direction: column; gap: 12px; }
         .loc-item {
             display: flex; align-items: center; justify-content: space-between;
@@ -27,7 +23,6 @@
         }
         .loc-item:active { transform: scale(0.98); background: #ffe4e8; }
         .loc-item.disabled { background: #f5f5f5; border-color: #ddd; opacity: 0.6; pointer-events: none; }
-
         .loc-info { display: flex; align-items: center; gap: 14px; }
         .loc-emoji { font-size: 32px; }
         .loc-text { display: flex; flex-direction: column; text-align: left; }
@@ -45,125 +40,111 @@
             <div class="energy-badge">⚡<span id="energy">--</span></div>
         </div>
 
-        <div id="mapContent">
-            <!-- 动态生成的区域与地点列表 -->
-        </div>
+        <div id="mapContent"></div>
     </div>
 
+    <script src="../../boot-safe.js"></script>
     <script type="module">
-        // 1. 引擎等待机制
         let Cake = null;
-        let checkCount = 0;
-
-        function waitForEngine() {
-            Cake = window.parent.Cake || window.Cake;
-            if (Cake && Cake.store && Cake.store.state) {
-                initPage();
-            } else {
-                checkCount++;
-                if (checkCount < 50) { 
-                    setTimeout(waitForEngine, 100);
-                } else {
-                    document.getElementById('mapContent').innerHTML = '<h3 style="color:red; text-align:center;">❌ 游戏引擎加载超时，请刷新重试</h3>';
-                }
-            }
-        }
-
         const $ = (id) => document.getElementById(id);
         const num = (v, fallback = 0) => Number.isFinite(Number(v)) ? Number(v) : fallback;
 
-        // 返回娱乐首页
-        $('btnBack').onclick = () => {
-            window.location.href = '../index.html';
-        };
-
-        // 渲染地图上的所有地点
-        const renderMap = () => {
+        function getCake() {
             try {
-                const state = Cake.store.state;
-                const currentEnergy = num(state.energy, 0);
-                $('energy').innerText = currentEnergy;
+                if (window.parent && window.parent !== window && window.parent.Cake) return window.parent.Cake;
+            } catch (_) {}
+            return window.Cake || null;
+        }
 
-                const regions = Cake.REGIONS || {};
-                const contentEl = $('mapContent');
-                
-                if (Object.keys(regions).length === 0) {
-                    contentEl.innerHTML = '<div class="muted" style="text-align:center; padding:20px;">当前没有可前往的区域</div>';
-                    return;
-                }
+        function renderMap() {
+            Cake = getCake();
+            if (!Cake || !Cake.store || !Cake.store.state) return;
+            const state = Cake.store.state;
+            const energy = num(state.energy, 0);
+            $('energy').textContent = energy;
 
-                let html = '';
+            const list = $('mapContent');
+            if (!list) return;
 
-                // 遍历所有区域，比如 'town'
-                for (const [rId, region] of Object.entries(regions)) {
-                    if (!region) continue;
+            const locations = Array.isArray(Cake.LOCATIONS) ? Cake.LOCATIONS : [];
+            const groups = Array.isArray(Cake.REGIONS) ? Cake.REGIONS : [];
 
-                    // 👈 终极兜底：如果拿不到地点，就从全局强行捞
-                    let locations = (typeof Cake.getRegionLocations === 'function') 
-                        ? Cake.getRegionLocations(rId) 
-                        : null;
-                    if (!locations || Object.keys(locations).length === 0) {
-                        locations = Cake.LOCATIONS || {};
-                    }
-
-                    if (Object.keys(locations).length === 0) {
-                        html += `<div class="region-title">${region.emoji || '📍'} ${region.name}</div>`;
-                        html += `<div class="muted" style="padding: 10px;">暂无地点数据</div>`;
-                        continue;
-                    }
-
-                    html += `<div class="region-title">${region.emoji || '📍'} ${region.name}</div>`;
-                    html += `<div class="loc-list">`;
-
-                    for (const [lId, loc] of Object.entries(locations)) {
-                        if (!loc) continue;
-                        const cost = num(loc.cost, 0);
-                        const isDisabled = currentEnergy < cost;
-                        
-                        html += `
-                            <div class="loc-item ${isDisabled ? 'disabled' : ''}" onclick="goLocation('${rId}', '${lId}')">
-                                <div class="loc-info">
-                                    <span class="loc-emoji">${loc.emoji || '🏠'}</span>
-                                    <div class="loc-text">
-                                        <span class="loc-name">${loc.name}</span>
-                                        <span class="loc-desc">${loc.desc || ''}</span>
-                                        <span class="loc-cost">消耗精力: ⚡${cost} · 耗时: ${num(loc.time, 0)}分</span>
-                                    </div>
-                                </div>
-                                <span class="loc-arrow">▶</span>
-                            </div>
-                        `;
-                    }
-                    html += `</div>`;
-                }
-
-                contentEl.innerHTML = html;
-            } catch (err) {
-                console.error('❌ [Map] 渲染崩溃:', err);
-                $('mapContent').innerHTML = `<div style="color:red; padding:20px; background:#fff; border-radius:10px;">
-                    页面渲染遇到错误: ${err.message}
-                </div>`;
+            if (locations.length === 0 && groups.length === 0) {
+                list.innerHTML = '<div class="muted text-center">地图数据尚未就绪</div>';
+                return;
             }
-        };
 
-        // 跳转到具体地点页面
-        window.goLocation = (regionId, locId) => {
-            window.location.href = `location.html?region=${regionId}&loc=${locId}`;
-        };
+            const html = groups.map((region) => {
+                const items = (region.locations || []).map((loc) => {
+                    const entry = locations.find((item) => item.id === loc || item.key === loc) || {};
+                    const cost = num(entry.cost, 0);
+                    const disabled = energy < cost;
+                    return `
+                        <div class="loc-item ${disabled ? 'disabled' : ''}" data-target="${entry.id || loc}">
+                            <div class="loc-info">
+                                <div class="loc-emoji">${entry.emoji || '📍'}</div>
+                                <div class="loc-text">
+                                    <div class="loc-name">${entry.name || loc}</div>
+                                    <div class="loc-desc">${entry.desc || '探索这个地方'}</div>
+                                    <div class="loc-cost">⚡ ${cost}</div>
+                                </div>
+                            </div>
+                            <div class="loc-arrow">→</div>
+                        </div>
+                    `;
+                }).join('');
 
-        // 初始化
-        function initPage() {
-            if (typeof Cake.initPage === 'function') {
-                Cake.initPage('fun', () => {
-                    renderMap();
-                }, false);
-            } else {
-                renderMap();
+                return `
+                    <div>
+                        <div class="region-title">${region.name || '区域'}</div>
+                        <div class="loc-list">${items}</div>
+                    </div>
+                `;
+            }).join('');
+
+            list.innerHTML = html;
+
+            list.querySelectorAll('.loc-item').forEach((item) => {
+                item.onclick = () => {
+                    const target = item.dataset.target;
+                    if (!target) return;
+                    const entry = locations.find((loc) => loc.id === target || loc.key === target);
+                    if (!entry) return;
+                    if (num(state.energy, 0) < num(entry.cost, 0)) {
+                        alert('⚡ 精力不足，不能前往这里');
+                        return;
+                    }
+                    const nextUrl = `location.html?id=${encodeURIComponent(target)}`;
+                    window.location.href = nextUrl;
+                };
+            });
+        }
+
+        function bindPage() {
+            const backBtn = $('btnBack');
+            if (backBtn && backBtn.dataset.bound !== 'true') {
+                backBtn.dataset.bound = 'true';
+                backBtn.addEventListener('click', () => history.back());
+            }
+            renderMap();
+            if (typeof Cake?.initPage === 'function') {
+                Cake.initPage('fun', renderMap, false);
             }
         }
 
-        // 启动等待机制
-        waitForEngine();
+        if (window.safePageBoot && typeof window.safePageBoot.waitForCake === 'function') {
+            window.safePageBoot.waitForCake((readyCake) => {
+                Cake = readyCake;
+                bindPage();
+            }, {
+                timeout: 15000,
+                required: (game) => !!(game && game.store && game.store.state),
+                onTimeout: () => '地图数据加载超时，请刷新页面'
+            });
+        } else {
+            Cake = getCake();
+            if (Cake && Cake.store && Cake.store.state) bindPage();
+        }
     </script>
 </body>
 </html>

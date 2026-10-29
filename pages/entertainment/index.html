@@ -9,12 +9,11 @@
         body { background: transparent; padding: 16px; display: flex; justify-content: center; margin: 0; }
         .hub-card { background: white; padding: 20px; border-radius: 16px; box-shadow: 0 4px 10px rgba(255,182,193,0.2); text-align: center; width: 100%; max-width: 340px; }
         .energy-box { background: #fff9fa; padding: 12px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #ffd1dc; font-weight: bold; color: var(--pink-600); font-size: 16px; }
-        
-        .nav-card { 
-            display: flex; align-items: center; justify-content: space-between; 
-            width: 100%; background: #f0faf8; border: 1px solid #a8e6cf; 
-            padding: 15px; border-radius: 12px; font-size: 16px; font-weight: bold; 
-            cursor: pointer; transition: transform 0.1s; margin-bottom: 12px; 
+        .nav-card {
+            display: flex; align-items: center; justify-content: space-between;
+            width: 100%; background: #f0faf8; border: 1px solid #a8e6cf;
+            padding: 15px; border-radius: 12px; font-size: 16px; font-weight: bold;
+            cursor: pointer; transition: transform 0.1s; margin-bottom: 12px;
             box-sizing: border-box; color: var(--text-main); text-align: left;
         }
         .nav-card:active { transform: scale(0.98); }
@@ -28,7 +27,7 @@
 <body>
     <div class="hub-card" id="mainCard">
         <div class="energy-box">⚡ 当前精力：<span id="energy">--</span>/<span id="maxEnergy">--</span></div>
-        
+
         <h3 style="margin-bottom: 12px; text-align: left; border-left: 4px solid var(--pink-300); padding-left: 8px;">🎮 休息区</h3>
         <div id="btnRest" class="nav-card rest">
             <div>
@@ -48,57 +47,77 @@
         </div>
     </div>
 
+    <script src="../boot-safe.js"></script>
     <script type="module">
-        // 直接使用最新的 Cake
-        const Cake = window.parent.Cake || window.Cake;
-        if (!Cake) return;
-
+        let Cake = null;
         const $ = (id) => document.getElementById(id);
         const num = (v, fallback = 0) => Number.isFinite(Number(v)) ? Number(v) : fallback;
 
-        // 刷新 UI 状态
-        const updateUI = () => {
+        function updateUI() {
+            if (!Cake || !Cake.store || !Cake.store.state) return;
             const state = Cake.store.state;
-            if (!state) return;
-
             const energy = num(state.energy, 0);
             const maxEnergy = num(state.maxEnergy, 100);
-
-            $('energy').innerText = energy;
-            $('maxEnergy').innerText = maxEnergy;
-
-            // 精力满了不能休息
+            $('energy').textContent = energy;
+            $('maxEnergy').textContent = maxEnergy;
             $('btnRest').classList.toggle('disabled', energy >= maxEnergy);
-            // 精力太少不能出门（去地图至少需要 8 点）
             $('btnGoMap').classList.toggle('disabled', energy < 8);
-        };
+        }
 
-        // 绑定事件
-        $('btnRest').onclick = () => {
-            if (num(Cake.store.state.energy, 0) >= num(Cake.store.state.maxEnergy, 100)) return;
-            
-            // 调用底层的 nap 方法
-            if (typeof Cake.nap === 'function') {
-                Cake.nap();
-                updateUI(); // 立即刷新一次
-            } else {
-                alert('❌ 找不到休息功能');
+        function bindUI() {
+            const restBtn = $('btnRest');
+            const mapBtn = $('btnGoMap');
+            if (!restBtn || !mapBtn) return;
+            if (restBtn.dataset.bound === 'true') return;
+            restBtn.dataset.bound = 'true';
+            mapBtn.dataset.bound = 'true';
+
+            restBtn.onclick = () => {
+                if (!Cake || !Cake.store || !Cake.store.state) return;
+                if (num(Cake.store.state.energy, 0) >= num(Cake.store.state.maxEnergy, 100)) return;
+                if (typeof Cake.nap === 'function') {
+                    Cake.nap();
+                    updateUI();
+                } else {
+                    alert('❌ 找不到休息功能');
+                }
+            };
+
+            mapBtn.onclick = () => {
+                if (!Cake || !Cake.store || !Cake.store.state) return;
+                if (num(Cake.store.state.energy, 0) < 8) return;
+                window.location.href = 'map/index.html';
+            };
+        }
+
+        function renderPage() {
+            if (!Cake || !Cake.store || !Cake.store.state) return;
+            bindUI();
+            updateUI();
+            if (typeof Cake.initPage === 'function') {
+                Cake.initPage('fun', () => {
+                    updateUI();
+                    if (!window.__funRefreshTimer) {
+                        window.__funRefreshTimer = setInterval(updateUI, 1000);
+                    }
+                }, false);
             }
-        };
+        }
 
-        $('btnGoMap').onclick = () => {
-            if (num(Cake.store.state.energy, 0) < 8) return;
-            // 同文件夹下的 map 目录
-            window.location.href = 'map/index.html'; 
-        };
-
-        // 初始化
-        if (typeof Cake.initPage === 'function') {
-            Cake.initPage('fun', () => {
-                updateUI();
-                // 定时刷新，防止时间流逝导致精力变化但页面不更新
-                setInterval(updateUI, 1000);
-            }, false);
+        if (window.safePageBoot && typeof window.safePageBoot.waitForCake === 'function') {
+            window.safePageBoot.waitForCake((readyCake) => {
+                Cake = readyCake;
+                renderPage();
+            }, {
+                timeout: 15000,
+                required: (game) => !!(game && game.store && game.store.state),
+                onTimeout: () => '游戏引擎加载超时，请刷新页面'
+            });
+        } else {
+            Cake = window.parent.Cake || window.Cake;
+            if (Cake && Cake.store && Cake.store.state) {
+                renderPage();
+            }
         }
     </script>
 </body>

@@ -11,10 +11,16 @@
 
     for (const path of MAP_MODULES) {
         try {
-            await import(path);
+            // 👈 核心：加个 3 秒的加载超时限制，防止某个烂文件卡死整个引擎
+            const timeout = new Promise((_, reject) => 
+                setTimeout(() => reject(new Error('加载超时 (3s)')), 3000)
+            );
+            
+            await Promise.race([import(path), timeout]);
+            console.log(`✅ [Map] 成功加载: ${path}`);
+            
         } catch (err) {
-            // 👈 终极报错放大镜：谁不在或者写错了，直接揪出来！
-            console.warn(`⚠️ [Map] 致命错误！子模块加载失败 -> ${path}`);
+            console.warn(`⚠️ [Map] 子模块加载失败或超时，已跳过 -> ${path}`);
             console.warn(`原因: ${err.message}`);
         }
     }
@@ -41,7 +47,6 @@
     }
     Cake.__mapLocationsLoaded = true;
 
-    // ⚠️ 不直接覆盖：保留已挂载的地点，合并新地点
     Cake.LOCATIONS = Cake.LOCATIONS || {};
 
     const regions = Cake.REGIONS || {};

@@ -3,123 +3,83 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🏪 店铺 · 甜蜜物语</title>
-    <link rel="stylesheet" href="../css/styles.css">
+    <title>🏪 店铺大厅 · 甜蜜物语</title>
+    <link rel="stylesheet" href="../../css/styles.css">
+    <style>
+        .nav-card { display: flex; align-items: center; justify-content: space-between; padding: 15px; background: #fff; border-radius: 12px; margin-bottom: 12px; cursor: pointer; border: 1px solid var(--pink-100); transition: 0.2s; }
+        .nav-card:active { transform: scale(0.98); background: #fff8fa; }
+        .nav-left { display: flex; align-items: center; gap: 12px; }
+        .nav-icon { font-size: 28px; }
+        .nav-title { font-weight: bold; color: var(--pink-600); font-size: 15px; }
+        .nav-desc { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+        .arrow { color: var(--pink-300); font-size: 20px; font-weight: bold; }
+    </style>
 </head>
 <body>
     <div class="game-body" style="padding-top: 10px;">
-        <div class="content" id="content">
-            <!-- 页面内容由 JS 渲染 -->
-        </div>
+        <div class="content" id="content"></div>
     </div>
-
     <script type="module">
-        // 1. 跨 iframe 获取父页面的 Cake 引擎
         const Cake = window.parent.Cake || window.Cake;
-        
-        if (!Cake) {
-            document.getElementById('content').innerHTML = '<div style="color:red; padding:20px;">❌ 未能获取到游戏引擎，请刷新重试。</div>';
-            throw new Error('Cake engine not found');
-        }
-
-        // 辅助函数：格式化数字
+        if (!Cake) return;
         const num = (v, fallback = 0) => Number.isFinite(Number(v)) ? Number(v) : fallback;
 
-        // ==================== 核心渲染逻辑 ====================
-        const renderShop = () => {
+        const render = () => {
             const state = Cake.store.state;
             const shop = state.shop;
-            const contentEl = document.getElementById('content');
-
-            // 状态判定
             const isOpen = shop.isOpen;
-            const cleanliness = num(shop.stats.cleanliness, 100);
-            const reputation = num(shop.stats.reputation, 0);
-            const money = num(state.money, 0);
-
-            // 渲染成品货架
-            let foodHtml = '<p class="muted">货架空空如也，快去烘焙吧！</p>';
-            let hasFood = false;
-            let foodList = '';
-
-            for (const [recipeKey, data] of Object.entries(state.foods || {})) {
-                const recipe = Cake.RECIPES[recipeKey];
-                if (!recipe) continue;
-
-                const total = (data.perfect || 0) + (data.good || 0) + (data.normal || 0) + (data.failed || 0);
-                if (total <= 0) continue;
-
-                hasFood = true;
-                // 拼装品质标签
-                const parts = [];
-                if (data.perfect > 0) parts.push(`<span style="color:var(--pink-500)">✨完美 ${data.perfect}</span>`);
-                if (data.good > 0) parts.push(`<span style="color:var(--green-ok)">👍优良 ${data.good}</span>`);
-                if (data.normal > 0) parts.push(`<span>普通 ${data.normal}</span>`);
-                if (data.failed > 0) parts.push(`<span style="color:var(--text-muted)">💀失败 ${data.failed}</span>`);
-
-                foodList += `
-                    <div class="item-card">
-                        <span class="item-emoji">${recipe.emoji || '🍰'}</span>
-                        <span class="item-name">${recipe.name}</span>
-                        <div class="item-desc" style="margin-top:6px; font-size:12px; display:flex; flex-direction:column; gap:2px;">
-                            ${parts.join('')}
-                        </div>
-                    </div>
-                `;
+            
+            // 统计
+            let totalFoods = 0;
+            for (const key in state.foods) {
+                totalFoods += (state.foods[key].perfect || 0) + (state.foods[key].good || 0) + (state.foods[key].normal || 0);
             }
 
-            if (hasFood) {
-                foodHtml = `<div class="grid-2">${foodList}</div>`;
-            }
-
-            // 页面 HTML 组装
-            contentEl.innerHTML = `
+            document.getElementById('content').innerHTML = `
                 <div class="card text-center" style="text-align: center;">
                     <h2>🏪 ${shop.name}</h2>
                     <div style="display:flex; justify-content:center; gap:15px; margin: 10px 0; font-weight:bold;">
-                        <span>🧹 卫生度: ${cleanliness}%</span>
-                        <span>⭐ 声望: ${reputation}</span>
+                        <span>🧹 卫生: ${num(shop.stats.cleanliness, 100)}%</span>
+                        <span>⭐ 声望: ${num(shop.stats.reputation, 0)}</span>
                     </div>
 
-                    <div style="display: flex; gap: 10px; justify-content: center; margin-top: 15px;">
-                        <button id="btn-toggle" class="small ${isOpen ? 'secondary' : 'gold'}" style="flex: 1; font-size: 15px; padding: 12px;">
-                            ${isOpen ? '打烊休息' : '开门营业'}
-                        </button>
-                        <button id="btn-clean" class="small secondary" style="flex: 1;" ${cleanliness >= 100 ? 'disabled' : ''}>
-                            打扫卫生 (30min)
-                        </button>
-                    </div>
+                    <button id="btn-toggle" class="small ${isOpen ? 'secondary' : 'gold'}" style="width: 80%; font-size: 16px; padding: 15px; margin-top: 15px;">
+                        ${isOpen ? '🔕 打烊休息' : '🚪 开门营业'}
+                    </button>
                 </div>
 
-                <div class="card">
-                    <h3>🍰 正在售卖的成品</h3>
-                    ${foodHtml}
-                    <p class="muted mt-8" style="font-size: 12px; margin-top:10px;">
-                        * 营业期间，顾客会自动挑选并购买您的成品。
-                    </p>
+                <h3>📂 经营管理</h3>
+                <div class="nav-card" onclick="go('manage.html')">
+                    <div class="nav-left">
+                        <span class="nav-icon">📈</span>
+                        <div>
+                            <div class="nav-title">经营策略</div>
+                            <div class="nav-desc">调整定价、打扫卫生</div>
+                        </div>
+                    </div>
+                    <span class="arrow">→</span>
+                </div>
+
+                <div class="nav-card" onclick="go('shelf.html')">
+                    <div class="nav-left">
+                        <span class="nav-icon">🍰</span>
+                        <div>
+                            <div class="nav-title">成品货架</div>
+                            <div class="nav-desc">当前存货 ${totalFoods} 个</div>
+                        </div>
+                    </div>
+                    <span class="arrow">→</span>
                 </div>
             `;
 
-            // 绑定事件
             document.getElementById('btn-toggle').onclick = () => {
                 const res = Cake.toggleShopStatus();
                 if (res && res.success === false) alert(res.message);
             };
-
-            document.getElementById('btn-clean').onclick = () => {
-                const res = Cake.cleanShop();
-                if (res && res.success === false) alert(res.message);
-            };
         };
 
-        // ==================== 初始化页面 ====================
-        if (typeof Cake.initPage === 'function') {
-            // 激活导航栏的 'shop' 标签，并传入渲染函数
-            Cake.initPage('shop', renderShop, false);
-        } else {
-            // 兜底：如果不在 iframe 里直接运行
-            renderShop();
-        }
+        window.go = (page) => window.location.href = page;
+        if (typeof Cake.initPage === 'function') Cake.initPage('shop', render, false);
     </script>
 </body>
 </html>

@@ -1,7 +1,7 @@
 (async () => {
     'use strict';
     try {
-        await import('./cake.js');
+        await import('./cake.js'); // 修正：原来写的是 cakes.js，实际文件是 cake.js
     } catch (err) {
         console.warn('⚠️ [Bakery/Small] cake.js 缺失，已兜底');
     }

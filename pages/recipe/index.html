@@ -18,13 +18,6 @@
         .nav-title { font-weight: bold; color: var(--pink-600); font-size: 18px; }
         .nav-desc { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
         .arrow { color: var(--pink-300); font-size: 24px; font-weight: bold; }
-        
-        /* 暴力报错样式 */
-        .fatal-error {
-            background: #ff4d4f; color: white; padding: 20px; border-radius: 10px;
-            font-family: monospace; font-size: 14px; word-break: break-all;
-            box-shadow: 0 4px 15px rgba(255, 77, 79, 0.4); margin: 20px;
-        }
     </style>
 </head>
 <body>
@@ -33,54 +26,29 @@
             <div class="muted text-center" style="margin-top:50px;">⏳ 正在等待引擎加载，请稍候...</div>
         </div>
     </div>
-    
+
+    <script src="../boot-safe.js"></script>
     <script type="module">
         let Cake = null;
-        let checkCount = 0;
 
-        // 👈 暴力等待器：死等父页面的引擎和数据全部就绪
-        function waitForEngine() {
-            Cake = window.parent.Cake || window.Cake;
-            
-            // 必须确保：引擎存在 + 存档加载完 + 菜谱数据加载完
-            if (Cake && Cake.store && Cake.store.state && Cake.RECIPES && Object.keys(Cake.RECIPES).length > 0) {
-                renderPage();
-            } else {
-                checkCount++;
-                if (checkCount < 100) { // 等 10 秒
-                    setTimeout(waitForEngine, 100);
-                } else {
-                    showFatalError('游戏引擎或配方数据加载超时！请刷新页面或检查父页面是否有 404。');
-                }
-            }
-        }
-
-        // 👈 暴力报错函数：出错了直接把红字怼在屏幕上
-        function showFatalError(msg) {
-            const content = document.getElementById('content');
-            if (content) {
-                content.innerHTML = `<div class="fatal-error">
-                    <h3 style="margin: 0 0 10px 0;">🚨 致命错误</h3>
-                    <div>${msg}</div>
-                </div>`;
-            }
-        }
-
-        const render = () => {
+        function renderPage() {
             try {
+                if (!Cake || !Cake.store || !Cake.store.state) {
+                    return;
+                }
+
                 const state = Cake.store.state;
-                const allRecipes = Object.entries(Cake.RECIPES);
-                
+                const allRecipes = Object.entries(Cake.RECIPES || {});
                 let bakeryTotal = 0, bakeryUnlocked = 0;
                 let cookTotal = 0, cookUnlocked = 0;
 
                 allRecipes.forEach(([key, r]) => {
                     if (r.skill === 'bakery') {
                         bakeryTotal++;
-                        if (state.unlockedRecipes[key]) bakeryUnlocked++;
+                        if (state.unlockedRecipes?.[key]) bakeryUnlocked++;
                     } else if (r.skill === 'cook') {
                         cookTotal++;
-                        if (state.unlockedRecipes[key]) cookUnlocked++;
+                        if (state.unlockedRecipes?.[key]) cookUnlocked++;
                     }
                 });
 
@@ -114,20 +82,22 @@
                 `;
             } catch (err) {
                 console.error('❌ [Recipe] 渲染崩溃:', err);
-                showFatalError(`渲染过程发生异常：<br>${err.message}<br><br>堆栈：<br>${err.stack}`);
-            }
-        };
-
-        function renderPage() {
-            if (typeof Cake.initPage === 'function') {
-                Cake.initPage('recipe', render, false);
-            } else {
-                render(); // 如果父页面没这个接口，直接自己画
+                window.safePageBoot?.showFatalError(`渲染过程发生异常：<br>${err.message}<br><br>堆栈：<br>${err.stack}`, 'content');
             }
         }
 
-        // 启动暴力等待
-        waitForEngine();
+        window.safePageBoot.waitForCake((readyCake) => {
+            Cake = readyCake;
+            if (typeof Cake.initPage === 'function') {
+                Cake.initPage('recipe', renderPage, false);
+            } else {
+                renderPage();
+            }
+        }, {
+            timeout: 15000,
+            required: (game) => !!(game && game.store && game.store.state && game.RECIPES && Object.keys(game.RECIPES).length > 0),
+            onTimeout: () => '游戏引擎或配方数据加载超时！请刷新页面或检查父页面是否有 404。'
+        });
     </script>
 </body>
 </html>

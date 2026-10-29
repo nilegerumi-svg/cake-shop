@@ -1,12 +1,12 @@
 // js/shared.js
 window.Cake = window.Cake || {};
 
-// 🚨 核心护盾：如果当前是子页面（iframe），绝不执行代理逻辑，防止互相劫持爆栈！
+// 🚨 核心护盾：子页面直接跳过，防止互相劫持
 if (window.self !== window.top) {
     console.log('🧩 [Shared] 检测到子页面环境，跳过代理生成。');
 } else {
 
-    // ── 1. 初始化状态 ──
+    // ── 1. 初始化状态（对齐新的 schema 与 store） ──
     (() => {
         const Cake = window.Cake;
         const store = Cake.store;
@@ -15,30 +15,32 @@ if (window.self !== window.top) {
             return;
         }
 
+        // 👈 修复：强制使用 schema.js 的 createEmptyState
         const getDefaultState = () => {
-            if (typeof Cake.defaultState === 'function') return Cake.defaultState();
-            if (store.DEFAULT_STATE) return JSON.parse(JSON.stringify(store.DEFAULT_STATE));
-            return {
-                day: 1, money: 500, energy: 100, reputation: 20,
-                shopLevel: 1, decoration: 0, priceRate: 1.0,
-                avatar: '👩‍🍳', shopName: '甜蜜小屋',
-                recipes: {}, cakes: {}, ingredients: {}, characters: {}, log: [],
-            };
+            if (typeof Cake.createEmptyState === 'function') return Cake.createEmptyState();
+            console.warn('⚠️ [Shared] 找不到 createEmptyState，使用极简兜底');
+            return { version: 1, money: 200, time: { day: 1, hour: 8, minute: 0 }, inventory: [] };
         };
 
-        const hasSave = typeof Cake.hasSave === 'function' ? Cake.hasSave() : false;
+        // 判断是否已经有存档
+        let hasSave = false;
+        try {
+            hasSave = !!localStorage.getItem(Cake.store.SAVE_KEY || 'cake_shop_save');
+        } catch (_) {}
 
         if (!hasSave) {
             const s = getDefaultState();
+            // 兼容你之前的开局名字与头像设置
             try {
                 const pn = localStorage.getItem('playerName');
                 const sn = localStorage.getItem('shopName');
                 const av = localStorage.getItem('playerAvatar');
                 if (pn && pn.trim()) s.playerName = pn.trim().slice(0, 12);
-                if (sn && sn.trim()) s.shopName = sn.trim().slice(0, 12);
+                if (sn && sn.trim() && s.shop) s.shop.name = sn.trim().slice(0, 12);
                 const AVATAR_MAP = { girl1: '👧🏻', girl2: '👩🏻', boy1: '👦🏻', cake: '🧁' };
                 if (av && AVATAR_MAP[av]) s.avatar = AVATAR_MAP[av];
             } catch (_) { /* ignore */ }
+            
             store.state = s;
             if (typeof Cake.saveState === 'function') Cake.saveState();
         } else if (typeof Cake.loadStateFromStorage === 'function') {
@@ -46,28 +48,24 @@ if (window.self !== window.top) {
         }
     })();
 
-    // ── 2. Game 兼容层：动态 Proxy（替代原来的 LIVE_KEYS 静态清单） ──
+    // ── 2. Game 兼容层：动态 Proxy ──
     (() => {
         const Cake = window.Cake;
 
-        // Game 只是 Cake 的一个「实时视图」：
-        //  - 读 Game.xxx  → 转发到 Cake.xxx（任何新方法自动生效，无需登记）
-        //  - 写 Game.xxx  → 落在 Game 自身，绝不污染 Cake（彻底避免 setter 覆盖事故）
-        //  - Game.state  → 特殊映射到 Cake.store.state（游戏存档）
         const Game = new Proxy({}, {
             get(target, prop) {
                 if (prop === 'state') {
                     return Cake.store ? Cake.store.state : undefined;
                 }
-                if (prop in target) return target[prop];   // 允许 Game 上的临时覆盖（如 main.js 的 meta）
-                return Cake[prop];                          // 默认动态转发到 Cake
+                if (prop in target) return target[prop]; 
+                return Cake[prop];                          
             },
             set(target, prop, value) {
                 if (prop === 'state') {
                     if (Cake.store) Cake.store.state = value;
                     return true;
                 }
-                target[prop] = value;                       // 只写 Game 自身，不污染 Cake
+                target[prop] = value;                       
                 return true;
             },
             has(target, prop) {
@@ -76,32 +74,25 @@ if (window.self !== window.top) {
         });
 
         window.Game = Game;
-        console.log('🧩 [Shared] 父页面 Game 动态代理已挂载（无需维护 LIVE_KEYS）');
+        console.log('🧩 [Shared] 父页面 Game 动态代理已挂载');
     })();
 
-    // ── 3. bridge：跨 iframe 状态同步 ──
+    // ── 3. 跨 iframe 状态同步 (适配新的 bridge.js) ──
     (() => {
         const Cake = window.Cake;
-        const setup = () => {
-            if (!Cake.bridge || !Cake.bridge.inIframe) return false;
-            if (typeof Cake.bridge.onStateChanged !== 'function') return false;
-
-            Cake.bridge.onStateChanged(() => {
+        
+        // 监听来自 bridge.js 的刷新事件
+        if (typeof Cake.on === 'function') {
+            Cake.on('refresh_ui', () => {
+                // 收到子页面通知，重新从 localStorage 拉取最新数据
                 if (typeof Cake.loadStateFromStorage === 'function') {
                     Cake.store.state = Cake.loadStateFromStorage();
                 }
+                // 触发父页面渲染
                 if (typeof Cake.refreshPage === 'function') {
-                    try { Cake.refreshPage(); return; } catch (_) {}
+                    try { Cake.refreshPage(); } catch (_) {}
                 }
-                try { window.location.reload(); } catch (_) {}
             });
-            return true;
-        };
-        if (setup()) return;
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', setup);
-        } else {
-            setTimeout(setup, 0);
         }
     })();
 

@@ -19,19 +19,17 @@
         return _state;
     };
 
+    const allowLocation = (loc) => ['home', 'town'].includes(String(loc || 'home'));
+
     window.Cake.store = {
         get state() {
             return ensureState();
         },
         set state(val) {
             _state = val;
-            // 设置状态时自动保存一次
             window.Cake.saveState();
         },
-        
         SAVE_KEY: SAVE_KEY,
-
-        // 👈 检查是否有存档（开始页用）
         hasSave: function () {
             try {
                 return !!localStorage.getItem(SAVE_KEY);
@@ -39,7 +37,6 @@
                 return false;
             }
         },
-
         saveState: function () {
             if (!_state) return;
             try {
@@ -48,7 +45,6 @@
                 console.warn('⚠️ [Store] 存档保存失败:', e);
             }
         },
-
         loadStateFromStorage: function () {
             try {
                 const raw = localStorage.getItem(SAVE_KEY);
@@ -70,7 +66,18 @@
         }
     };
 
-    // 把常用方法提升到 Cake 根对象，方便调用
+    window.Cake.travelTo = function (location) {
+        const state = ensureState();
+        const target = String(location || 'home');
+        if (!allowLocation(target)) {
+            return { success: false, message: `未知地点：${target}` };
+        }
+        state.currentLocation = target;
+        if (typeof window.Cake.saveState === 'function') window.Cake.saveState();
+        if (typeof window.Cake.emit === 'function') window.Cake.emit('refresh_ui');
+        return { success: true, location: target };
+    };
+
     window.Cake.hasSave = window.Cake.store.hasSave;
     window.Cake.saveState = window.Cake.store.saveState;
     window.Cake.loadStateFromStorage = window.Cake.store.loadStateFromStorage;

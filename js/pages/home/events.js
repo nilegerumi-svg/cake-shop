@@ -7,7 +7,7 @@ export const bindEvents = () => {
     contentEl.dataset.bound = 'true';
 
     contentEl.addEventListener('click', (e) => {
-        const G = window.parent.Game || window.Game; 
+        const G = window.parent.Game || window.Game;
         if (!G || !G.state) return;
 
         const btn = e.target.closest('[data-action]');
@@ -17,21 +17,35 @@ export const bindEvents = () => {
 
         if (action === 'nap') {
             if ((G.state.energy ?? 0) >= (G.state.maxEnergy ?? 100)) return;
-            // 👈 修复：调用底层正确的 nap 方法
             if (typeof G.nap === 'function') G.nap();
         }
 
         if (action === 'sleep') {
-            // 👈 修复：调用底层正确的 sleep 方法
             if (typeof G.sleep === 'function') G.sleep();
         }
 
         if (action === 'go-park') {
-            // 👈 新增：直接调底层散步逻辑（假设你希望在这里快速散步）
             if (typeof G.walk === 'function') {
-                // 由于散步需要触发地图和事件，如果你有专门的散步方法
-                G.walk('park'); 
+                G.walk('park');
             }
+        }
+
+        if (action === 'go-town') {
+            if (typeof G.travelTo === 'function') {
+                G.travelTo('town');
+            } else {
+                G.state.currentLocation = 'town';
+            }
+            if (typeof G.refreshPage === 'function') G.refreshPage();
+        }
+
+        if (action === 'go-home') {
+            if (typeof G.travelTo === 'function') {
+                G.travelTo('home');
+            } else {
+                G.state.currentLocation = 'home';
+            }
+            if (typeof G.refreshPage === 'function') G.refreshPage();
         }
     });
 };

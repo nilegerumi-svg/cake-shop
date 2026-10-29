@@ -19,8 +19,6 @@
             .replace(/"/g, '&quot;')
             .replace(/'/g, '&#39;');
 
-    // 👈 修复：适配新的 state.time.day 和 state.log
-    // js/core/utils.js (节选，替换原有的 addLog)
     const addLog = (text, type = 'info') => {
         const s = Cake.store?.state;
         if (!s) return;
@@ -32,13 +30,12 @@
         // 存档
         if (typeof Cake.saveState === 'function') Cake.saveState();
         
-        // 👈 广播刷新：如果是父页面，直接刷新 UI；如果是子页面，发消息给父页面刷新
+        // 广播刷新
         if (typeof Cake.emit === 'function') {
             Cake.emit('refresh_ui');
         }
     };
 
-    // 👈 修复：调用统一报错
     const fail = (message) => {
         addLog(message, 'error');
         return { success: false, message };
@@ -53,42 +50,48 @@
         return '🤍 陌生';
     };
 
+    /* ==================== 食材品质生成引擎 ==================== */
+    
+    // 👈 新增：随机生成食材品质 (0-100)
+    const getRandomIngredientQuality = () => {
+        const r = Math.random();
+        if (r < 0.10) return Math.floor(Math.random() * 40);      // 10% 概率：低劣 (0-39)
+        if (r < 0.70) return Math.floor(40 + Math.random() * 30); // 60% 概率：普通 (40-69)
+        if (r < 0.95) return Math.floor(70 + Math.random() * 20); // 25% 概率：优良 (70-89)
+        return Math.floor(90 + Math.random() * 11);               // 5%  概率：完美 (90-100)
+    };
+
     /* ==================== 食材相关（基于 inventory 数组） ==================== */
 
-    // 👈 修复：检查背包数组里是否有足够的、未腐烂的食材
     const hasIngredients = (ing) => {
         const s = Cake.store?.state;
         if (!s || !s.inventory) return false;
 
         for (const k of Object.keys(ing)) {
-            // 统计该食材且没烂的数量
             const count = s.inventory.filter(i => i.id === k && !i.isRotten).length;
             if (count < ing[k]) return false;
         }
         return true;
     };
 
-    // 👈 修复：从背包数组中扣除食材（优先扣除快过期的）
     const consumeIngredients = (ing) => {
         const s = Cake.store?.state;
         if (!s || !s.inventory) return;
 
         for (const k of Object.keys(ing)) {
             let need = ing[k];
-            // 找到该食材，按过期时间升序（快过期的先消耗）
             const available = s.inventory
                 .map((item, index) => ({ ...item, _index: index }))
                 .filter(i => i.id === k && !i.isRotten)
                 .sort((a, b) => a.expireDay - b.expireDay);
 
             for (let i = 0; i < available.length && need > 0; i++) {
-                s.inventory.splice(available[i]._index, 1); // 从背包删掉这个实例
+                s.inventory.splice(available[i]._index, 1);
                 need--;
             }
         }
     };
 
-    // 👈 修复：渲染配方所需的食材标签（基于 inventory）
     const ingredientTags = (ing) => {
         const s = Cake.store?.state;
         if (!s) return '';
@@ -111,7 +114,6 @@
 
     /* ==================== 补充缺失的渲染工具 ==================== */
     
-    // 👈 补充：时间格式化（render.js 需要）
     const getTimeString = () => {
         const state = Cake.store?.state;
         if (!state || !state.time) return '08:00';
@@ -129,10 +131,11 @@
         addLog,
         fail,
         affLevel,
+        getRandomIngredientQuality, // 👈 挂载随机品质引擎
         hasIngredients,
         consumeIngredients,
         ingredientTags,
-        getTimeString, // 👈 挂载
+        getTimeString,
     });
 
     if (typeof window.$ === 'undefined') {

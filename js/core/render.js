@@ -7,7 +7,7 @@ window.Cake = window.Cake || {};
 
     // 👈 修改：href 指向 pages/ 目录，配合 iframe 使用
     const NAV_ITEMS = [
-    { key: 'home',    label: '🏠 主页', href: 'pages/home.html' },
+    { key: 'home',    label: '🏠 主页', href: 'pages/home/index.html' },
     { key: 'shop',    label: '🏪 店铺', href: 'pages/shop/index.html' }, // 修改
     { key: 'bake',    label: '🧂 烘焙', href: 'pages/bake/index.html' }, // 修改
     { key: 'buy',     label: '🛒 采购', href: 'pages/buy/index.html' },  // 修改

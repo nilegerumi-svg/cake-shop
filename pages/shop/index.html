@@ -2,84 +2,125 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🏪 店铺大厅 · 甜蜜物语</title>
-    <link rel="stylesheet" href="../../css/styles.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>🍰 甜蜜物语</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/game-shell.css">
+    
+    <!-- 监视器接管全局 -->
+    <script type="module" src="js/host/monitor/index.js"></script>
     <style>
-        .nav-card { display: flex; align-items: center; justify-content: space-between; padding: 15px; background: #fff; border-radius: 12px; margin-bottom: 12px; cursor: pointer; border: 1px solid var(--pink-100); transition: 0.2s; }
-        .nav-card:active { transform: scale(0.98); background: #fff8fa; }
-        .nav-left { display: flex; align-items: center; gap: 12px; }
-        .nav-icon { font-size: 28px; }
-        .nav-title { font-weight: bold; color: var(--pink-600); font-size: 15px; }
-        .nav-desc { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
-        .arrow { color: var(--pink-300); font-size: 20px; font-weight: bold; }
+        /* 👈 超级硬核的布局修正：不依赖任何复杂的 Flex，直接用 Fixed 定死 */
+        body, html { margin: 0; padding: 0; height: 100%; background: #fff0f5; overflow: hidden; }
+        
+        /* 顶部 Header 强制钉死在最上面，高度自适应 */
+        #header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 70px; /* 给一个固定高度，防止塌陷 */
+            background: #fff;
+            z-index: 9999;
+            border-bottom: 2px solid red; /* 🚨 为了让你看到，加了红边 */
+            box-sizing: border-box;
+        }
+
+        /* 导航栏强制钉在 Header 下面 */
+        #navBar {
+            position: fixed;
+            top: 70px;
+            left: 0;
+            right: 0;
+            height: 50px;
+            background: #fff;
+            display: flex;
+            align-items: center;
+            overflow-x: auto;
+            z-index: 9999;
+            border-bottom: 2px solid blue; /* 🚨 加了蓝边 */
+            box-sizing: border-box;
+        }
+
+        /* 中间的内容区：用绝对定位把上下空出来 */
+        .main-frame {
+            position: absolute;
+            top: 120px; /* Header + Nav 的高度 */
+            bottom: 120px; /* 底部两个 iframe 和按钮的高度 */
+            left: 0;
+            width: 100%;
+            border: none;
+            background: transparent;
+            z-index: 10;
+        }
+
+        /* 日志区放到底部 */
+        .log-frame {
+            position: absolute;
+            bottom: 60px; /* 让出底栏的高度 */
+            left: 0;
+            width: 100%;
+            height: 120px;
+            border: none;
+            background: #fff;
+            border-top: 2px dashed #ffd1dc;
+            z-index: 10;
+        }
+
+        /* 底部按钮栏 */
+        .action-footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: #fff;
+            display: flex;
+            z-index: 9999;
+            border-top: 1px solid var(--pink-200);
+        }
     </style>
 </head>
 <body>
-    <div class="game-body" style="padding-top: 10px;">
-        <div class="content" id="content"></div>
+    <!-- 加载遮罩 -->
+    <div id="app-loading" style="position: fixed; inset: 0; background: #fff0f5; z-index: 99999; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+        <div class="loading-title" style="font-size: 24px; font-weight: bold; color: #d6336c; margin-bottom: 20px;">🍰 甜蜜物语</div>
+        <div id="loading-text" style="font-size: 14px; color: #888; margin-bottom: 15px;">正在准备启动...</div>
+        <div class="loading-bar-wrap" style="width: 200px; height: 10px; background: #ffe4e1; border-radius: 5px; overflow: hidden;">
+            <div id="loading-bar" style="width: 0%; height: 100%; background: #ff8fa3;"></div>
+        </div>
     </div>
-    <script type="module">
-        const Cake = window.parent.Cake || window.Cake;
-        if (!Cake) return;
-        const num = (v, fallback = 0) => Number.isFinite(Number(v)) ? Number(v) : fallback;
 
-        const render = () => {
-            const state = Cake.store.state;
-            const shop = state.shop;
-            const isOpen = shop.isOpen;
-            
-            // 统计
-            let totalFoods = 0;
-            for (const key in state.foods) {
-                totalFoods += (state.foods[key].perfect || 0) + (state.foods[key].good || 0) + (state.foods[key].normal || 0);
-            }
+    <!-- 主体区域 -->
+    <div class="app-wrapper" id="app-root">
+        <header id="header">Header 应该在这里</header>
+        <nav id="navBar">Nav 应该在这里</nav>
+        
+        <iframe id="mainFrame" src="pages/home/index.html" class="main-frame"></iframe>
+        <iframe id="logFrame" src="pages/log/index.html" class="log-frame"></iframe>
+        
+        <div class="action-footer" id="footer">
+            <div class="footer-btn" onclick="window.footerAction('sleep')" style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; border-right:1px solid #eee;">
+                <span class="icon">🛌</span><span style="font-size:12px;">睡觉</span>
+            </div>
+            <div class="footer-btn" onclick="window.footerAction('shop')" style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; border-right:1px solid #eee;">
+                <span class="icon" id="f-icon-shop">🚪</span><span id="f-text-shop" style="font-size:12px;">营业</span>
+            </div>
+            <div class="footer-btn" style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+                <span class="icon">📅</span><span class="footer-time" id="f-time" style="font-size:12px;">Day 1 08:00</span>
+            </div>
+        </div>
+    </div>
 
-            document.getElementById('content').innerHTML = `
-                <div class="card text-center" style="text-align: center;">
-                    <h2>🏪 ${shop.name}</h2>
-                    <div style="display:flex; justify-content:center; gap:15px; margin: 10px 0; font-weight:bold;">
-                        <span>🧹 卫生: ${num(shop.stats.cleanliness, 100)}%</span>
-                        <span>⭐ 声望: ${num(shop.stats.reputation, 0)}</span>
-                    </div>
-
-                    <button id="btn-toggle" class="small ${isOpen ? 'secondary' : 'gold'}" style="width: 80%; font-size: 16px; padding: 15px; margin-top: 15px;">
-                        ${isOpen ? '🔕 打烊休息' : '🚪 开门营业'}
-                    </button>
-                </div>
-
-                <h3>📂 经营管理</h3>
-                <div class="nav-card" onclick="go('manage.html')">
-                    <div class="nav-left">
-                        <span class="nav-icon">📈</span>
-                        <div>
-                            <div class="nav-title">经营策略</div>
-                            <div class="nav-desc">调整定价、打扫卫生</div>
-                        </div>
-                    </div>
-                    <span class="arrow">→</span>
-                </div>
-
-                <div class="nav-card" onclick="go('shelf.html')">
-                    <div class="nav-left">
-                        <span class="nav-icon">🍰</span>
-                        <div>
-                            <div class="nav-title">成品货架</div>
-                            <div class="nav-desc">当前存货 ${totalFoods} 个</div>
-                        </div>
-                    </div>
-                    <span class="arrow">→</span>
-                </div>
-            `;
-
-            document.getElementById('btn-toggle').onclick = () => {
-                const res = Cake.toggleShopStatus();
-                if (res && res.success === false) alert(res.message);
-            };
-        };
-
-        window.go = (page) => window.location.href = page;
-        if (typeof Cake.initPage === 'function') Cake.initPage('shop', render, false);
+    <script src="js/host/log-bridge.js"></script>
+    <script type="module" src="js/host/game-shell.js"></script>
+    
+    <script>
+        // 2.5 秒后强制移除 Loading 遮罩
+        setTimeout(() => {
+            const loadingEl = document.getElementById('app-loading');
+            if (loadingEl) loadingEl.remove();
+        }, 2500);
     </script>
 </body>
 </html>

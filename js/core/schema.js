@@ -52,8 +52,12 @@
             // ================= 资产与背包 =================
             // 背包数组：存 { id: 'chicken_egg', quality: 50, expireDay: 5 }
             inventory: [],
-            
-            // 成品库存：存 { 'cake:muffin': { total: 2, perfect: 0, good: 1, normal: 1 } }
+
+            // 👈 新增：未送达的订单
+            // 结构：{ itemId: 'chicken_egg', quantity: 5, arriveTime: 1440, isTool: false }
+            orders: [],
+
+            // 成品库存：存 { 'cake:muffin': { total: 2, perfect: 0, good: 0, normal: 0, failed: 0 } }
             foods: {},
 
             // 已解锁的配方

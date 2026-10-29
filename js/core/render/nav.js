@@ -15,8 +15,14 @@ window.Cake = window.Cake || {};
     ];
 
     Cake.renderNav = (activeKey) => {
+        console.log('👉 [Nav] 开始渲染导航栏...');
         const el = Cake.$('navBar');
-        if (!el || window.self !== window.top) return;
+        
+        // 👈 核心修复：删掉了 window.self !== window.top
+        if (!el) {
+            console.error('❌ [Nav] 找不到 #navBar 元素！');
+            return;
+        }
 
         const key = activeKey || 'home';
 
@@ -37,5 +43,6 @@ window.Cake = window.Cake || {};
                         ${item.label}
                     </a>`;
         }).join('');
+        console.log('✅ [Nav] 导航栏渲染完成！');
     };
 })();

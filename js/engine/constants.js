@@ -1,0 +1,22 @@
+// js/engine/constants.js
+export const ENGINE_STATES = Object.freeze({
+    IDLE: 'idle',
+    INITIALIZING: 'initializing',
+    READY: 'ready',
+    FAILED: 'failed',
+    CANCELLED: 'cancelled'
+});
+
+export const TRANSITIONS = Object.freeze({
+    [ENGINE_STATES.IDLE]: [ENGINE_STATES.INITIALIZING],
+    [ENGINE_STATES.INITIALIZING]: [
+        ENGINE_STATES.INITIALIZING,
+        ENGINE_STATES.READY,
+        ENGINE_STATES.FAILED,
+        ENGINE_STATES.CANCELLED,
+        ENGINE_STATES.IDLE
+    ],
+    [ENGINE_STATES.READY]: [],
+    [ENGINE_STATES.FAILED]: [ENGINE_STATES.INITIALIZING, ENGINE_STATES.IDLE],
+    [ENGINE_STATES.CANCELLED]: [ENGINE_STATES.INITIALIZING, ENGINE_STATES.IDLE]
+});

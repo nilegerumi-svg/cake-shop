@@ -1,22 +1,39 @@
 // js/actions/entertainment/rest/index.js
 
-// 1. 引入核心拆分文件
-import './nap.js';
-import './sleep.js';
-import './monitor.js';
-
-// 2. 引入区域注册表
-import './town/index.js';
-
-// 👈 核心修复：把 deepFreeze 加在外面，让整个文件都能用！
-const deepFreeze = (obj) => {
-    if (obj === null || typeof obj !== 'object' || Object.isFrozen(obj)) return obj;
-    for (const key of Object.keys(obj)) deepFreeze(obj[key]);
-    return Object.freeze(obj);
-};
-
-(() => {
+(async () => {
     'use strict';
+    console.log('🛌 [Rest] 开始逐个加载休息子模块...');
+
+    // 1. 引入核心拆分文件（动态加载防崩溃）
+    const REST_MODULES = [
+        './nap.js',
+        './sleep.js',
+        './monitor.js',
+        './town/index.js'
+    ];
+
+    for (const path of REST_MODULES) {
+        try {
+            // 加上 3 秒超时防卡死
+            const timeout = new Promise((_, reject) => 
+                setTimeout(() => reject(new Error('加载超时')), 3000)
+            );
+            await Promise.race([import(path), timeout]);
+            console.log(`✅ [Rest] 成功加载: ${path}`);
+        } catch (err) {
+            console.warn(`⚠️ [Rest] 子模块加载失败，已跳过 -> ${path}`);
+            console.warn(`原因: ${err.message}`);
+        }
+    }
+
+    // 👈 核心绝杀：把 deepFreeze 挂载到全局 Cake 上！
+    // 这样不管内部哪个子文件调用了 deepFreeze，都能找到它！
+    window.Cake = window.Cake || {};
+    window.Cake.deepFreeze = (obj) => {
+        if (obj === null || typeof obj !== 'object' || Object.isFrozen(obj)) return obj;
+        for (const key of Object.keys(obj)) window.Cake.deepFreeze(obj[key]);
+        return Object.freeze(obj);
+    };
 
     const getCake = () => {
         try {
@@ -30,7 +47,6 @@ const deepFreeze = (obj) => {
     const Cake = getCake();
     if (!Cake) return;
 
-    // 防重复挂载
     if (Cake.__restLoaded) {
         console.log('🛌 [Rest] 已加载，跳过重复初始化');
         return;
@@ -62,7 +78,6 @@ const deepFreeze = (obj) => {
                 return;
             }
 
-            // 1. 查区域配置
             const regionCfg = Cake.Actions && Cake.Actions.Rest && Cake.Actions.Rest[region];
             if (!regionCfg) {
                 Cake.addLog?.('❌ 未知的休息区域。');
@@ -70,7 +85,6 @@ const deepFreeze = (obj) => {
                 return;
             }
 
-            // 2. 查地点配置
             const locCfg = regionCfg[location];
             if (!locCfg) {
                 Cake.addLog?.('❌ 这里无法休息。');
@@ -78,7 +92,6 @@ const deepFreeze = (obj) => {
                 return;
             }
 
-            // 3. 查动作配置
             const actionCfg = locCfg[action];
             if (!actionCfg) {
                 Cake.addLog?.(`❌ 这里无法进行「${action === 'sleep' ? '睡觉' : '小憩'}」。`);
@@ -86,7 +99,6 @@ const deepFreeze = (obj) => {
                 return;
             }
 
-            // 4. 抽取休息事件（可能为 null）
             let ev = null;
             if (Cake.RestMonitor && typeof Cake.RestMonitor.check === 'function') {
                 try {
@@ -99,12 +111,11 @@ const deepFreeze = (obj) => {
             const logs = [];
             if (ev && ev.text) logs.push(ev.text);
 
-            // 5. 分流执行
             if (action === 'sleep') {
                 let time = actionCfg.time;
                 if (time === 'next_day') {
                     const cur = num(state.hour, 8) * 60 + num(state.minute, 0);
-                    time = 24 * 60 + 8 * 60 - cur;   // 距次日 08:00 的分钟数
+                    time = 24 * 60 + 8 * 60 - cur;
                 }
 
                 if (Cake.RestSys && typeof Cake.RestSys.sleep === 'function') {

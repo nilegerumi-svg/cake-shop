@@ -5,13 +5,10 @@
     window.Cake = window.Cake || {};
 
     let _state = null;
-
-    // 我们的统一存档 Key
     const SAVE_KEY = 'cake_shop_save';
 
     const ensureState = () => {
         if (!_state) {
-            // 安全兜底：如果没初始化，调用 schema.js 生成一个全新状态
             if (typeof window.Cake.createEmptyState === 'function') {
                 _state = window.Cake.createEmptyState();
             } else {
@@ -32,10 +29,17 @@
             window.Cake.saveState();
         },
         
-        // 暴露存档 Key 给 render.js 使用
         SAVE_KEY: SAVE_KEY,
 
-        // 👈 统一的保存接口
+        // 👈 检查是否有存档（开始页用）
+        hasSave: function () {
+            try {
+                return !!localStorage.getItem(SAVE_KEY);
+            } catch (_) {
+                return false;
+            }
+        },
+
         saveState: function () {
             if (!_state) return;
             try {
@@ -45,13 +49,11 @@
             }
         },
 
-        // 👈 统一的读取接口 (供 host/main.js 调用)
         loadStateFromStorage: function () {
             try {
                 const raw = localStorage.getItem(SAVE_KEY);
                 if (raw) {
                     const parsed = JSON.parse(raw);
-                    // 用 migrate.js 洗一遍数据，保证兼容旧版本
                     if (typeof window.Cake.migrateState === 'function') {
                         _state = window.Cake.migrateState(parsed);
                     } else {
@@ -68,16 +70,9 @@
         }
     };
 
-    // 为了兼容之前代码里用到的 Cake.saveState() 和 Cake.loadStateFromStorage()，将它们提升到最外层
+    // 把常用方法提升到 Cake 根对象，方便调用
+    window.Cake.hasSave = window.Cake.store.hasSave;
     window.Cake.saveState = window.Cake.store.saveState;
-    window.Cake.hasSave = function () {
-        try {
-            return !!localStorage.getItem(SAVE_KEY);
-        } catch (_) {
-            return false;
-        }
-    };
-    
     window.Cake.loadStateFromStorage = window.Cake.store.loadStateFromStorage;
 
     console.log('📦 [Store] 状态容器与存档系统装载完毕');

@@ -70,6 +70,14 @@
 
     // 为了兼容之前代码里用到的 Cake.saveState() 和 Cake.loadStateFromStorage()，将它们提升到最外层
     window.Cake.saveState = window.Cake.store.saveState;
+    window.Cake.hasSave = function () {
+        try {
+            return !!localStorage.getItem(SAVE_KEY);
+        } catch (_) {
+            return false;
+        }
+    };
+    
     window.Cake.loadStateFromStorage = window.Cake.store.loadStateFromStorage;
 
     console.log('📦 [Store] 状态容器与存档系统装载完毕');

@@ -6,13 +6,11 @@ import './error-ui.js';
     if (window.__rootMonitorLoaded) return;
     window.__rootMonitorLoaded = true;
 
-    // 1. 过滤无关报错
     window.addEventListener('error', (e) => {
         if (e.message && (e.message.includes('LIDNotifyId') || e.message.includes('WeixinJSBridge'))) return;
         window.CakeMonitorUI.showError(e.message || '全局脚本错误');
     }, true);
 
-    // 2. 进度条更新器
     window.updateLoadingProgress = (text, percent) => {
         const textEl = document.getElementById('loading-text');
         const barEl = document.getElementById('loading-bar');
@@ -20,54 +18,48 @@ import './error-ui.js';
         if (barEl && percent !== undefined) barEl.style.width = `${percent}%`;
     };
 
-    // 3. 隐藏 Loading
-    const hideLoading = () => {
+    // 👈 终极强杀：直接暴力移除整个 DOM 节点！
+    const forceKillLoading = () => {
         const loadingEl = document.getElementById('app-loading');
         if (loadingEl) {
-            loadingEl.style.opacity = '0';
-            setTimeout(() => { loadingEl.style.display = 'none'; }, 300);
+            console.log('🔪 [Monitor] 强杀 Loading 遮罩层！');
+            loadingEl.style.setProperty('display', 'none', 'important');
+            loadingEl.style.setProperty('opacity', '0', 'important');
+            loadingEl.style.setProperty('z-index', '-999', 'important');
+            if (loadingEl.parentNode) loadingEl.parentNode.removeChild(loadingEl); // 直接连根拔起
         }
     };
 
-    // 4. 👈 核心修复：优雅的轮询渲染（解决渲染引擎加载慢的问题）
     let renderCheckCount = 0;
     const tryRender = () => {
         if (window.Cake && typeof window.Cake.renderAll === 'function') {
-            console.log('🎨 [Monitor] 找到渲染引擎，开始绘制主界面！');
             try {
                 window.Cake.renderAll();
-                hideLoading();
-                console.log('✅ [Monitor] 主界面渲染成功');
+                forceKillLoading(); // 画完立刻杀遮罩
             } catch (err) {
                 console.error('❌ [Monitor] 渲染时报错:', err);
             }
         } else {
-            // 如果渲染引擎还没加载出来，每 100 毫秒等一次，最多等 5 秒
             renderCheckCount++;
             if (renderCheckCount < 50) {
                 setTimeout(tryRender, 100);
             } else {
-                console.warn('⚠️ [Monitor] 渲染引擎始终未加载，强行显示外壳');
-                hideLoading();
+                forceKillLoading();
             }
         }
     };
 
-    // 监听正常的 game-ready
     window.addEventListener('game-ready', () => {
-        console.log('🎨 [Monitor] 收到引擎就绪信号，准备渲染主界面...');
-        tryRender(); // 呼叫防呆轮询渲染
+        tryRender();
     });
 
-    // 5. 加载主引擎
     const script = document.createElement('script');
     script.type = 'module';
     script.src = new URL('js/main.js', document.baseURI).href;
-
     script.onload = () => {
-        console.log('📦 [Monitor] main.js 加载完毕...');
+        // 给一个兜底的强杀时间
+        setTimeout(forceKillLoading, 2500);
     };
-    
-    script.onerror = () => { window.CakeMonitorUI.showError('无法加载 js/main.js'); hideLoading(); };
+    script.onerror = () => { window.CakeMonitorUI.showError('无法加载 js/main.js'); forceKillLoading(); };
     document.body.appendChild(script);
 })();

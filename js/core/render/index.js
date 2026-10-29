@@ -10,21 +10,43 @@ window.Cake = window.Cake || {};
     let currentRender = null;
     let currentActiveTab = 'home';
 
+    // 👈 新增：屏幕级报错展示器
+    const showScreenError = (msg, err) => {
+        console.error(msg, err);
+        let el = document.getElementById('render-fatal-error');
+        if (!el) {
+            el = document.createElement('div');
+            el.id = 'render-fatal-error';
+            el.style.cssText = 'position:fixed;top:0;left:0;right:0;background:rgba(220,38,38,0.95);color:white;padding:15px;z-index:9999999;font-family:monospace;font-size:12px;text-align:left;word-break:break-all;';
+            document.body.appendChild(el);
+        }
+        el.innerHTML = `<h3>🚨 UI 渲染崩溃！</h3><div>${msg}</div><div style="margin-top:5px;opacity:0.8;">${err ? err.stack : ''}</div>`;
+    };
+
     // 核心刷新逻辑
     Cake.renderAll = () => {
+        // 👈 强制捕捉任何一个渲染错误，并在屏幕上显示
         try {
+            if (typeof Cake.renderHeader !== 'function') throw new Error('找不到 renderHeader 函数');
             Cake.renderHeader();
+        } catch (err) { showScreenError('顶部 Header 渲染失败', err); }
+
+        try {
+            if (typeof Cake.renderNav !== 'function') throw new Error('找不到 renderNav 函数');
             Cake.renderNav(currentActiveTab);
+        } catch (err) { showScreenError('导航栏 Nav 渲染失败', err); }
+
+        try {
             Cake.renderFooter();
             Cake.renderInventory();
             Cake.renderFoods();
-            // log.js 可以在这里引入渲染，或者单独由子页面渲染
-        } catch (err) {
-            console.error('[Render] 主页面渲染失败:', err);
-        }
+        } catch (err) { showScreenError('底部或背包渲染失败', err); }
 
         if (typeof currentRender === 'function') {
-            try { currentRender(); } catch (err) { console.error('[Render] 子页面渲染异常:', err); }
+            try { currentRender(); } catch (err) { 
+                console.error('[Render] 子页面渲染异常:', err); 
+                // 子页面报错我们只在控制台看，不强行阻断主外壳
+            }
         }
     };
 
@@ -45,7 +67,7 @@ window.Cake = window.Cake || {};
         Cake.refreshPage();
     };
 
-    // 兼容老代码，如果你还有页面调用 Cake.renderLog，可以保留
+    // 兼容老代码
     Cake.renderLog = () => {
          const list = Cake.$('logList');
          if (!list) return;

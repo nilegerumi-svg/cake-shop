@@ -7,8 +7,34 @@
     <title>总地图</title>
     <link rel="stylesheet" href="../../../css/styles.css">
     <style>
-        body { background: transparent; padding: 16px; display: flex; justify-content: center; color: #4a3b3f; margin: 0; }
-        .map-card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(255,182,193,0.2); width: 100%; max-width: 400px; box-sizing: border-box; }
+        :root {
+            --card-w-mobile: min(92vw, 420px);
+            --card-w-pc: min(32vw, 480px);
+        }
+
+        body {
+            background: transparent;
+            padding: 16px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            color: #4a3b3f;
+            margin: 0;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        .map-card {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 10px rgba(255,182,193,0.2);
+            width: var(--card-w-mobile);
+            max-width: 100%;
+            aspect-ratio: 4 / 5;
+            box-sizing: border-box;
+        }
+
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px dashed #ffd1dc; padding-bottom: 12px; }
         .header h2 { color: #ff6b81; margin: 0; font-size: 18px; }
         .back-btn { background: none; border: none; color: #888; font-size: 15px; cursor: pointer; padding: 4px 8px; font-weight: bold; }
@@ -17,9 +43,17 @@
         .region-title { margin: 20px 0 10px 0; font-size: 15px; color: var(--pink-600); border-left: 4px solid var(--pink-400); padding-left: 8px; }
         .loc-list { display: flex; flex-direction: column; gap: 12px; }
         .loc-item {
-            display: flex; align-items: center; justify-content: space-between;
-            background: #fff5f7; border: 1px solid #ffb6c1; border-radius: 12px;
-            padding: 15px; cursor: pointer; transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #fff5f7;
+            border: 1px solid #ffb6c1;
+            border-radius: 12px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 100%;
+            box-sizing: border-box;
         }
         .loc-item:active { transform: scale(0.98); background: #ffe4e8; }
         .loc-item.disabled { background: #f5f5f5; border-color: #ddd; opacity: 0.6; pointer-events: none; }
@@ -30,12 +64,20 @@
         .loc-desc { font-size: 12px; color: #888; margin-top: 4px; }
         .loc-cost { font-size: 12px; color: var(--pink-600); font-weight: bold; margin-top: 4px; }
         .loc-arrow { font-size: 16px; color: #ffb6c1; }
+
+        @media (min-width: 768px) {
+            .map-card {
+                width: var(--card-w-pc);
+                min-height: 640px;
+                aspect-ratio: 4 / 5;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="map-card">
         <div class="header">
-            <button class="back-btn" id="btnBack" type="button">◀ 返回</button>
+            <button class="back-btn" id="btnBack" type="button" onclick="history.back()">◀ 返回</button>
             <h2>🗺️ 城镇地图</h2>
             <div class="energy-badge">⚡<span id="energy">--</span></div>
         </div>
@@ -66,25 +108,27 @@
             const list = $('mapContent');
             if (!list) return;
 
-            const locations = Array.isArray(Cake.LOCATIONS) ? Cake.LOCATIONS : [];
-            const groups = Array.isArray(Cake.REGIONS) ? Cake.REGIONS : [];
+            const regionList = Array.isArray(Cake.REGIONS) ? Cake.REGIONS : Object.values(Cake.REGIONS || {});
+            const locationList = Array.isArray(Cake.LOCATIONS) ? Cake.LOCATIONS : Object.values(Cake.LOCATIONS || {});
 
-            if (locations.length === 0 && groups.length === 0) {
+            if (regionList.length === 0 && locationList.length === 0) {
                 list.innerHTML = '<div class="muted text-center">地图数据尚未就绪</div>';
                 return;
             }
 
-            const html = groups.map((region) => {
-                const items = (region.locations || []).map((loc) => {
-                    const entry = locations.find((item) => item.id === loc || item.key === loc) || {};
+            const html = regionList.map((region) => {
+                const regionKey = region.id || region.key || region.name || 'region';
+                const locIds = Array.isArray(region.locations) ? region.locations : [];
+                const items = locIds.map((locId) => {
+                    const entry = locationList.find((item) => item.id === locId || item.key === locId) || {};
                     const cost = num(entry.cost, 0);
                     const disabled = energy < cost;
                     return `
-                        <div class="loc-item ${disabled ? 'disabled' : ''}" data-target="${entry.id || loc}">
+                        <div class="loc-item ${disabled ? 'disabled' : ''}" data-target="${entry.id || locId}" onclick="window.goMapLocation && window.goMapLocation('${entry.id || locId}')">
                             <div class="loc-info">
                                 <div class="loc-emoji">${entry.emoji || '📍'}</div>
                                 <div class="loc-text">
-                                    <div class="loc-name">${entry.name || loc}</div>
+                                    <div class="loc-name">${entry.name || locId}</div>
                                     <div class="loc-desc">${entry.desc || '探索这个地方'}</div>
                                     <div class="loc-cost">⚡ ${cost}</div>
                                 </div>
@@ -96,35 +140,37 @@
 
                 return `
                     <div>
-                        <div class="region-title">${region.name || '区域'}</div>
+                        <div class="region-title">${region.emoji || '📍'} ${region.name || regionKey}</div>
                         <div class="loc-list">${items}</div>
                     </div>
                 `;
             }).join('');
 
             list.innerHTML = html;
-
             list.querySelectorAll('.loc-item').forEach((item) => {
+                const target = item.dataset.target;
                 item.onclick = () => {
-                    const target = item.dataset.target;
-                    if (!target) return;
-                    const entry = locations.find((loc) => loc.id === target || loc.key === target);
-                    if (!entry) return;
-                    if (num(state.energy, 0) < num(entry.cost, 0)) {
-                        alert('⚡ 精力不足，不能前往这里');
-                        return;
-                    }
-                    const nextUrl = `location.html?id=${encodeURIComponent(target)}`;
-                    window.location.href = nextUrl;
+                    if (target && window.goMapLocation) window.goMapLocation(target);
                 };
             });
         }
+
+        window.goMapLocation = (target) => {
+            if (!target) return;
+            const state = Cake && Cake.store && Cake.store.state ? Cake.store.state : null;
+            const loc = (Array.isArray(Cake.LOCATIONS) ? Cake.LOCATIONS : Object.values(Cake.LOCATIONS || {})).find((item) => item.id === target || item.key === target) || {};
+            if (state && num(state.energy, 0) < num(loc.cost, 0)) {
+                alert('⚡ 精力不足，不能前往这里');
+                return;
+            }
+            window.location.href = `location.html?id=${encodeURIComponent(target)}`;
+        };
 
         function bindPage() {
             const backBtn = $('btnBack');
             if (backBtn && backBtn.dataset.bound !== 'true') {
                 backBtn.dataset.bound = 'true';
-                backBtn.addEventListener('click', () => history.back());
+                backBtn.onclick = () => history.back();
             }
             renderMap();
             if (typeof Cake?.initPage === 'function') {

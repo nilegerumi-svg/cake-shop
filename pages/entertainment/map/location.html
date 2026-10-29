@@ -7,8 +7,35 @@
     <title>地点</title>
     <link rel="stylesheet" href="../../../css/styles.css">
     <style>
-        body { background: transparent; font-family: sans-serif; padding: 16px; display: flex; justify-content: center; color: #4a3b3f; margin: 0; }
-        .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(255,182,193,0.2); width: 100%; max-width: 400px; box-sizing: border-box; }
+        :root {
+            --card-w-mobile: min(92vw, 420px);
+            --card-w-pc: min(32vw, 480px);
+        }
+
+        body {
+            background: transparent;
+            font-family: sans-serif;
+            padding: 16px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            color: #4a3b3f;
+            margin: 0;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 10px rgba(255,182,193,0.2);
+            width: var(--card-w-mobile);
+            max-width: 100%;
+            aspect-ratio: 4 / 5;
+            box-sizing: border-box;
+        }
+
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px dashed #ffd1dc; padding-bottom: 12px; }
         .header h2 { color: #ff6b81; margin: 0; font-size: 18px; }
         .back-btn { background: none; border: none; color: #888; font-size: 15px; cursor: pointer; padding: 4px 8px; font-weight: bold; }
@@ -22,10 +49,21 @@
         .section-title { color: #d85c74; font-size: 14px; font-weight: bold; margin: 16px 0 10px; text-align: left; border-left: 4px solid #ffb6c1; padding-left: 8px; }
         .action-list { display: flex; flex-direction: column; gap: 10px; }
         .action-item {
-            display: flex; align-items: center; justify-content: space-between;
-            width: 100%; background: #f0faf8; color: #4a3b3f; border: 1px solid #a8e6cf;
-            padding: 14px 16px; border-radius: 12px; font-size: 15px; font-weight: bold;
-            cursor: pointer; transition: transform 0.1s; text-align: left; box-sizing: border-box;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            background: #f0faf8;
+            color: #4a3b3f;
+            border: 1px solid #a8e6cf;
+            padding: 14px 16px;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.1s;
+            text-align: left;
+            box-sizing: border-box;
         }
         .action-item:active { transform: scale(0.98); background: #e0f5f0; }
         .action-item.rest { background: #fff0f5; border-color: #ffb6c1; }
@@ -37,12 +75,20 @@
         .action-name { font-size: 15px; font-weight: bold; }
         .action-desc { font-size: 12px; color: #888; font-weight: normal; margin-top: 2px; }
         .action-arrow { font-size: 13px; color: #ffb6c1; white-space: nowrap; }
+
+        @media (min-width: 768px) {
+            .card {
+                width: var(--card-w-pc);
+                min-height: 640px;
+                aspect-ratio: 4 / 5;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="card">
         <div class="header">
-            <button class="back-btn" id="btnBack" type="button">◀ 返回</button>
+            <button class="back-btn" id="btnBack" type="button" onclick="history.back()">◀ 返回</button>
             <h2 id="pageTitle">📍 地点</h2>
             <div class="energy-badge">⚡<span id="energy">--</span></div>
         </div>
@@ -63,12 +109,28 @@
             return window.Cake || null;
         }
 
+        window.handleLocationAction = (actionKey, locKey) => {
+            if (!Cake || !Cake.store || !Cake.store.state) return;
+            try {
+                const res = Cake.performLocationAction && Cake.performLocationAction('town', locKey, actionKey);
+                if (res && res.success === false) {
+                    alert(res.message);
+                    return;
+                }
+            } catch (err) {
+                console.error('[location] 动作执行失败:', err);
+                alert('❌ 动作执行失败：' + (err && err.message || err));
+                return;
+            }
+            setTimeout(renderLocation, 200);
+        };
+
         function renderLocation() {
             Cake = getCake();
             if (!Cake || !Cake.store || !Cake.store.state) return;
             const params = new URLSearchParams(window.location.search);
             const key = params.get('id') || 'park';
-            const list = Array.isArray(Cake.LOCATIONS) ? Cake.LOCATIONS : [];
+            const list = Array.isArray(Cake.LOCATIONS) ? Cake.LOCATIONS : Object.values(Cake.LOCATIONS || {});
             const loc = list.find((item) => item.id === key || item.key === key) || {
                 id: key,
                 name: '未知地点',
@@ -93,9 +155,10 @@
                 <div class="section-title">可执行动作</div>
                 <div class="action-list">
                     ${actions.map((action) => {
+                        const actionKey = action.key || action.id || action.name || 'action';
                         const disabled = num(action.cost, 0) > num(state.energy, 0);
                         return `
-                            <button class="action-item ${action.type === 'rest' ? 'rest' : ''} ${disabled ? 'disabled' : ''}" type="button" data-action="${action.key || action.id || action.name || 'action'}" ${disabled ? 'disabled' : ''}>
+                            <button class="action-item ${action.type === 'rest' ? 'rest' : ''} ${disabled ? 'disabled' : ''}" type="button" data-action="${actionKey}" data-loc="${key}" ${disabled ? 'disabled' : ''} onclick="window.handleLocationAction && window.handleLocationAction('${actionKey}', '${key}')">
                                 <div class="action-info">
                                     <div class="action-emoji">${action.emoji || '✨'}</div>
                                     <div class="action-text">
@@ -110,26 +173,13 @@
                 </div>
             `;
             $('locationContent').innerHTML = html;
-
-            $('locationContent').querySelectorAll('[data-action]').forEach((btn) => {
-                btn.addEventListener('click', () => {
-                    const actionKey = btn.dataset.action;
-                    if (!actionKey) return;
-                    if (typeof Cake.walk === 'function') {
-                        Cake.walk(actionKey, key);
-                    } else if (typeof Cake.triggerRest === 'function') {
-                        Cake.triggerRest(actionKey);
-                    }
-                    setTimeout(renderLocation, 200);
-                });
-            });
         }
 
         function bindPage() {
             const backBtn = $('btnBack');
             if (backBtn && backBtn.dataset.bound !== 'true') {
                 backBtn.dataset.bound = 'true';
-                backBtn.addEventListener('click', () => history.back());
+                backBtn.onclick = () => history.back();
             }
             renderLocation();
             if (typeof Cake?.initPage === 'function') {

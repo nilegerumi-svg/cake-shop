@@ -6,22 +6,78 @@
     <title>娱乐与外出</title>
     <link rel="stylesheet" href="../../css/styles.css">
     <style>
-        body { background: transparent; padding: 16px; display: flex; justify-content: center; margin: 0; }
-        .hub-card { background: white; padding: 20px; border-radius: 16px; box-shadow: 0 4px 10px rgba(255,182,193,0.2); text-align: center; width: 100%; max-width: 340px; }
-        .energy-box { background: #fff9fa; padding: 12px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #ffd1dc; font-weight: bold; color: var(--pink-600); font-size: 16px; }
-        .nav-card {
-            display: flex; align-items: center; justify-content: space-between;
-            width: 100%; background: #f0faf8; border: 1px solid #a8e6cf;
-            padding: 15px; border-radius: 12px; font-size: 16px; font-weight: bold;
-            cursor: pointer; transition: transform 0.1s; margin-bottom: 12px;
-            box-sizing: border-box; color: var(--text-main); text-align: left;
+        :root {
+            --card-w-mobile: min(92vw, 360px);
+            --card-w-pc: min(30vw, 420px);
         }
+
+        body {
+            background: transparent;
+            padding: 16px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            margin: 0;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        .hub-card {
+            background: white;
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: 0 4px 10px rgba(255,182,193,0.2);
+            text-align: center;
+            width: var(--card-w-mobile);
+            max-width: 100%;
+            aspect-ratio: 4 / 5;
+            box-sizing: border-box;
+        }
+
+        .energy-box {
+            background: #fff9fa;
+            padding: 12px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border: 1px solid #ffd1dc;
+            font-weight: bold;
+            color: var(--pink-600);
+            font-size: 16px;
+        }
+
+        .nav-card {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            background: #f0faf8;
+            border: 1px solid #a8e6cf;
+            padding: 15px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.1s;
+            margin-bottom: 12px;
+            box-sizing: border-box;
+            color: var(--text-main);
+            text-align: left;
+        }
+
         .nav-card:active { transform: scale(0.98); }
         .nav-card.rest { background: #fff0f5; border-color: #ffb6c1; }
         .nav-card.disabled { background: #f5f5f5; border-color: #ddd; color: #aaa; pointer-events: none; }
         .nav-icon { font-size: 24px; margin-bottom: 4px; display: block; }
         .nav-sub { font-size: 12px; color: var(--text-muted); font-weight: normal; margin-top: 4px; }
         .arrow { color: var(--pink-300); font-size: 20px; }
+
+        @media (min-width: 768px) {
+            .hub-card {
+                width: var(--card-w-pc);
+                min-height: 520px;
+                aspect-ratio: 4 / 5;
+            }
+        }
     </style>
 </head>
 <body>
@@ -29,7 +85,7 @@
         <div class="energy-box">⚡ 当前精力：<span id="energy">--</span>/<span id="maxEnergy">--</span></div>
 
         <h3 style="margin-bottom: 12px; text-align: left; border-left: 4px solid var(--pink-300); padding-left: 8px;">🎮 休息区</h3>
-        <div id="btnRest" class="nav-card rest">
+        <div id="btnRest" class="nav-card rest" data-action="rest" onclick="window.handleFunAction && window.handleFunAction('rest')">
             <div>
                 <span class="nav-icon">😴 小憩一会</span>
                 <div class="nav-sub">恢复 30 点精力，耗时 1 小时</div>
@@ -38,7 +94,7 @@
         </div>
 
         <h3 style="margin: 20px 0 12px 0; text-align: left; border-left: 4px solid #a8e6cf; padding-left: 8px;">🛴 外出区</h3>
-        <div id="btnGoMap" class="nav-card">
+        <div id="btnGoMap" class="nav-card" data-action="go-map" onclick="window.handleFunAction && window.handleFunAction('go-map')">
             <div>
                 <span class="nav-icon">🗺️ 城镇地图</span>
                 <div class="nav-sub">打开地图，选择地点去散步购物</div>
@@ -52,6 +108,26 @@
         let Cake = null;
         const $ = (id) => document.getElementById(id);
         const num = (v, fallback = 0) => Number.isFinite(Number(v)) ? Number(v) : fallback;
+
+        window.handleFunAction = (action) => {
+            if (!Cake || !Cake.store || !Cake.store.state) return;
+
+            if (action === 'rest') {
+                if (num(Cake.store.state.energy, 0) >= num(Cake.store.state.maxEnergy, 100)) return;
+                if (typeof Cake.nap === 'function') {
+                    Cake.nap();
+                    updateUI();
+                } else {
+                    alert('❌ 找不到休息功能');
+                }
+                return;
+            }
+
+            if (action === 'go-map') {
+                if (num(Cake.store.state.energy, 0) < 8) return;
+                window.location.href = 'map/index.html';
+            }
+        };
 
         function updateUI() {
             if (!Cake || !Cake.store || !Cake.store.state) return;
@@ -72,22 +148,8 @@
             restBtn.dataset.bound = 'true';
             mapBtn.dataset.bound = 'true';
 
-            restBtn.onclick = () => {
-                if (!Cake || !Cake.store || !Cake.store.state) return;
-                if (num(Cake.store.state.energy, 0) >= num(Cake.store.state.maxEnergy, 100)) return;
-                if (typeof Cake.nap === 'function') {
-                    Cake.nap();
-                    updateUI();
-                } else {
-                    alert('❌ 找不到休息功能');
-                }
-            };
-
-            mapBtn.onclick = () => {
-                if (!Cake || !Cake.store || !Cake.store.state) return;
-                if (num(Cake.store.state.energy, 0) < 8) return;
-                window.location.href = 'map/index.html';
-            };
+            restBtn.onclick = () => window.handleFunAction('rest');
+            mapBtn.onclick = () => window.handleFunAction('go-map');
         }
 
         function renderPage() {

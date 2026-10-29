@@ -2,7 +2,10 @@
     'use strict';
 
     function getCake() {
-        return window.parent.Cake || window.Cake || null;
+        if (window.parent && window.parent !== window) {
+            return window.parent.Cake || window.Cake || null;
+        }
+        return window.Cake || null;
     }
 
     function showFatalError(message, targetId = 'content') {
@@ -29,15 +32,14 @@
 
     function waitForCake(onReady, opts = {}) {
         const {
-            timeout = 10000,
+            timeout = 15000,
             interval = 100,
-            onTimeout = null,
             required = (Cake) => !!(Cake && Cake.store && Cake.store.state),
+            onTimeout = null,
             targetId = 'content'
         } = opts;
 
-        let count = 0;
-        const start = Date.now();
+        const startedAt = Date.now();
 
         function tick() {
             const Cake = getCake();
@@ -46,8 +48,7 @@
                 return;
             }
 
-            count++;
-            if (Date.now() - start >= timeout) {
+            if (Date.now() - startedAt >= timeout) {
                 const msg = onTimeout ? onTimeout() : '游戏引擎或数据未加载完成，请刷新页面重试。';
                 showFatalError(msg, targetId);
                 return;

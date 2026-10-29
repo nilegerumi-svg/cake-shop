@@ -6,7 +6,7 @@
     const VEG_MODULES = [
         './leafy.js',
         './roots.js',
-        './gourds.js',
+        './gourds.js', // 依然是优雅加载
         './mushrooms.js',
         './monitor.js'
     ];
@@ -14,9 +14,9 @@
     for (const path of VEG_MODULES) {
         try {
             await import(path);
-            console.log(`✅ [Vegetable] 加载成功: ${path}`);
+            console.log(`✅ [Vegetable] 成功加载: ${path}`);
         } catch (err) {
-            // 👈 终极报错放大镜：谁报错就打印谁
+            // 静默跳过缺失或报错的文件，不中断主流程
             console.warn(`⚠️ [Vegetable] 子模块加载失败，已跳过 -> ${path}`);
             console.warn(`原因: ${err.message}`);
         }
@@ -24,7 +24,7 @@
 
     window.Cake = window.Cake || {};
     
-    // 加上 || {} 兜底，就算某个文件加载失败，也绝不会报 undefined 错误
+    // 优雅合并，哪怕 gourds 挂了，也不会报 undefined
     window.Cake.INGREDIENTS_VEGETABLE = Object.assign(
         {},
         window.Cake.VEG_LEAFY || {},

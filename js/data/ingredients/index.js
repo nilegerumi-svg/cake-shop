@@ -18,17 +18,17 @@
     for (const path of ING_MODULES) {
         try {
             await import(path);
+            console.log(`✅ [Ingredients] 成功加载: ${path}`);
         } catch (err) {
-            // 👈 终极报错：直接把罪魁祸首的名字喊出来！
-            const errMsg = `❌ [Ingredients] 致命错误！子模块加载失败 -> ${path}\n原因: ${err.message}`;
-            console.error(errMsg);
-            throw new Error(errMsg);
+            // 👈 修改：只警告，不 throw 抛出死机！
+            console.warn(`⚠️ [Ingredients] 子模块加载失败，已跳过 -> ${path}`);
+            console.warn(`原因: ${err.message || err}`);
         }
     }
 
     window.Cake = window.Cake || {};
     
-    // 合并各个子模块的数据
+    // 合并各个子模块的数据（全部都加上 || {} 兜底）
     window.Cake.INGREDIENTS = Object.assign(
         {},
         window.Cake.INGREDIENTS_MEAT || {},

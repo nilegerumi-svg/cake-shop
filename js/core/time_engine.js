@@ -77,6 +77,16 @@
         if (Cake.Social && typeof Cake.Social.checkDailyMeet === 'function') {
             Cake.Social.checkDailyMeet(state);
         }
+
+        // 👈 新增：跨天季节检测
+        const newSeasonId = Cake.getSeasonByDay(state.time.day);
+        if (!state.time.season || state.time.season !== newSeasonId) {
+            state.time.season = newSeasonId;
+            const seasonData = Cake.SEASONS[newSeasonId];
+            if (Cake.addLog) {
+                Cake.addLog(`✨ 季节更替！现在是【${seasonData.name}季】 ${seasonData.emoji} —— ${seasonData.desc}`, 'success');
+            }
+        }
     };
 
     // 处理订单送达逻辑

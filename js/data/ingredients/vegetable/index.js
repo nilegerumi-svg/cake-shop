@@ -5,7 +5,7 @@
     const VEG_MODULES = [
         './leafy.js',
         './roots.js',
-        './gourd.js',
+        './gourd.js',      // 修正：原来写的是 gourds.js，实际文件是 gourd.js
         './mushrooms.js',
         './monitor.js'
     ];

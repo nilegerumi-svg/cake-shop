@@ -4,37 +4,20 @@
 
     window.Cake = window.Cake || {};
 
-    // ⚠️ 这是极早期兜底模板。
-    // 完整默认状态在 state.js 的 defaultState()（含 totalEarned / totalCakes / hour / minute / achievements 等）。
-    // shared.js 会在引擎启动时用 defaultState() 或存档覆盖它，因此这里字段少不会影响游戏。
-    const DEFAULT_STATE = Object.freeze({
-        version: 1,
-        day: 1,
-        money: 500,
-        energy: 100,
-        reputation: 20,
-        shopLevel: 1,
-        decoration: 0,
-        priceRate: 1.0,
-        hour: 8,
-        minute: 0,
-        avatar: '👩‍🍳',
-        shopName: '甜蜜小屋',
-        recipes: {},
-        cakes: {},
-        ingredients: {},
-        characters: {},
-        log: [],
-        achievements: {},
-        totalCakes: 0,
-        totalEarned: 0,
-    });
-
     let _state = null;
+
+    // 我们的统一存档 Key
+    const SAVE_KEY = 'cake_shop_save';
 
     const ensureState = () => {
         if (!_state) {
-            _state = JSON.parse(JSON.stringify(DEFAULT_STATE));
+            // 安全兜底：如果没初始化，调用 schema.js 生成一个全新状态
+            if (typeof window.Cake.createEmptyState === 'function') {
+                _state = window.Cake.createEmptyState();
+            } else {
+                console.error('❌ [Store] 找不到 createEmptyState，请检查 schema.js 是否加载！');
+                _state = { version: 1, money: 100, time: { day: 1, hour: 8, minute: 0 } };
+            }
         }
         return _state;
     };
@@ -45,7 +28,49 @@
         },
         set state(val) {
             _state = val;
+            // 设置状态时自动保存一次
+            window.Cake.saveState();
         },
-        DEFAULT_STATE,
+        
+        // 暴露存档 Key 给 render.js 使用
+        SAVE_KEY: SAVE_KEY,
+
+        // 👈 统一的保存接口
+        saveState: function () {
+            if (!_state) return;
+            try {
+                localStorage.setItem(SAVE_KEY, JSON.stringify(_state));
+            } catch (e) {
+                console.warn('⚠️ [Store] 存档保存失败:', e);
+            }
+        },
+
+        // 👈 统一的读取接口 (供 host/main.js 调用)
+        loadStateFromStorage: function () {
+            try {
+                const raw = localStorage.getItem(SAVE_KEY);
+                if (raw) {
+                    const parsed = JSON.parse(raw);
+                    // 用 migrate.js 洗一遍数据，保证兼容旧版本
+                    if (typeof window.Cake.migrateState === 'function') {
+                        _state = window.Cake.migrateState(parsed);
+                    } else {
+                        _state = parsed;
+                    }
+                } else {
+                    _state = ensureState();
+                }
+            } catch (e) {
+                console.warn('⚠️ [Store] 存档读取失败，将使用新存档:', e);
+                _state = ensureState();
+            }
+            return _state;
+        }
     };
+
+    // 为了兼容之前代码里用到的 Cake.saveState() 和 Cake.loadStateFromStorage()，将它们提升到最外层
+    window.Cake.saveState = window.Cake.store.saveState;
+    window.Cake.loadStateFromStorage = window.Cake.store.loadStateFromStorage;
+
+    console.log('📦 [Store] 状态容器与存档系统装载完毕');
 })();

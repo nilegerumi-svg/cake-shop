@@ -12,82 +12,139 @@
             border-left: 4px solid var(--pink-400); padding-left: 8px;
             display: flex; align-items: center; gap: 6px;
         }
+        .fatal-error { background: #ff4d4f; color: white; padding: 20px; border-radius: 10px; font-family: monospace; font-size: 14px; word-break: break-all; margin: 20px; }
     </style>
 </head>
 <body>
     <div class="game-body" style="padding-top: 10px;">
         <div class="back-btn" onclick="history.back()">← 返回图鉴大厅</div>
-        <div class="content" id="content"></div>
+        <div class="content" id="content">
+            <div class="muted text-center" style="margin-top:50px;">⏳ 正在等待引擎数据...</div>
+        </div>
     </div>
+    
     <script type="module">
-        const Cake = window.parent.Cake || window.Cake;
-        if (!Cake) return;
+        let Cake = null;
+        let checkCount = 0;
+
+        // 👈 1. 引擎轮询等待器
+        function waitForEngine() {
+            Cake = window.parent.Cake || window.Cake;
+            // 必须确保引擎、存档、菜谱数据都加载完毕
+            if (Cake && Cake.store && Cake.store.state && Cake.RECIPES && Object.keys(Cake.RECIPES).length > 0) {
+                renderPage();
+            } else {
+                checkCount++;
+                if (checkCount < 100) {
+                    setTimeout(waitForEngine, 100);
+                } else {
+                    showFatalError('游戏引擎或菜谱数据加载超时！请刷新页面。');
+                }
+            }
+        }
+
+        // 👈 2. 满屏红字报错器
+        function showFatalError(msg) {
+            const content = document.getElementById('content');
+            if (content) {
+                content.innerHTML = `<div class="fatal-error"><h3>🚨 致命错误</h3><div>${msg}</div></div>`;
+            }
+        }
 
         const SIZE_NAMES = { small: '小尺寸 / 单客', medium: '中尺寸 / 分享', large: '大尺寸 / 庆典' };
 
         const render = () => {
-            const state = Cake.store.state;
-            const contentEl = document.getElementById('content');
+            try {
+                const state = Cake.store.state;
+                const contentEl = document.getElementById('content');
 
-            // 过滤烘焙配方
-            const filtered = Object.entries(Cake.RECIPES).filter(([key, r]) => r.skill === 'bakery');
+                // 过滤烘焙配方
+                const filtered = Object.entries(Cake.RECIPES).filter(([key, r]) => r.skill === 'bakery');
 
-            // 按尺寸分组
-            const grouped = {};
-            filtered.forEach(([key, r]) => {
-                const groupKey = r.size || 'other';
-                if (!grouped[groupKey]) grouped[groupKey] = [];
-                grouped[groupKey].push([key, r]);
-            });
-
-            let html = '';
-            const order = ['small', 'medium', 'large', 'other'];
-
-            order.forEach(groupKey => {
-                const groupItems = grouped[groupKey];
-                if (!groupItems || groupItems.length === 0) return;
-
-                const groupName = SIZE_NAMES[groupKey] || groupKey;
-                html += `<div class="group-title">📌 ${groupName}</div>`;
-                html += `<div class="grid-2">`;
-
-                groupItems.forEach(([recipeKey, recipe]) => {
-                    const isUnlocked = !!state.unlockedRecipes[recipeKey];
-                    const ingHtml = Cake.ingredientTags ? Cake.ingredientTags(recipe.ing) : '';
-                    const costMoney = 50;
-                    const canResearch = !isUnlocked && state.money >= costMoney && state.energy >= 15;
-
-                    html += `
-                        <div class="item-card" style="${isUnlocked ? 'border-color: var(--pink-300); background: #fffafb;' : ''}">
-                            <span class="item-emoji">${recipe.emoji || '🍰'}</span>
-                            <span class="item-name">${recipe.name || recipeKey}</span>
-                            <span class="item-desc" style="color:var(--text-muted); font-size:12px; margin: 4px 0;">⚡ ${recipe.energy}</span>
-                            <div class="ing-row">${ingHtml}</div>
-                            <div style="margin-top: 15px; width: 100%;">
-                                ${isUnlocked 
-                                    ? `<span class="ing-tag ok" style="width: 100%; justify-content: center;">✅ 已掌握</span>` 
-                                    : `<button type="button" class="small gold" style="width: 100%;" 
-                                            ${canResearch ? `onclick="doResearch('${recipeKey}')"` : 'disabled'}>
-                                            ${canResearch ? `🔬 研发 (💰${costMoney} ⚡15)` : '❌ 资源不足'}
-                                       </button>`
-                                }
-                            </div>
-                        </div>
-                    `;
+                // 按尺寸分组
+                const grouped = {};
+                filtered.forEach(([key, r]) => {
+                    const groupKey = r.size || 'other';
+                    if (!grouped[groupKey]) grouped[groupKey] = [];
+                    grouped[groupKey].push([key, r]);
                 });
-                html += `</div>`;
-            });
 
-            contentEl.innerHTML = html || '<div class="muted text-center">暂无烘焙配方</div>';
+                let html = '';
+                const order = ['small', 'medium', 'large', 'other'];
+
+                order.forEach(groupKey => {
+                    const groupItems = grouped[groupKey];
+                    if (!groupItems || groupItems.length === 0) return;
+
+                    const groupName = SIZE_NAMES[groupKey] || groupKey;
+                    html += `<div class="group-title">📌 ${groupName}</div>`;
+                    html += `<div class="grid-2">`;
+
+                    groupItems.forEach(([recipeKey, recipe]) => {
+                        const isUnlocked = !!state.unlockedRecipes[recipeKey];
+                        // 👈 防御：防止 ingredientTags 未加载时报错
+                        const ingHtml = (typeof Cake.ingredientTags === 'function') 
+                                        ? Cake.ingredientTags(recipe.ing) 
+                                        : '';
+                        const costMoney = 50;
+                        const canResearch = !isUnlocked && state.money >= costMoney && state.energy >= 15;
+
+                        html += `
+                            <div class="item-card" style="${isUnlocked ? 'border-color: var(--pink-300); background: #fffafb;' : ''}">
+                                <span class="item-emoji">${recipe.emoji || '🍰'}</span>
+                                <span class="item-name">${recipe.name || recipeKey}</span>
+                                <span class="item-desc" style="color:var(--text-muted); font-size:12px; margin: 4px 0;">⚡ ${recipe.energy}</span>
+                                <div class="ing-row">${ingHtml}</div>
+                                <div style="margin-top: 15px; width: 100%;">
+                                    ${isUnlocked 
+                                        ? `<span class="ing-tag ok" style="width: 100%; justify-content: center;">✅ 已掌握</span>` 
+                                        : `<button type="button" class="small gold" style="width: 100%;" 
+                                                ${canResearch ? `onclick="window.doResearch('${recipeKey}')"` : 'disabled'}>
+                                                ${canResearch ? `🔬 研发 (💰${costMoney} ⚡15)` : '❌ 资源不足'}
+                                           </button>`
+                                    }
+                                </div>
+                            </div>
+                        `;
+                    });
+                    html += `</div>`;
+                });
+
+                contentEl.innerHTML = html || '<div class="muted text-center" style="margin-top:30px;">暂无已配置的烘焙配方</div>';
+            } catch (err) {
+                console.error('❌ [Bakery] 渲染崩溃:', err);
+                showFatalError(`渲染过程发生异常：<br>${err.message}`);
+            }
         };
 
+        // 👈 3. 安全执行研发动作
         window.doResearch = (recipeKey) => {
-            const res = Cake.researchRecipe(recipeKey);
-            if (res && res.success === false) alert(res.message);
-            else render();
+            try {
+                if (typeof Cake.researchRecipe !== 'function') {
+                    return alert('研发功能未加载');
+                }
+                const res = Cake.researchRecipe(recipeKey);
+                if (res && res.success === false) {
+                    alert(res.message);
+                } else {
+                    render(); // 成功后重绘，按钮状态会变成“已掌握”
+                }
+            } catch (err) {
+                console.error('研发失败:', err);
+                alert('研发发生异常: ' + err.message);
+            }
         };
 
-        if (typeof Cake.initPage === 'function') Cake.initPage('recipe', render, false);
+        function renderPage() {
+            if (typeof Cake.initPage === 'function') {
+                Cake.initPage('recipe', render, false);
+            } else {
+                render();
+            }
+        }
+
+        // 启动
+        waitForEngine();
     </script>
 </body>
 </html>

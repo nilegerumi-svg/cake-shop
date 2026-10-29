@@ -1,15 +1,27 @@
 // js/actions/entertainment/index.js
-
-// 区块自治：这里只 import 自己区块内的文件，不做任何全局登记。
-import './map/index.js';        // → monitor + town + location-actions
-import './common_events.js';
-import './rest/index.js';       // → nap + sleep + monitor + town/events
-import './walk.js';
-import './shop/index.js';       // 👈 核心新增：把刚刚做好的地图商店引进来！
-
-(() => {
+(async () => {
     'use strict';
+    console.log('🎮 [娱乐系统] 开始逐个加载子模块...');
 
+    const ENT_MODULES = [
+        './map/index.js',
+        './common_events.js',
+        './rest/index.js',
+        './walk.js',
+        './shop/index.js'
+    ];
+
+    for (const path of ENT_MODULES) {
+        try {
+            await import(path);
+        } catch (err) {
+            // 👈 终极报错放大镜：直接告诉你到底是谁路径不对/404了！
+            console.warn(`⚠️ [Entertainment] 致命错误！子模块加载失败 -> ${path}`);
+            console.warn(`原因: ${err.message}`);
+        }
+    }
+
+    // ==== 下面是原有的挂载逻辑 ====
     const getCake = () => {
         try {
             if (window.parent && window.parent !== window && window.parent.Cake) {
@@ -31,7 +43,6 @@ import './shop/index.js';       // 👈 核心新增：把刚刚做好的地图�
     }
     Cake.__entertainmentLoaded = true;
 
-    // 分组命名空间（纯糖，非必需，也不参与任何全局注册）
     Cake.Entertainment = {
         get rest()          { return Cake.rest; },
         get sleep()         { return Cake.sleep; },
@@ -42,11 +53,10 @@ import './shop/index.js';       // 👈 核心新增：把刚刚做好的地图�
         get actions()       { return Cake.ACTION_TYPES; },
         get events()        { return Cake.COMMON_WALK_EVENTS; },
         
-        // 👈 新增：把商城暴露给外部调用
-        get townShops()     { return Cake.TOWN_SHOPS; },      // 获取地图上有哪些商店
-        get getShopItems()  { return Cake.getShopItems; },    // 获取某商店卖什么
-        get orderItem()     { return Cake.orderItem; }        // 订购商品
+        get townShops()     { return Cake.TOWN_SHOPS; },      
+        get getShopItems()  { return Cake.getShopItems; },    
+        get orderItem()     { return Cake.orderItem; }        
     };
 
-    console.log('🎮 娱乐与外出系统（含地图商城）已装载');
+    console.log('🎮 娱乐与外出系统（含地图商城）装载完毕');
 })();

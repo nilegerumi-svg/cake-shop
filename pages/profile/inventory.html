@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎒 食材仓库</title>
+    <link rel="stylesheet" href="../../css/styles.css">
+    <style>
+        .back-btn { display: inline-block; margin-bottom: 15px; color: var(--pink-600); cursor: pointer; font-weight: bold; }
+        .inv-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; }
+    </style>
+</head>
+<body>
+    <div class="game-body" style="padding-top: 10px;">
+        <div class="back-btn" onclick="history.back()">← 返回个人中心</div>
+        <div class="content" id="content"></div>
+    </div>
+
+    <script type="module">
+        const Cake = window.parent.Cake || window.Cake;
+        if (!Cake) return;
+
+        const render = () => {
+            const state = Cake.store.state;
+            const contentEl = document.getElementById('content');
+            
+            if (!state.inventory || state.inventory.length === 0) {
+                contentEl.innerHTML = '<div class="card text-center muted">仓库空空如也，快去采购吧！</div>';
+                return;
+            }
+
+            // 按 ID 汇总
+            const summary = {};
+            state.inventory.forEach(item => {
+                if (!summary[item.id]) {
+                    summary[item.id] = { count: 0, rotten: 0, data: Cake.INGREDIENTS[item.id] || { name: item.id, emoji: '❓' } };
+                }
+                summary[item.id].count++;
+                if (item.isRotten) summary[item.id].rotten++;
+            });
+
+            const cards = Object.values(summary).map(item => {
+                const isRotten = item.rotten > 0;
+                return `
+                    <div class="item-card" style="${isRotten ? 'border-color: var(--red-line); background: #fff0f0;' : ''}">
+                        <span class="item-emoji">${item.data.emoji}</span>
+                        <span class="item-name">${item.data.name}</span>
+                        <span class="item-meta">数量：${item.count}</span>
+                        ${isRotten ? `<span class="item-meta" style="color: var(--red-lack); font-weight: bold;">已腐烂: ${item.rotten}</span>` : ''}
+                    </div>
+                `;
+            }).join('');
+
+            contentEl.innerHTML = `
+                <div class="card">
+                    <h2>🎒 食材仓库</h2>
+                    <p class="muted" style="margin-bottom: 15px;">食材会随时间过期变质，请尽快使用。</p>
+                    <div class="inv-grid">${cards}</div>
+                </div>
+            `;
+        };
+
+        Cake.initPage('profile', render, false);
+    </script>
+</body>
+</html>

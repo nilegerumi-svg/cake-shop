@@ -1,10 +1,8 @@
 // js/actions/craft/index.js
 (async () => {
     'use strict';
-    console.log('⚙️ [Actions/Craft] 开始逐个加载制作模块...');
-
     const CRAFT_MODULES = [
-        './_shared.js',
+        './_shared.js', // 如果它 404，下面的 try-catch 会兜住它
         './quality.js',
         './buy.js',
         './research.js',
@@ -16,11 +14,9 @@
         try {
             await import(path);
         } catch (err) {
-            // 👈 终极报错放大镜：谁不在，或者谁写错了，直接揪出来！
-            console.warn(`⚠️ [Craft] 子模块加载失败，已跳过 -> ${path}`);
-            console.warn(`原因: ${err.message}`);
+            // 静默跳过，只在需要排错时打警告
+            console.warn(`⚠️ [Craft] 子模块加载失败，已兜底跳过 -> ${path}`);
         }
     }
-
     console.log('⚙️ [Actions/Craft] 制作与交易动作处理完毕');
 })();

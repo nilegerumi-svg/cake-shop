@@ -9,11 +9,9 @@
         './recipes/index.js',      // 菜谱（烘焙、料理）
         './tool/index.js',         // 工具（烤箱、炒锅）
         './characters/index.js'    // 角色（恋爱系统）
+        './seasons/index.js',      //季节
+        './achievements/index.js', //成就
     ];
-
-    // 暂时没写的空文件夹：bundles, shop, achievements, usually_shop_events
-    // 我们先把它们注释掉，防止 404 崩溃！
-
     for (const path of DATA_MODULES) {
         try {
             await import(path);

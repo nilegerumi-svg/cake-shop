@@ -1,10 +1,9 @@
-// js/data/recipes/bakery/medium/index.js
 (async () => {
     'use strict';
     try {
-        await import('./cakes.js');
+        await import('./cake.js');
     } catch (err) {
-        console.warn('⚠️ [Bakery/Medium] cakes.js 缺失，已兜底');
+        console.warn('⚠️ [Bakery/Medium] cake.js 缺失，已兜底');
     }
 
     window.Cake = window.Cake || {};

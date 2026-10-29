@@ -5,6 +5,7 @@ import './map/index.js';        // → monitor + town + location-actions
 import './common_events.js';
 import './rest/index.js';       // → nap + sleep + monitor + town/events
 import './walk.js';
+import './shop/index.js';       // 👈 核心新增：把刚刚做好的地图商店引进来！
 
 (() => {
     'use strict';
@@ -30,7 +31,7 @@ import './walk.js';
     }
     Cake.__entertainmentLoaded = true;
 
-    // 可选：分组命名空间（纯糖，非必需，也不参与任何全局注册）
+    // 分组命名空间（纯糖，非必需，也不参与任何全局注册）
     Cake.Entertainment = {
         get rest()          { return Cake.rest; },
         get sleep()         { return Cake.sleep; },
@@ -40,7 +41,12 @@ import './walk.js';
         get regions()       { return Cake.REGIONS; },
         get actions()       { return Cake.ACTION_TYPES; },
         get events()        { return Cake.COMMON_WALK_EVENTS; },
+        
+        // 👈 新增：把商城暴露给外部调用
+        get townShops()     { return Cake.TOWN_SHOPS; },      // 获取地图上有哪些商店
+        get getShopItems()  { return Cake.getShopItems; },    // 获取某商店卖什么
+        get orderItem()     { return Cake.orderItem; }        // 订购商品
     };
 
-    console.log('🎮 娱乐与外出系统已装载');
+    console.log('🎮 娱乐与外出系统（含地图商城）已装载');
 })();

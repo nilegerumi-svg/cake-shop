@@ -3,9 +3,11 @@
     'use strict';
 
     const path = window.location.pathname || '';
-    const isHome = path.includes('home.html');
+    
+    // 👈 核心修复：只要路径包含 pages/home 或者 home.html，就认定为主页
+    const isHome = path.includes('pages/home') || path.includes('home.html');
 
-    // 统一收尾：开始页需要关闭 loading 屏，iframe 页不需要（父页面 monitor.js 管）
+    // 统一收尾：开始页需要关闭 loading 屏，iframe 页不需要（父页面 monitor 管）
     const complete = () => {
         if (!isHome && typeof window.appLoadingComplete === 'function') {
             window.appLoadingComplete();

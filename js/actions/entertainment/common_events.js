@@ -34,7 +34,7 @@
             state.shop.stats.reputation = Math.max(0, state.shop.stats.reputation + evt.rep);
         }
 
-        // 3. 结算金钱（新增：支持你 home 里的捡硬币事件）
+        // 3. 结算金钱
         if (evt.money) {
             state.money = Math.max(0, state.money + evt.money);
         }
@@ -54,9 +54,19 @@
                 }
             }
         }
+
+        // 👈 5. 结算好感度（甩锅给社交引擎）
+        if (evt.aff) {
+            if (Cake.Social && typeof Cake.Social.addAffection === 'function') {
+                Cake.Social.addAffection(evt.aff);
+            } else {
+                // 如果社交引擎还没建好，这里先做个兜底，防止报错
+                console.warn('⚠️ [Events] 社交引擎未加载，好感度结算被跳过。');
+            }
+        }
     };
 
-    // 👈 保留你写的这个辅助函数（虽然 walk.js 用的是 MapMonitor，但这可以作为备用抽取器）
+    // 👈 保留你写的这个辅助函数
     window.Cake.triggerRandomEvent = function () {
         const Cake = window.Cake;
         const state = Cake.store.state;

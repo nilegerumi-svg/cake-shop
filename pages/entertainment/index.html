@@ -6,170 +6,100 @@
     <title>娱乐与外出</title>
     <link rel="stylesheet" href="../../css/styles.css">
     <style>
-        body { background: transparent; font-family: sans-serif; padding: 16px; display: flex; justify-content: center; color: #4a3b3f; margin: 0; }
-        .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(255,182,193,0.2); text-align: center; width: 100%; max-width: 340px; }
-        .energy-box { background: #fff9fa; padding: 10px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #ffd1dc; font-weight: bold; }
-        h2 { color: #ff6b81; margin: 0 0 12px 0; font-size: 16px; text-align: left; border-left: 4px solid #ffb6c1; padding-left: 8px; }
-        .menu-btn {
-            display: flex; align-items: center; justify-content: space-between;
-            width: 100%; background: #f0faf8; color: #4a3b3f; border: 1px solid #a8e6cf;
-            padding: 16px; border-radius: 12px; font-size: 16px; font-weight: bold;
-            cursor: pointer; transition: transform 0.1s; margin-bottom: 12px;
-            text-decoration: none; box-sizing: border-box;
+        body { background: transparent; padding: 16px; display: flex; justify-content: center; margin: 0; }
+        .hub-card { background: white; padding: 20px; border-radius: 16px; box-shadow: 0 4px 10px rgba(255,182,193,0.2); text-align: center; width: 100%; max-width: 340px; }
+        .energy-box { background: #fff9fa; padding: 12px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #ffd1dc; font-weight: bold; color: var(--pink-600); font-size: 16px; }
+        
+        .nav-card { 
+            display: flex; align-items: center; justify-content: space-between; 
+            width: 100%; background: #f0faf8; border: 1px solid #a8e6cf; 
+            padding: 15px; border-radius: 12px; font-size: 16px; font-weight: bold; 
+            cursor: pointer; transition: transform 0.1s; margin-bottom: 12px; 
+            box-sizing: border-box; color: var(--text-main); text-align: left;
         }
-        .menu-btn:active { transform: scale(0.98); background: #e0f5f0; }
-        .menu-btn.rest { background: #fff0f5; border-color: #ffb6c1; }
-        .menu-btn.disabled { background: #f5f5f5; border-color: #ddd; color: #aaa; pointer-events: none; }
-        .menu-icon { font-size: 18px; }
-        .menu-sub { font-size: 12px; color: #888; font-weight: normal; margin-top: 4px; }
+        .nav-card:active { transform: scale(0.98); }
+        .nav-card.rest { background: #fff0f5; border-color: #ffb6c1; }
+        .nav-card.disabled { background: #f5f5f5; border-color: #ddd; color: #aaa; pointer-events: none; }
+        .nav-icon { font-size: 24px; margin-bottom: 4px; display: block; }
+        .nav-sub { font-size: 12px; color: var(--text-muted); font-weight: normal; margin-top: 4px; }
+        .arrow { color: var(--pink-300); font-size: 20px; }
     </style>
 </head>
 <body>
-    <div class="card" id="mainCard">
-        <div class="energy-box">⚡ 当前体力：<span id="energy">--</span>/100</div>
-        <h2>🎮 休息区</h2>
-        <button id="btnRest" class="menu-btn rest" type="button">
-            <div style="text-align: left;">
-                <div class="menu-icon">😴 休息一下</div>
-                <div class="menu-sub">恢复体力，耗时 1 小时</div>
+    <div class="hub-card" id="mainCard">
+        <div class="energy-box">⚡ 当前精力：<span id="energy">--</span>/<span id="maxEnergy">--</span></div>
+        
+        <h3 style="margin-bottom: 12px; text-align: left; border-left: 4px solid var(--pink-300); padding-left: 8px;">🎮 休息区</h3>
+        <div id="btnRest" class="nav-card rest">
+            <div>
+                <span class="nav-icon">😴 小憩一会</span>
+                <div class="nav-sub">恢复 30 点精力，耗时 1 小时</div>
             </div>
-            <span style="color: #ffb6c1;">▶</span>
-        </button>
-        <h2 style="margin-top: 24px;">🛴 外出区</h2>
-        <button id="btnGoMap" class="menu-btn" type="button">
-            <div style="text-align: left;">
-                <div class="menu-icon">🗺️ 外出地图</div>
-                <div class="menu-sub">打开总地图，选择区域去散步</div>
+            <span class="arrow">▶</span>
+        </div>
+
+        <h3 style="margin: 20px 0 12px 0; text-align: left; border-left: 4px solid #a8e6cf; padding-left: 8px;">🛴 外出区</h3>
+        <div id="btnGoMap" class="nav-card">
+            <div>
+                <span class="nav-icon">🗺️ 城镇地图</span>
+                <div class="nav-sub">打开地图，选择地点去散步购物</div>
             </div>
-            <span style="color: #a8e6cf;">▶</span>
-        </button>
+            <span class="arrow" style="color: #a8e6cf;">▶</span>
+        </div>
     </div>
 
-    <script>
-    (() => {
-        'use strict';
+    <script type="module">
+        // 直接使用最新的 Cake
+        const Cake = window.parent.Cake || window.Cake;
+        if (!Cake) return;
 
         const $ = (id) => document.getElementById(id);
+        const num = (v, fallback = 0) => Number.isFinite(Number(v)) ? Number(v) : fallback;
 
-        let G = null;
-        let tries = 0;
-        const MAX_TRIES = 100;      // 100 × 100ms = 10s
-        const UI_INTERVAL = 500;
-        let uiTimer = null;
-
-        const num = (v, fallback = 0) => {
-            const n = Number(v);
-            return Number.isFinite(n) ? n : fallback;
-        };
-
-        const getEngine = () => {
-            try {
-                if (window.parent && window.parent !== window && window.parent.Game) {
-                    return window.parent.Game;
-                }
-            } catch (_) { /* 跨域 */ }
-            return window.Game || null;
-        };
-
-        /* ==================== UI 刷新 ==================== */
-
+        // 刷新 UI 状态
         const updateUI = () => {
-            const s = G && G.state;
-            if (!s) return;
+            const state = Cake.store.state;
+            if (!state) return;
 
-            const energy = Math.max(0, Math.min(100, num(s.energy, 0)));
-            const energyEl = $('energy');
-            if (energyEl) energyEl.innerText = energy;
+            const energy = num(state.energy, 0);
+            const maxEnergy = num(state.maxEnergy, 100);
 
-            const btnRest = $('btnRest');
-            if (btnRest) btnRest.classList.toggle('disabled', energy >= 100);
+            $('energy').innerText = energy;
+            $('maxEnergy').innerText = maxEnergy;
 
-            const btnGoMap = $('btnGoMap');
-            if (btnGoMap) btnGoMap.classList.toggle('disabled', energy < 8);
+            // 精力满了不能休息
+            $('btnRest').classList.toggle('disabled', energy >= maxEnergy);
+            // 精力太少不能出门（去地图至少需要 8 点）
+            $('btnGoMap').classList.toggle('disabled', energy < 8);
         };
 
-        const startUiLoop = () => {
-            if (uiTimer) return;
-            updateUI();
-            uiTimer = setInterval(updateUI, UI_INTERVAL);
-        };
-
-        const stopUiLoop = () => {
-            if (uiTimer) { clearInterval(uiTimer); uiTimer = null; }
-        };
-
-        /* ==================== 事件绑定 ==================== */
-
-        const bindClick = () => {
-            const btnRest = $('btnRest');
-            if (btnRest && !btnRest.dataset.bound) {
-                btnRest.dataset.bound = 'true';
-                btnRest.addEventListener('click', () => {
-                    const engine = G || getEngine();
-                    if (!engine || !engine.state) return;
-                    if (num(engine.state.energy, 0) >= 100) return;
-
-                    try {
-                        if (typeof engine.rest !== 'function') throw new Error('找不到 G.rest 方法');
-                        engine.rest();
-                        setTimeout(updateUI, 100);
-                    } catch (err) {
-                        alert('❌ 休息报错：\n' + (err && err.message || err));
-                    }
-                });
-            }
-
-            const btnGoMap = $('btnGoMap');
-            if (btnGoMap && !btnGoMap.dataset.bound) {
-                btnGoMap.dataset.bound = 'true';
-                btnGoMap.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    const engine = G || getEngine();
-                    if (!engine || !engine.state) return;
-                    if (num(engine.state.energy, 0) < 8) return;
-
-                    // 进入「总地图」（选择区域）
-                    try {
-                        if (window.parent && window.parent !== window &&
-                            window.parent.HostRouter &&
-                            typeof window.parent.HostRouter.navigateTo === 'function') {
-                            window.parent.HostRouter.navigateTo('pages/entertainment/map/index.html');
-                            return;
-                        }
-                    } catch (_) { /* 跨域或未定义，走兜底 */ }
-
-                    window.location.href = 'map/index.html';
-                });
+        // 绑定事件
+        $('btnRest').onclick = () => {
+            if (num(Cake.store.state.energy, 0) >= num(Cake.store.state.maxEnergy, 100)) return;
+            
+            // 调用底层的 nap 方法
+            if (typeof Cake.nap === 'function') {
+                Cake.nap();
+                updateUI(); // 立即刷新一次
+            } else {
+                alert('❌ 找不到休息功能');
             }
         };
 
-        /* ==================== 启动 ==================== */
-
-        const boot = () => {
-            const engine = getEngine();
-
-            if (engine && engine.state) {
-                G = engine;
-                window.Game = engine;
-                bindClick();
-                startUiLoop();
-                return;
-            }
-
-            if (++tries >= MAX_TRIES) {
-                const box = $('energy');
-                if (box) box.innerText = '--';
-                console.error('❌ [娱乐页] 等待父页面 Game 超时');
-                return;
-            }
-
-            setTimeout(boot, 100);
+        $('btnGoMap').onclick = () => {
+            if (num(Cake.store.state.energy, 0) < 8) return;
+            // 同文件夹下的 map 目录
+            window.location.href = 'map/index.html'; 
         };
 
-        window.addEventListener('pagehide', stopUiLoop);
-
-        boot();
-    })();
+        // 初始化
+        if (typeof Cake.initPage === 'function') {
+            Cake.initPage('fun', () => {
+                updateUI();
+                // 定时刷新，防止时间流逝导致精力变化但页面不更新
+                setInterval(updateUI, 1000);
+            }, false);
+        }
     </script>
 </body>
 </html>

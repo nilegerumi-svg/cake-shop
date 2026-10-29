@@ -5,15 +5,16 @@ window.Cake = window.Cake || {};
     'use strict';
     const Cake = window.Cake;
 
+    // 👈 修改：href 指向 pages/ 目录，配合 iframe 使用
     const NAV_ITEMS = [
-        { key: 'home',    label: '🏠 主页', href: 'game.html' },
-        { key: 'shop',    label: '🏪 店铺', href: 'shop.html' },
-        { key: 'bake',    label: '🧂 烘焙', href: 'bake.html' },
-        { key: 'buy',     label: '🛒 采购', href: 'buy.html' },
-        { key: 'recipe',  label: '🍖 配方', href: 'recipe.html' },
-        { key: 'love',    label: '💕 缘分', href: 'love.html' },
-        { key: 'fun',     label: '🎮 娱乐', href: 'entertainment/index.html' },
-        { key: 'profile', label: '⭐ 我的', href: 'profile.html' },
+        { key: 'home',    label: '🏠 主页', href: 'pages/home.html' },
+        { key: 'shop',    label: '🏪 店铺', href: 'pages/shop.html' },
+        { key: 'bake',    label: '🧂 烘焙', href: 'pages/bake.html' },
+        { key: 'buy',     label: '🛒 采购', href: 'pages/buy.html' },
+        { key: 'recipe',  label: '🍖 配方', href: 'pages/recipe.html' },
+        { key: 'love',    label: '💕 缘分', href: 'pages/love.html' },
+        { key: 'fun',     label: '🎮 娱乐', href: 'pages/entertainment/index.html' },
+        { key: 'profile', label: '⭐ 我的', href: 'pages/profile.html' },
     ];
 
     const isInIframe = window.self !== window.top;
@@ -39,11 +40,11 @@ window.Cake = window.Cake || {};
 
         el.innerHTML = `
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                <div class="header-left" style="display: flex; align-items: center; gap: 6px; font-weight: bold; font-size: 15px; color: #d6336c;">
+                <div class="header-left" style="display: flex; align-items: center; gap: 6px; font-weight: bold; font-size: 15px; color: var(--pink-600);">
                     <span class="shop-emoji" style="font-size: 20px;">👩‍🍳</span>
                     <span>${esc(state.shop?.name ?? '甜蜜小屋')}</span>
                 </div>
-                <div class="header-stats" style="display: flex; gap: 8px; font-size: 13px; color: #555; font-weight: bold;">
+                <div class="header-stats" style="display: flex; gap: 8px; font-size: 13px; color: var(--text-mid); font-weight: bold;">
                     <span>📅 ${num(state.time?.day, 1)}天 ${timeStr}</span>
                     <span>💰 ${num(state.money, 100)}</span>
                     <span>🧹 ${num(state.shop?.stats?.cleanliness, 100)}%</span>
@@ -51,10 +52,10 @@ window.Cake = window.Cake || {};
             </div>
             <div class="energy-wrap" style="display: flex; align-items: center; gap: 8px; font-size: 12px;">
                 <span>⚡</span>
-                <div class="energy-bar" style="flex: 1; height: 6px; background: #ffe4e1; border-radius: 4px; overflow: hidden;">
-                    <div class="energy-bar-fill" style="height: 100%; width: ${pct}%; background: #ff8fa3;"></div>
+                <div class="energy-bar" style="flex: 1; height: 6px; background: var(--pink-100); border-radius: 4px; overflow: hidden;">
+                    <div class="energy-bar-fill" style="height: 100%; width: ${pct}%; background: var(--pink-400);"></div>
                 </div>
-                <span style="color: #888; width: 45px; text-align: right;">${pct}/${state.maxEnergy || 100}</span>
+                <span style="color: var(--text-muted); width: 45px; text-align: right;">${pct}/${state.maxEnergy || 100}</span>
             </div>`;
     };
 
@@ -66,9 +67,15 @@ window.Cake = window.Cake || {};
         el.innerHTML = NAV_ITEMS.map((item) => {
             const isActive = item.key === key;
             const activeStyle = isActive
-                ? 'background: #ff8fa3; color: #ffffff; box-shadow: 0 4px 10px rgba(255,143,163,0.4); transform: translateY(-1px);'
+                ? 'background: var(--pink-400); color: #ffffff; box-shadow: 0 4px 10px rgba(255,143,163,0.4); transform: translateY(-1px);'
                 : '';
-            return `<a class="nav-btn ${isActive ? 'active' : ''}" style="${activeStyle}" href="${item.href}">${item.label}</a>`;
+            // 👈 核心修改：拦截默认跳转，让中间的主 iframe 去加载页面
+            return `<a class="nav-btn ${isActive ? 'active' : ''}" 
+                        style="${activeStyle}; cursor: pointer;" 
+                        href="javascript:void(0)" 
+                        onclick="document.getElementById('mainFrame').src='${item.href}'; Cake.initPage('${item.key}');">
+                        ${item.label}
+                    </a>`;
         }).join('');
     };
 
@@ -98,7 +105,7 @@ window.Cake = window.Cake || {};
         list.scrollTop = 0;
     };
 
-    // 👈 新增：渲染背包
+    // 👈 修改：套用你写的 .ing-tag 和 .lack 样式
     const renderInventory = () => {
         const el = Cake.$('ui-inventory');
         if (!el) return;
@@ -127,8 +134,10 @@ window.Cake = window.Cake || {};
         });
 
         const html = Object.values(summary).map(s => {
-            const rottenText = s.rotten > 0 ? `<span style="color:red; font-size:12px;">(腐烂 ${s.rotten})</span>` : '';
-            return `<span class="inv-item" style="display:inline-block; margin-right: 10px; margin-bottom: 5px; background:#f0f0f0; padding: 4px 8px; border-radius: 6px;">
+            const rottenText = s.rotten > 0 ? `<span style="font-size:11px; margin-left:2px;">(烂${s.rotten})</span>` : '';
+            // 如果有腐烂，套用 .lack（红色），否则用默认或 .ok（绿色）
+            const tagClass = s.rotten > 0 ? 'ing-tag lack' : 'ing-tag ok';
+            return `<span class="${tagClass}">
                 ${s.emoji} ${s.name} ×${s.count} ${rottenText}
             </span>`;
         }).join('');
@@ -136,7 +145,7 @@ window.Cake = window.Cake || {};
         el.innerHTML = html;
     };
 
-    // 👈 新增：渲染成品
+    // 👈 修改：套用整齐的标签和文字颜色
     const renderFoods = () => {
         const el = Cake.$('ui-foods');
         if (!el) return;
@@ -147,25 +156,26 @@ window.Cake = window.Cake || {};
             return;
         }
 
-        let html = '';
+        let html = '<div class="ing-row" style="justify-content:flex-start;">';
         for (const [recipeKey, data] of Object.entries(state.foods)) {
             const recipe = Cake.RECIPES[recipeKey];
             const name = recipe ? recipe.name : recipeKey;
             
             const parts = [];
-            if (data.perfect > 0) parts.push(`<span style="color:#ff8fa3">✨完美 ${data.perfect}</span>`);
-            if (data.good > 0) parts.push(`<span style="color:#52c41a">👍优良 ${data.good}</span>`);
-            if (data.normal > 0) parts.push(`普通 ${data.normal}`);
-            if (data.failed > 0) parts.push(`<span style="color:#888">💀失败 ${data.failed}</span>`);
+            if (data.perfect > 0) parts.push(`<span style="color:var(--pink-500)">✨完美 ${data.perfect}</span>`);
+            if (data.good > 0) parts.push(`<span style="color:var(--green-ok)">👍优良 ${data.good}</span>`);
+            if (data.normal > 0) parts.push(`<span>普通 ${data.normal}</span>`);
+            if (data.failed > 0) parts.push(`<span style="color:var(--text-muted)">💀失败 ${data.failed}</span>`);
 
             if (parts.length > 0) {
-                html += `<div class="food-item" style="margin-bottom: 5px;">
+                html += `<div class="ing-tag" style="padding: 8px 12px; background: #fff;">
                     <strong>${name}</strong>: ${parts.join(' | ')}
                 </div>`;
             }
         }
+        html += '</div>';
         
-        el.innerHTML = html || '<div class="muted">货架上还没有成品</div>';
+        el.innerHTML = html;
     };
 
     const renderAll = () => {
@@ -198,7 +208,10 @@ window.Cake = window.Cake || {};
 
     const initPage = (activeTab, renderFn, showLog = false) => {
         currentActiveTab = activeTab || 'home';
-        currentRender = typeof renderFn === 'function' ? renderFn : null;
+        // 如果是在 iframe 里调的，且没有传 renderFn，保留父页面的 currentRender（防止被意外清空）
+        if (renderFn !== undefined) {
+            currentRender = typeof renderFn === 'function' ? renderFn : null;
+        }
         const logWrap = Cake.$('logPanelWrap');
         if (logWrap) logWrap.style.display = showLog ? 'block' : 'none';
         refreshPage();

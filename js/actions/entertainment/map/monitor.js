@@ -1,13 +1,13 @@
 <script type="module">
-    // 👈 1. 移除那个容易报错的 error-handler 引入（防崩溃已由父页面的 monitor 接管）
+    // 1. 移除那个路径容易错的 error-handler（防崩溃已经由父页面的 monitor 接管）
 
-    // 2. 增加引擎就绪轮询：如果父页面没加载完，我们就等它一下
+    // 2. 全局变量与轮询等待机制
     let Cake = null;
     let checkCount = 0;
 
     function waitForEngine() {
         Cake = window.parent.Cake || window.Cake;
-        // 必须确保核心方法也挂载了才能开始渲染
+        // 必须确保核心数据方法也挂载了才能开始渲染
         if (Cake && typeof Cake.getRegionLocations === 'function') {
             initPage();
         } else {
@@ -29,6 +29,7 @@
         const grid = document.getElementById('nav-grid');
         if (!grid) return;
 
+        // 直接用 Object.entries 拿到 key 和 value，不用再通过名字反查
         grid.innerHTML = Object.entries(locations).map(([key, loc]) => {
             const isActive = (key === currentLocId);
             return `
@@ -48,6 +49,8 @@
     // === 渲染主界面 ===
     function renderUI() {
         try {
+            if (typeof Cake.getRegionLocations !== 'function') return;
+
             const locations = Cake.getRegionLocations(REGION_ID);
             if (!locations || Object.keys(locations).length === 0) {
                 console.warn('⚠️ 城镇地点数据为空！');
@@ -55,16 +58,20 @@
                 return;
             }
 
+            // 1. 重新渲染导航高亮
             renderNav(locations);
 
+            // 2. 更新地点信息卡
             const locConfig = locations[currentLocId];
             if (!locConfig) return;
 
             document.getElementById('loc-title').textContent = (locConfig.emoji || '📍') + ' ' + locConfig.name;
             document.getElementById('loc-desc').textContent = locConfig.desc || '';
 
-            // 渲染动作
-            const actions = Cake.getLocationActions(REGION_ID, currentLocId) || [];
+            // 3. 渲染动作按钮
+            const actions = (typeof Cake.getLocationActions === 'function') 
+                ? Cake.getLocationActions(REGION_ID, currentLocId) 
+                : [];
             const actionsGrid = document.getElementById('actions-grid');
             
             if (actions.length === 0) {
@@ -79,16 +86,18 @@
                 `).join('');
             }
 
-            // 渲染商店
+            // 4. 商店面板
             const shopPanel = document.getElementById('shop-panel');
             if (locConfig.type === 'shop') {
                 shopPanel.style.display = 'block';
                 document.getElementById('shop-title').textContent = (locConfig.emoji || '🏪') + ' ' + locConfig.name;
                 
-                const items = Cake.getShopItems(currentLocId) || [];
+                const items = (typeof Cake.getShopItems === 'function') 
+                    ? Cake.getShopItems(currentLocId) 
+                    : [];
                 const itemsGrid = document.getElementById('shop-items');
                 
-                if (items.length > 0) {
+                if (items && items.length > 0) {
                     itemsGrid.innerHTML = items.map(item => `
                         <div class="item-card">
                             <div class="item-emoji">${item.emoji || '📦'}</div>
@@ -117,8 +126,10 @@
     window.doAction = (actionKey) => {
         if (typeof Cake.performLocationAction !== 'function') return;
         const res = Cake.performLocationAction(REGION_ID, currentLocId, actionKey);
-        if (res && res.success === false) alert(res.message);
-        setTimeout(renderUI, 100);
+        if (res && res.success === false) {
+            alert(res.message);
+        }
+        setTimeout(renderUI, 100); 
     };
 
     // === 购买物品 ===

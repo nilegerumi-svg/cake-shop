@@ -1,5 +1,3 @@
-// js/actions/shop/index.js
-
 (function () {
     'use strict';
 

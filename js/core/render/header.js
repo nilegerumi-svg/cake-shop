@@ -17,6 +17,10 @@ window.Cake = window.Cake || {};
         const esc = Cake.escapeHtml;
         const timeStr = Cake.getTimeString ? Cake.getTimeString() : '08:00';
 
+        // 👈 核心新增：获取当前季节数据
+        const seasonId = state.time?.season || 'spring';
+        const seasonData = Cake.SEASONS?.[seasonId] || { emoji: '🌸', name: '春' };
+
         el.innerHTML = `
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                 <div class="header-left" style="display: flex; align-items: center; gap: 6px; font-weight: bold; font-size: 15px; color: var(--pink-600);">
@@ -24,7 +28,8 @@ window.Cake = window.Cake || {};
                     <span>${esc(state.shop?.name ?? '甜蜜小屋')}</span>
                 </div>
                 <div class="header-stats" style="display: flex; gap: 8px; font-size: 13px; color: var(--text-mid); font-weight: bold;">
-                    <span>📅 ${num(state.time?.day, 1)}天 ${timeStr}</span>
+                    <!-- 👈 修改：把季节 Emoji 插在时间前面 -->
+                    <span>${seasonData.emoji} ${num(state.time?.day, 1)}天 ${timeStr}</span>
                     <span>💰 ${num(state.money, 100)}</span>
                     <span>🧹 ${num(state.shop?.stats?.cleanliness, 100)}%</span>
                 </div>

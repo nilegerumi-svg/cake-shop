@@ -31,6 +31,7 @@
                 isOpen: false,       // 是否营业
                 openTime: 8 * 60,    // 营业时间 8:00 (用分钟表示)
                 closeTime: 22 * 60,  // 打烊时间 22:00
+                priceRate: 1.0, // 👈 新增：默认售价倍率
                 stats: {
                     cleanliness: 100, // 卫生度（影响客流）
                     reputation: 0     // 声望

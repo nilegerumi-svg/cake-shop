@@ -7,8 +7,8 @@
     <title>城镇</title>
     <link rel="stylesheet" href="../../../css/styles.css">
     <style>
-        body { background: transparent; font-family: sans-serif; padding: 16px; display: flex; justify-content: center; color: #4a3b3f; margin: 0; }
-        .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(255,182,193,0.2); width: 100%; max-width: 400px; }
+        body { background: transparent; padding: 16px; display: flex; justify-content: center; color: #4a3b3f; margin: 0; }
+        .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(255,182,193,0.2); width: 100%; max-width: 400px; box-sizing: border-box; }
 
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px dashed #ffd1dc; padding-bottom: 12px; }
         .header h2 { color: #ff6b81; margin: 0; font-size: 18px; }
@@ -47,62 +47,30 @@
         </div>
     </div>
 
-    <script>
-    (() => {
-        'use strict';
+    <script type="module">
+        // 1. 直接获取最新的引擎
+        const Cake = window.parent.Cake || window.Cake;
+        if (!Cake) return;
 
         const $ = (id) => document.getElementById(id);
-        const locListEl = $('locList');
-        const energyEl  = $('energy');
+        const num = (v, fallback = 0) => Number.isFinite(Number(v)) ? Number(v) : fallback;
+        
+        // 本页固定属于 town 区域
+        const REGION_ID = 'town'; 
 
-        let Cake = null;
-        let tries = 0;
-        const MAX_TRIES = 100;      // 100 × 100ms = 10s
-
-        const REGION_ID = 'town';   // 本页对应的区域 id
-
-        const num = (v, fallback = 0) => {
-            const n = Number(v);
-            return Number.isFinite(n) ? n : fallback;
+        // 返回总地图
+        $('btnBack').onclick = () => {
+            window.location.href = 'index.html';
         };
 
-        const getCake = () => {
-            try {
-                if (window.parent && window.parent !== window && window.parent.Cake) {
-                    return window.parent.Cake;
-                }
-            } catch (_) { /* 跨域 */ }
-            return window.Cake || null;
-        };
-
-        const navigateTo = (fullPath, relativeFallback) => {
-            try {
-                if (window.parent && window.parent !== window &&
-                    window.parent.HostRouter &&
-                    typeof window.parent.HostRouter.navigateTo === 'function') {
-                    window.parent.HostRouter.navigateTo(fullPath);
-                    return;
-                }
-            } catch (_) { /* 跨域或未定义 */ }
-            window.location.href = relativeFallback || fullPath;
-        };
-
-        /* ==================== 返回总地图 ==================== */
-
-        const goBack = () => {
-            navigateTo('pages/entertainment/map/index.html', 'index.html');
-        };
-
-        /* ==================== 渲染地点列表 ==================== */
-
+        // 渲染地点列表
         const renderList = () => {
             try {
-                const state = Cake && Cake.store && Cake.store.state;
-                if (!state) throw new Error('无法读取当前游戏状态');
-
+                const state = Cake.store.state;
                 const energy = Math.max(0, Math.min(100, num(state.energy, 0)));
-                if (energyEl) energyEl.innerText = energy;
+                $('energy').innerText = energy;
 
+                // 获取该区域的地点数据
                 const locs = (typeof Cake.getRegionLocations === 'function')
                     ? Cake.getRegionLocations(REGION_ID)
                     : Cake.REGION_TOWN;
@@ -116,7 +84,7 @@
                     if (!loc) continue;
 
                     html += `
-                        <div class="loc-item" data-loc="${key}">
+                        <div class="loc-item" onclick="goLocation('${key}')">
                             <div class="loc-info">
                                 <span class="loc-emoji">${loc.emoji || '📍'}</span>
                                 <div class="loc-text">
@@ -129,73 +97,27 @@
                     `;
                 }
 
-                if (html === '') {
-                    html = '<div style="color:#888; text-align:center;">当前没有可去的地点...</div>';
-                }
-                locListEl.innerHTML = html;
+                $('locList').innerHTML = html || '<div style="color:#888; text-align:center;">当前没有可去的地点...</div>';
 
             } catch (err) {
-                locListEl.innerHTML = `
+                $('locList').innerHTML = `
                     <div style="color: red; padding: 15px; background: #ffe4e1; border-radius: 10px;">
                         <strong>⚠️ 渲染失败：</strong><br>${err.message || err}
                     </div>`;
             }
         };
 
-        /* ==================== 事件绑定 ==================== */
-
-        const bindClick = () => {
-            const btnBack = $('btnBack');
-            if (btnBack && !btnBack.dataset.bound) {
-                btnBack.dataset.bound = 'true';
-                btnBack.addEventListener('click', goBack);
-            }
-
-            if (locListEl && !locListEl.dataset.bound) {
-                locListEl.dataset.bound = 'true';
-                locListEl.addEventListener('click', (e) => {
-                    const item = e.target.closest('.loc-item');
-                    if (!item) return;
-
-                    const locKey = item.dataset.loc;
-
-                    // ⭐ 进入「地点详情页」，而不是直接散步
-                    navigateTo(
-                        `pages/entertainment/map/location.html?region=${REGION_ID}&loc=${locKey}`,
-                        `location.html?region=${REGION_ID}&loc=${locKey}`
-                    );
-                });
-            }
+        // 跳转到具体的地点页
+        window.goLocation = (locKey) => {
+            window.location.href = `location.html?region=${REGION_ID}&loc=${locKey}`;
         };
 
-        /* ==================== 启动 ==================== */
-
-        const boot = () => {
-            const engine = getCake();
-
-            if (engine && engine.store && engine.store.state) {
-                Cake = engine;
-                window.Cake = engine;
-                bindClick();
+        // 初始化
+        if (typeof Cake.initPage === 'function') {
+            Cake.initPage('fun', () => {
                 renderList();
-                return;
-            }
-
-            if (++tries >= MAX_TRIES) {
-                if (locListEl) {
-                    locListEl.innerHTML = `
-                        <div style="color: red; padding: 15px; background: #ffe4e1; border-radius: 10px;">
-                            <strong>⚠️ 无法连接游戏引擎：</strong><br>父页面 Cake 未就绪，请刷新重试。
-                        </div>`;
-                }
-                return;
-            }
-
-            setTimeout(boot, 100);
-        };
-
-        boot();
-    })();
+            }, false);
+        }
     </script>
 </body>
 </html>

@@ -6,6 +6,9 @@
     const TOP_THRESHOLD = 24;
     const RETRY_MAX = 100;
     const SEARCH_DEBOUNCE = 120;
+    // 折叠时仅展示最近 3 条日记
+    const COLLAPSE_SHOW = 3;
+    const COLLAPSE_KEY = 'cake_log_collapsed';
 
     const logList = document.getElementById('logList');
     const listBody = document.getElementById('listBody');
@@ -13,10 +16,12 @@
     const searchInput = document.getElementById('logSearch');
     const loadMoreBtn = document.getElementById('loadMore');
     const jumpBtn = document.getElementById('jumpBtn');
+    const collapseBtn = document.getElementById('logCollapse');
 
     const state = {
         logs: [], sig: null, query: '', collapsed: new Set(),
-        groups: [], nextIndex: 0, pendingNew: false
+        groups: [], nextIndex: 0, pendingNew: false,
+        isCollapsed: false
     };
 
     const el = (tag, cls) => { const node = document.createElement(tag); if (cls) node.className = cls; return node; };
@@ -137,6 +142,17 @@
     function updateLoadMore() { loadMoreBtn.hidden = state.nextIndex >= state.groups.length; }
     function showEmpty(msg) { const box = el('div', 'empty'); box.textContent = msg; listBody.replaceChildren(box); loadMoreBtn.hidden = true; }
 
+    /* ==================== 折叠 / 展开 ==================== */
+    function applyCollapsedUI() {
+        if (!collapseBtn) return;
+        // 折叠只控制容器高度（CSS max-height），完整列表仍在 DOM 中，
+        // 因此"折叠界面长度随信息量大小改变"天然成立；展开即恢复完整列表。
+        logList.classList.toggle('collapsed', state.isCollapsed);
+        collapseBtn.textContent = state.isCollapsed ? '展开 ▴' : '收起 ▾';
+        collapseBtn.setAttribute('aria-expanded', String(!state.isCollapsed));
+        loadMoreBtn.hidden = state.isCollapsed || state.nextIndex >= state.groups.length;
+    }
+
     function rebuild(opts) {
         const toTop = !!(opts && opts.toTop);
         state.groups = buildGroups(state.logs, state.query);
@@ -148,7 +164,7 @@
         const result = renderGroups(0, PAGE);
         state.nextIndex = result.nextIndex;
         listBody.replaceChildren(result.frag);
-        updateLoadMore(); updateCount();
+        updateLoadMore(); updateCount(); applyCollapsedUI();
         if (toTop) logList.scrollTop = 0;
     }
 
@@ -178,6 +194,16 @@
 
     jumpBtn.addEventListener('click', () => refresh(true));
     loadMoreBtn.addEventListener('click', appendMore);
+
+    // 折叠 / 展开切换
+    if (collapseBtn) {
+        collapseBtn.addEventListener('click', () => {
+            state.isCollapsed = !state.isCollapsed;
+            try { localStorage.setItem(COLLAPSE_KEY, state.isCollapsed ? '1' : '0'); } catch (_) {}
+            applyCollapsedUI();
+        });
+        try { state.isCollapsed = localStorage.getItem(COLLAPSE_KEY) === '1'; } catch (_) {}
+    }
 
     let searchTimer = null;
     searchInput.addEventListener('input', () => {

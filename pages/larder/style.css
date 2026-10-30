@@ -1,0 +1,64 @@
+/* pages/larder/style.css —— 食材库主界面 */
+
+.cat-tabs {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+}
+
+.cat-btn {
+    background: #fff;
+    border: 1px solid #ddd;
+    padding: 8px 15px;
+    border-radius: 20px;
+    white-space: nowrap;
+    cursor: pointer;
+    color: var(--text-mid);
+    transition: 0.2s;
+    font-size: 13px;
+}
+
+.cat-btn.active {
+    background: var(--pink-400);
+    color: #fff;
+    border-color: var(--pink-400);
+    font-weight: bold;
+}
+
+.larder-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 10px;
+}
+
+/* 食材卡片 */
+.ing-card {
+    background: #fff;
+    border: 1px solid var(--pink-100);
+    border-radius: var(--radius-item, 12px);
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 4px;
+}
+
+.ing-card .ing-emoji { font-size: 28px; }
+.ing-card .ing-name { font-weight: bold; font-size: 14px; color: var(--text-main); }
+.ing-card .ing-cat { font-size: 11px; color: var(--pink-600); background: var(--pink-50); padding: 1px 8px; border-radius: 999px; }
+.ing-card .ing-price { font-size: 12px; color: var(--text-muted); }
+.ing-card .ing-stock { font-size: 12px; color: var(--green-ok); font-weight: bold; }
+.ing-card .ing-days { font-size: 11px; color: var(--text-muted); }
+
+/* 变质徽标（沿用食材仓库页风格） */
+.spoil-badge {
+    display: inline-block;
+    padding: 2px 8px; border-radius: 999px;
+    font-size: 11px; font-weight: bold; line-height: 1.6;
+}
+.spoil-badge.warning { background: #fff8e1; color: #a06a00; border: 1px solid #ffe082; }
+.spoil-badge.spoiled { background: #fff0f0; color: #c62828; border: 1px solid #ffcdd2; }
+.spoil-badge.rotten  { background: #f5f5f5; color: #616161; border: 1px solid #e0e0e0; }

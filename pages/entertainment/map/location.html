@@ -7,38 +7,22 @@
     <title>地点</title>
     <link rel="stylesheet" href="../../../css/styles.css">
     <style>
-        :root {
-            --card-w-mobile: min(92vw, 420px);
-            --card-w-pc: min(32vw, 480px);
-        }
-
         body {
             background: transparent;
-            font-family: sans-serif;
+            font-family: var(--font-stack, sans-serif);
             padding: 16px;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
             color: #4a3b3f;
             margin: 0;
-            min-height: 100vh;
             box-sizing: border-box;
         }
 
         .card {
             background: white;
             padding: 20px;
-            border-radius: 15px;
-            box-shadow: 0 4px 10px rgba(255,182,193,0.2);
-            width: var(--card-w-mobile);
-            max-width: 100%;
-            aspect-ratio: 4 / 5;
+            border-radius: var(--radius-card);
+            box-shadow: var(--shadow-card);
+            width: 100%;
             box-sizing: border-box;
-            /* 地点动作与内嵌商店可能超出固定比例高度，允许滚动；
-               矮屏下再受视口高度限制，避免卡片整体被裁掉 */
-            max-height: calc(100vh - 32px);
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
         }
 
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px dashed #ffd1dc; padding-bottom: 12px; }
@@ -81,7 +65,25 @@
         .action-desc { font-size: 12px; color: #888; font-weight: normal; margin-top: 2px; }
         .action-arrow { font-size: 13px; color: #ffb6c1; white-space: nowrap; }
 
-        /* 内嵌商店 */
+        /* 内嵌商店入口（点击弹窗选购，不再平铺） */
+        .shop-entry {
+            display: flex; align-items: center; justify-content: space-between;
+            width: 100%; background: #fff8fa; color: #4a3b3f;
+            border: 1px solid #ffd1dc; padding: 14px 16px;
+            border-radius: 12px; font-size: 15px; font-weight: bold;
+            cursor: pointer; transition: transform 0.1s; text-align: left;
+            box-sizing: border-box;
+        }
+        .shop-entry:active { transform: scale(0.98); background: #fff0f5; }
+
+        /* 弹窗内商品分类标签与网格 */
+        .shop-tabs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 10px; }
+        .shop-tab {
+            background: #fff; border: 1px solid #ddd; padding: 6px 12px;
+            border-radius: 999px; white-space: nowrap; cursor: pointer;
+            color: var(--text-mid); font-size: 13px; transition: 0.2s;
+        }
+        .shop-tab.active { background: var(--pink-400); color: #fff; border-color: var(--pink-400); font-weight: bold; }
         .shop-list { display: flex; flex-direction: column; gap: 8px; }
         .shop-row {
             display: flex; align-items: center; gap: 10px;
@@ -99,14 +101,6 @@
         .buy-btn:active { transform: scale(0.96); }
         .buy-btn:disabled { background: #e5e5e5; color: #999; cursor: not-allowed; }
         .shop-hint { font-size: 11px; color: #999; text-align: center; margin-top: 8px; }
-
-        @media (min-width: 768px) {
-            .card {
-                width: var(--card-w-pc);
-                min-height: 640px;
-                aspect-ratio: 4 / 5;
-            }
-        }
     </style>
 </head>
 <body>
@@ -121,183 +115,6 @@
     </div>
 
     <script src="../../../pages/boot-safe.js"></script>
-    <script type="module">
-        let Cake = null;
-        const $ = (id) => document.getElementById(id);
-        const num = (v, fallback = 0) => Number.isFinite(Number(v)) ? Number(v) : fallback;
-
-        function getCake() {
-            try {
-                if (window.parent && window.parent !== window && window.parent.Cake) return window.parent.Cake;
-            } catch (_) {}
-            return window.Cake || null;
-        }
-
-        window.handleLocationAction = (actionKey, locKey) => {
-            if (!Cake || !Cake.store || !Cake.store.state) return;
-            try {
-                const res = Cake.performLocationAction && Cake.performLocationAction('town', locKey, actionKey);
-                if (res && res.success === false) {
-                    alert(res.message);
-                    return;
-                }
-            } catch (err) {
-                console.error('[location] 动作执行失败:', err);
-                alert('❌ 动作执行失败：' + (err && err.message || err));
-                return;
-            }
-            setTimeout(renderLocation, 200);
-        };
-
-        function renderLocation() {
-            Cake = getCake();
-            if (!Cake || !Cake.store || !Cake.store.state) return;
-            const params = new URLSearchParams(window.location.search);
-            const key = params.get('id') || 'park';
-
-            // 统一从区域配置取地点数据，并与动作接口保持一致
-            let loc = null;
-            const locs = (typeof Cake.getRegionLocations === 'function') ? Cake.getRegionLocations('town') : null;
-            loc = (locs && (locs[key] || (locs.find && locs.find((x) => x.id === key || x.key === key)))) || null;
-
-            // 兜底：从汇总 LOCATIONS 中查找
-            if (!loc) {
-                const list = Array.isArray(Cake.LOCATIONS) ? Cake.LOCATIONS : Object.values(Cake.LOCATIONS || {});
-                loc = list.find((item) => item.id === key || item.key === key) || null;
-            }
-
-            loc = loc || { id: key, name: '未知地点', emoji: '📍', desc: '该地点目前尚未配置。' };
-            const state = Cake.store.state;
-
-            $('pageTitle').textContent = `${loc.emoji || '📍'} ${loc.name || '地点'}`;
-            $('energy').textContent = num(state.energy, 0);
-
-            // 动作列表：优先引擎接口，兜底 loc.actions
-            let actions = [];
-            if (typeof Cake.getLocationActions === 'function') {
-                try { actions = Cake.getLocationActions('town', key) || []; } catch (_) {}
-            }
-            if (actions.length === 0 && Array.isArray(loc.actions)) actions = loc.actions;
-
-            // 内嵌商店：该地点配了商店时，就地展示可购商品
-            let shopHtml = '';
-            try {
-                const shopInfo = (typeof Cake.getLocationShop === 'function') ? Cake.getLocationShop('town', key) : null;
-                if (shopInfo && Array.isArray(shopInfo.items) && shopInfo.items.length > 0) {
-                    const money = num(state.money, 0);
-                    const rows = shopInfo.items.map((item) => {
-                        const price = num(item.price, 0);
-                        const affordable = money >= price;
-                        return `
-                            <div class="shop-row">
-                                <span class="shop-emoji">${item.emoji || '📦'}</span>
-                                <span class="shop-name">${item.name || item.id}</span>
-                                <span class="shop-price">💰 ${price}</span>
-                                <button class="buy-btn" type="button" data-buy="${item.id}" ${affordable ? '' : 'disabled'}>${affordable ? '订购' : '钱不够'}</button>
-                            </div>
-                        `;
-                    }).join('');
-
-                    shopHtml = `
-                        <div class="section-title">${shopInfo.shop.emoji || '🏪'} ${shopInfo.shop.name || '商店'}</div>
-                        <div class="shop-list">${rows}</div>
-                        <div class="shop-hint">下单后约 2 小时送达店铺</div>
-                    `;
-                }
-            } catch (err) {
-                // 商店数据缺失时不影响地点探索
-                console.warn('[location] 商店渲染跳过:', err);
-            }
-
-            const html = `
-                <div class="loc-head">
-                    <div class="loc-emoji">${loc.emoji || '📍'}</div>
-                    <div class="loc-meta">
-                        <div class="loc-name">${loc.name || '地点'}</div>
-                        <div class="loc-desc">${loc.desc || '探索与互动'}</div>
-                    </div>
-                </div>
-                <div class="section-title">可执行动作</div>
-                <div class="action-list">
-                    ${actions.map((action) => {
-                        const actionKey = action.key || action.id || action.name || 'action';
-                        const disabled = num(action.cost, 0) > num(state.energy, 0);
-                        return `
-                            <button class="action-item ${action.type === 'rest' ? 'rest' : ''} ${disabled ? 'disabled' : ''}" type="button" data-action="${actionKey}" data-loc="${key}" ${disabled ? 'disabled' : ''} onclick="window.handleLocationAction && window.handleLocationAction('${actionKey}', '${key}')">
-                                <div class="action-info">
-                                    <div class="action-emoji">${action.emoji || '✨'}</div>
-                                    <div class="action-text">
-                                        <div class="action-name">${action.name || '动作'}</div>
-                                        <div class="action-desc">${action.desc || '进行一次活动'}${action.cost ? ` · 消耗 ${action.cost} 精力` : ''}</div>
-                                    </div>
-                                </div>
-                                <div class="action-arrow">${disabled ? '锁定' : '执行'}</div>
-                            </button>
-                        `;
-                    }).join('') || '<div class="muted text-center">暂无可执行动作</div>' }
-                </div>
-                ${shopHtml}
-            `;
-            $('locationContent').innerHTML = html;
-            bindShopButtons();
-        }
-
-        // === 商店订购按钮（事件委托，避免重渲染后失效） ===
-        function bindShopButtons() {
-            const root = $('locationContent');
-            if (!root || root.dataset.shopBound === 'true') return;
-            root.dataset.shopBound = 'true';
-
-            root.addEventListener('click', (e) => {
-                const btn = e.target.closest('[data-buy]');
-                if (!btn || btn.disabled) return;
-
-                const itemId = btn.dataset.buy;
-                if (!Cake || !Cake.store || !Cake.store.state) return;
-
-                try {
-                    if (typeof Cake.orderItem !== 'function') {
-                        alert('❌ 订购功能未加载，请刷新重试');
-                        return;
-                    }
-                    const res = Cake.orderItem(itemId, 1);
-                    if (res && res.success === false) {
-                        alert(res.message || '订购失败');
-                    } else {
-                        renderLocation();
-                    }
-                } catch (err) {
-                    console.error('[location] 订购失败:', err);
-                    alert('❌ 订购失败：' + (err && err.message || err));
-                }
-            });
-        }
-
-        function bindPage() {
-            const backBtn = $('btnBack');
-            if (backBtn && backBtn.dataset.bound !== 'true') {
-                backBtn.dataset.bound = 'true';
-                backBtn.onclick = () => history.back();
-            }
-            renderLocation();
-            if (typeof Cake?.initPage === 'function') {
-                Cake.initPage('fun', renderLocation, false);
-            }
-        }
-
-        if (window.safePageBoot && typeof window.safePageBoot.waitForCake === 'function') {
-            window.safePageBoot.waitForCake((readyCake) => {
-                Cake = readyCake;
-                bindPage();
-            }, {
-                timeout: 15000,
-                required: (game) => !!(game && game.store && game.store.state),
-                onTimeout: () => '地图地点数据加载超时，请刷新页面'
-            });
-        } else {
-            Cake = getCake();
-            if (Cake && Cake.store && Cake.store.state) bindPage();
-        }
-    </script>
+    <script type="module" src="location.js"></script>
 </body>
 </html>

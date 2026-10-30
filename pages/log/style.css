@@ -1,24 +1,37 @@
+/* pages/log/style.css —— 小店日记（对齐全局粉色系风格） */
 * { box-sizing: border-box; }
 html, body { height: 100%; }
 body {
-    margin: 0; background: #fffaf0; color: #666; font-size: 14px;
-    font-family: system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+    margin: 0; background: var(--pink-50, #fff0f5); color: var(--text-main, #333); font-size: 14px;
+    font-family: var(--font-stack, system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif);
     display: flex; flex-direction: column; overflow: hidden;
 }
 
 .log-header {
     flex: 0 0 auto; padding: 10px 14px 8px;
-    background: #fffaf0; border-bottom: 1px solid #ffe4e1;
+    background: #fff; border-bottom: 1px solid var(--pink-200, #ffd1dc);
 }
 .log-title-row { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
-.log-title { color: #ff6b81; font-weight: bold; font-size: 15px; }
-.log-count { color: #c99; font-size: 12px; white-space: nowrap; }
+.log-title { color: var(--pink-600, #d6336c); font-weight: bold; font-size: 15px; }
+.log-count { color: var(--pink-300, #ffb6c1); font-size: 12px; white-space: nowrap; }
+.log-collapse-btn {
+    margin-left: auto; border: 1px solid var(--pink-200, #ffd1dc);
+    background: #fff; color: var(--pink-600, #d6336c);
+    padding: 2px 10px; border-radius: 999px; font-size: 12px;
+    cursor: pointer; transition: 0.2s;
+}
+.log-collapse-btn:hover { background: var(--pink-50, #fff0f5); }
+/* 折叠状态：列表限高，露出最近 3 条日记的高度；长度随信息量变化 */
+#logList.collapsed {
+    overflow-y: hidden;
+    max-height: clamp(120px, 22vh, 260px);
+}
 .log-search {
     width: 100%; margin-top: 8px; padding: 6px 12px;
-    border: 1px solid #ffe0e4; border-radius: 999px; background: #fff;
-    color: #555; font-size: 13px; outline: none; -webkit-appearance: none; appearance: none;
+    border: 1px solid var(--pink-200, #ffd1dc); border-radius: 999px; background: #fff;
+    color: var(--text-mid, #555); font-size: 13px; outline: none; -webkit-appearance: none; appearance: none;
 }
-.log-search:focus { border-color: #ffb3c1; box-shadow: 0 0 0 3px rgba(255, 107, 129, .12); }
+.log-search:focus { border-color: var(--pink-300, #ffb6c1); box-shadow: 0 0 0 3px rgba(255, 107, 129, .12); }
 
 .log-list {
     flex: 1 1 auto; min-height: 0; overflow-y: auto;
@@ -27,26 +40,26 @@ body {
 .day-group { margin-bottom: 14px; }
 .day-head {
     display: flex; align-items: center; gap: 6px; padding: 4px 0;
-    color: #ff6b81; font-weight: 600; font-size: 13px; cursor: pointer; user-select: none;
+    color: var(--pink-600, #d6336c); font-weight: 600; font-size: 13px; cursor: pointer; user-select: none;
 }
-.day-head .day-count { color: #c99; font-weight: normal; font-size: 11px; }
-.day-head .day-arrow { margin-left: auto; color: #c99; font-size: 12px; }
-.day-body { margin-left: 4px; padding-left: 10px; border-left: 2px solid #ffe4e1; }
+.day-head .day-count { color: var(--pink-300, #ffb6c1); font-weight: normal; font-size: 11px; }
+.day-head .day-arrow { margin-left: auto; color: var(--pink-300, #ffb6c1); font-size: 12px; }
+.day-body { margin-left: 4px; padding-left: 10px; border-left: 2px solid var(--pink-200, #ffd1dc); }
 .log-entry { margin: 6px 0; line-height: 1.6; white-space: pre-wrap; word-break: break-word; overflow-wrap: anywhere; }
 .log-entry mark { background: #ffe08a; color: inherit; border-radius: 2px; padding: 0 1px; }
-.empty { text-align: center; color: #bbb; margin-top: 30px; line-height: 1.8; }
+.empty { text-align: center; color: var(--text-muted, #888); margin-top: 30px; line-height: 1.8; }
 
 .load-more {
     display: block; width: 100%; margin: 10px 0 0; padding: 7px;
-    border: 1px dashed #ffd0d8; border-radius: 8px; background: #fff;
-    color: #ff8fa3; font-size: 12px; cursor: pointer;
+    border: 1px dashed var(--pink-300, #ffb6c1); border-radius: 8px; background: #fff;
+    color: var(--pink-400, #ff8fa3); font-size: 12px; cursor: pointer;
 }
-.load-more:hover { background: #fff5f7; }
+.load-more:hover { background: var(--pink-50, #fff0f5); }
 .load-more[hidden] { display: none; }
 
 .jump-btn {
     position: fixed; right: 14px; bottom: 14px; padding: 5px 12px;
-    border: none; border-radius: 999px; background: #ff6b81; color: #fff;
+    border: none; border-radius: 999px; background: var(--pink-500, #ff6b81); color: #fff;
     font-size: 12px; cursor: pointer; box-shadow: 0 2px 8px rgba(255, 107, 129, .35);
     opacity: .92; display: none;
 }
@@ -55,21 +68,21 @@ body {
 
 /* 系统日志样式 */
 .runtime-group {
-    margin-bottom: 14px; border: 1px dashed #ffd0d8; border-radius: 8px;
+    margin-bottom: 14px; border: 1px dashed var(--pink-300, #ffb6c1); border-radius: 8px;
     padding: 8px 10px; background: #fff;
 }
 .runtime-head {
-    display: flex; align-items: center; gap: 6px; color: #c97a8a;
+    display: flex; align-items: center; gap: 6px; color: var(--pink-700, #d85c74);
     font-weight: 600; font-size: 12px; cursor: pointer; user-select: none;
 }
-.runtime-head .runtime-count { color: #c99; font-weight: normal; font-size: 11px; }
-.runtime-head .runtime-arrow { margin-left: auto; color: #c99; font-size: 12px; }
+.runtime-head .runtime-count { color: var(--pink-300, #ffb6c1); font-weight: normal; font-size: 11px; }
+.runtime-head .runtime-arrow { margin-left: auto; color: var(--pink-300, #ffb6c1); font-size: 12px; }
 .runtime-clear {
-    margin-left: 8px; padding: 2px 8px; border: 1px solid #ffd0d8;
-    border-radius: 999px; background: #fff5f7; color: #ff6b81;
+    margin-left: 8px; padding: 2px 8px; border: 1px solid var(--pink-300, #ffb6c1);
+    border-radius: 999px; background: var(--pink-50, #fff0f5); color: var(--pink-600, #d6336c);
     font-size: 11px; cursor: pointer;
 }
-.runtime-clear:hover { background: #ffe4e8; }
+.runtime-clear:hover { background: var(--pink-100, #ffe4e1); }
 .runtime-body {
     margin-top: 6px; max-height: 160px; overflow-y: auto;
     font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
@@ -79,4 +92,4 @@ body {
 .runtime-entry { padding: 2px 0; border-bottom: 1px solid #fff0f2; word-break: break-word; }
 .runtime-entry.info  { color: #4a7a8a; }
 .runtime-entry.warn  { color: #b07a00; background: #fffbea; }
-.runtime-entry.error { color: #c81e3f; background: #fff0f5; }
+.runtime-entry.error { color: var(--pink-deep, #ff4757); background: var(--pink-50, #fff0f5); }

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📦 食材库 · 甜蜜物语</title>
+    <!-- 独立样式 -->
+    <link rel="stylesheet" href="style.css">
+    <!-- 全局样式 -->
+    <link rel="stylesheet" href="../../css/styles.css">
+</head>
+<body>
+    <div class="game-body" style="padding-top: 10px;">
+        <div class="card" style="padding: 10px 15px; margin-bottom: 10px;">
+            <h2 style="margin: 0; font-size: 18px;">📦 食材库</h2>
+            <p class="muted" style="margin: 5px 0 0 0; font-size: 12px;">查看全部食材图鉴、库存与保质期分类。食材会随时间逐级变质：临期 → 变质 → 腐烂。</p>
+        </div>
+
+        <div class="cat-tabs" id="categoryTabs">
+            <button class="cat-btn active" data-cat="all">📚 全部</button>
+            <button class="cat-btn" data-cat="meat">🥩 肉类</button>
+            <button class="cat-btn" data-cat="vegetable">🥬 蔬菜</button>
+            <button class="cat-btn" data-cat="grain">🌾 谷物</button>
+            <button class="cat-btn" data-cat="egg">🥚 蛋类</button>
+            <button class="cat-btn" data-cat="dairy">🥛 奶类</button>
+            <button class="cat-btn" data-cat="fruit">🍓 水果</button>
+            <button class="cat-btn" data-cat="seasoning">🧂 调料</button>
+            <button class="cat-btn" data-cat="additive">🧁 辅料</button>
+            <button class="cat-btn" data-cat="material">🪵 建材</button>
+        </div>
+
+        <div class="larder-grid" id="larderGrid">
+            <div class="muted" style="padding: 20px; text-align:center;">⏳ 正在准备食材库...</div>
+        </div>
+    </div>
+
+    <!-- 引擎等待器（与采购页/配方页一致） -->
+    <script src="../boot-safe.js"></script>
+    <!-- 独立逻辑 -->
+    <script type="module" src="index.js"></script>
+</body>
+</html>

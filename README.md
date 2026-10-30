@@ -50,6 +50,7 @@ cake-shop/
 │   ├── bake/                # 烘焙工坊（烘焙制作）
 │   ├── buy/                 # 采购中心（食材 / 工具 / 材料包订购）
 │   ├── shop/                # 店铺经营（营业开关 / 货架手动卖出 / 定价 / 清洁）
+│   ├── larder/              # 食材库（全部食材图鉴、库存与保质期分类）
 │   ├── recipe/              # 配方图鉴（烘焙 / 料理分类、研发解锁）
 │   ├── entertainment/       # 娱乐（小憩 / 地图探索入口）
 │   │   └── map/             #   ├─ index.html 总地图
@@ -57,7 +58,7 @@ cake-shop/
 │   │                        #   └─ location.html 地点详情与动作
 │   ├── love/                # 缘分系统（角色列表 / 详情对话 / 约会 / 送礼）
 │   ├── profile/             # 玩家档案（成就 / 工具 / 仓库 / 存档管理）
-│   └── log/                 # 底边控制台日志
+│   └── log/                 # 底边控制台日志（支持折叠）
 ├── js/
 │   ├── main.js              # 启动入口，配置加载模块列表
 │   ├── shared.js            # 跨页面共享层（Game 动态代理）
@@ -119,6 +120,39 @@ cake-shop/
 ---
 
 ## 🔧 更新日志 (Changelog)
+
+### v1.3 · UI 优化与架构清理
+
+> 本轮聚焦于 UI 体验优化、代码架构清理与模块化拆分。修复了多个影响游戏体验的显示问题，新增食材库主界面，并对大文件进行拆分以提升可维护性。
+
+#### 🎨 UI 优化
+*   **娱乐页宽度统一** —— 娱乐链路四页（娱乐首页、总地图、城镇、地点）原先使用固定 `aspect-ratio: 4/5` 居中卡片样式，与烘焙/采购等页面通栏布局不一致。已统一改为通栏流式布局，移除 PC 断点卡片宽度规则，确保所有页面宽度体系一致。
+*   **小店日记样式对齐** —— [pages/log/style.css](pages/log/style.css) 原先使用米黄底色（`#fffaf0`）+ 深粉标题，与全局粉色系（`--pink-*` 变量、`#fff0f5`）不一致。已全面对齐全局粉色系风格，并引入全局样式表。
+*   **移除"家园周围"的睡觉动作** —— [js/actions/entertainment/rest/town/index.js](js/actions/entertainment/rest/town/index.js) 中 `home` 配置了 `sleep`，导致地点页会往"家园周围"塞一个睡觉按钮。但睡觉白名单注释明确写着"只有家里能睡、镇上也应是白名单外"，而"家园周围"是城镇地图内的位置（人在外），按设计不应显示睡觉。已移除 `home` 的 `sleep` 配置。
+*   **商店弹窗分类选购** —— [pages/entertainment/map/location.html](pages/entertainment/map/location.html) 中商店由平铺改为"商店"按钮 + 弹窗分类选购，商品按食材/工具/建材分类，避免平铺占用过多空间。
+*   **日志折叠功能** —— [pages/log/index.html](pages/log/index.html) 头部增加折叠/展开切换按钮，[pages/log/player.js](pages/log/player.js) 实现折叠逻辑：折叠时仅展示最近 3 条日记，列表高度随信息量自然变化（CSS `max-height` 控制），状态持久化到 `localStorage`。
+*   **店铺白名单与商品名称修复** —— [pages/shop/index.html](pages/shop/index.html) 原先把 `state.inventory`（食材库存台账）当货架商品渲染，而它只存 id、不含名称/价格，导致显示"未知商品"，还能卖掉任何原材料。已改为只渲染 `state.foods`（成品糕点），名称/emoji 从配方表回查；[js/actions/shop/sell.js](js/actions/shop/sell.js) 新增 `Cake.sellFood` 接口与白名单常量 `Cake.SHOP_SELL_EXTRA_ALLOW`，店铺只允许卖出烘焙糕点类（`skill === 'bakery'`），额外最多放行牛奶（`milk`）。
+
+#### ✨ 新增功能
+*   **食材库主界面** —— 新增 [pages/larder/](pages/larder/) 目录（index.html + style.css + index.js），按保质期分类（肉/蔬菜/谷物/蛋/奶/水果/调料/辅料/建材）展示全部食材图鉴，显示库存数量、最短剩余天数、变质状态。底栏新增"📦 食材库"按钮，点击后主内容区切换到食材库页面。
+*   **休息事件库接线** —— [js/actions/entertainment/rest/index.js](js/actions/entertainment/rest/index.js) 将 `rest/town/events/index.js` 挂进休息系统加载清单，使小憩/睡觉可触发随机事件（如"家里小憩"触发甜梦、"公园小憩"触发苍蝇等）。
+
+#### 🗑️ 死代码清理
+*   **js/actions/entertainment/map/monitor.js** —— 以完整 `<script>` 标签包裹的旧版整页脚本，不是模块入口；全项目无任何引用。已删除。
+*   **js/host/main.js** —— 首屏渲染逻辑与 `monitor/index.js` 重复；全项目无引用（真正的入口是 `js/main.js`）。已删除。
+*   **js/shop/ 目录** —— 与 `js/data/shop/` 内容重复；`js/data/index.js` 引用的是 `./shop/index.js`（即 `js/data/shop`），`js/shop` 无任何引用。已删除整个目录。
+*   **js/data/tool/meta/index.js** —— 文件头注释写的是"recipes/meta"，内容是 `RECIPES_META`，但全项目没有任何地方引用 `RECIPES_META`，也无任何文件 import 它；是放错位置的孤儿文件。已删除。
+
+#### 📦 大文件拆分
+为提升可维护性，对体积较大的 HTML 页面进行模块化拆分（不改变父文件夹路径，拆到同目录独立 JS 文件）：
+*   **pages/entertainment/map/location.html** —— 18.6KB → 5.9KB HTML + 10.9KB [location.js](pages/entertainment/map/location.js)
+*   **pages/shop/index.html** —— 11KB → 3.8KB HTML + 6.4KB [page.js](pages/shop/page.js)
+*   **pages/profile/index.html** —— 12KB → 2.7KB HTML + 8KB [page.js](pages/profile/page.js)
+
+#### ✅ 验证
+全部改动通过静态校验（所有 JS 脚本语法检查通过、CSS 括号平衡与变量引用正确）与浏览器实机验证：引擎加载画面完整展示、小店日记位置正确、娱乐页宽度统一、商店弹窗分类选购正常、店铺只卖糕点、食材库页面正常渲染、日志折叠功能可用。
+
+---
 
 ### v1.2 · 实机测试修复与系统接线
 

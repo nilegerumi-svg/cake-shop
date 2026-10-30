@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>小店日记</title>
+    <!-- 全局样式（提供 --pink-* 变量与整体风格） -->
+    <link rel="stylesheet" href="../../css/styles.css">
     <!-- 引入拆出去的样式 -->
     <link rel="stylesheet" href="style.css">
 </head>
@@ -12,6 +14,7 @@
         <div class="log-title-row">
             <span class="log-title">📜 小店日记</span>
             <span class="log-count" id="logCount">共 0 条</span>
+            <button id="logCollapse" class="log-collapse-btn" type="button" aria-expanded="false" title="折叠到最近 3 条">收起 ▾</button>
         </div>
         <input id="logSearch" class="log-search" type="search"
                placeholder="搜索日记内容或天数…" autocomplete="off">

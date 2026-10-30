@@ -39,6 +39,13 @@ window.footerAction = (action) => {
         const res = Cake.toggleShopStatus();
         if (res && res.success === false) alert(res.message);
     }
+    else if (action === 'larder') {
+        // 📦 食材库：主内容区切换到食材库页面
+        const mainFrame = document.getElementById('mainFrame');
+        if (mainFrame) {
+            mainFrame.src = 'pages/larder/index.html';
+        }
+    }
     updateFooter();
 };
 

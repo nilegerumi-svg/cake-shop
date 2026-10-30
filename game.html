@@ -37,27 +37,26 @@
             <div class="log-pane">
                 <iframe id="logFrame" src="pages/log/index.html" class="log-frame"></iframe>
             </div>
-            <!-- 提示条放在日志下方、主内容区上方，不再占据底栏空间挡住功能按钮 -->
-            <div class="footer-hint" id="footerHint">💡 前往【🏪 店铺】页面即可开店营业，接待顾客！</div>
+            <!-- 提示条 + 功能按钮行都放在日志下方、主内容区上方，不再放底部挡住内容 -->
+            <div class="footer-bar" id="footer">
+                <div class="footer-hint" id="footerHint">💡 前往【🏪 店铺】页面即可开店营业，接待顾客！</div>
+                <div class="footer-btns">
+                    <div class="footer-btn" data-footer-action="sleep">
+                        <span class="icon">🛌</span><span>睡觉</span>
+                    </div>
+                    <div class="footer-btn" data-footer-action="shop">
+                        <span class="icon" id="f-icon-shop">🚪</span><span id="f-text-shop">营业</span>
+                    </div>
+                    <div class="footer-btn" data-footer-action="larder">
+                        <span class="icon">📦</span><span>食材库</span>
+                    </div>
+                    <div class="footer-btn" style="cursor:default;">
+                        <span class="icon">📅</span><span class="footer-time" id="f-time">Day 1 08:00</span>
+                    </div>
+                </div>
+            </div>
             <div class="main-pane">
                 <iframe id="mainFrame" src="pages/home/index.html" class="main-frame"></iframe>
-            </div>
-        </div>
-        
-        <div class="action-footer" id="footer">
-            <div class="footer-btns">
-                <div class="footer-btn" data-footer-action="sleep">
-                    <span class="icon">🛌</span><span>睡觉</span>
-                </div>
-                <div class="footer-btn" data-footer-action="shop">
-                    <span class="icon" id="f-icon-shop">🚪</span><span id="f-text-shop">营业</span>
-                </div>
-                <div class="footer-btn" data-footer-action="larder">
-                    <span class="icon">📦</span><span>食材库</span>
-                </div>
-                <div class="footer-btn" style="cursor:default;">
-                    <span class="icon">📅</span><span class="footer-time" id="f-time">Day 1 08:00</span>
-                </div>
             </div>
         </div>
     </div>

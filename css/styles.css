@@ -65,7 +65,7 @@ body {
 #header,
 #navBar,
 .game-body,
-.action-footer {
+.footer-bar {
     width: 100%;
     max-width: var(--app-max-width);
     margin-inline: auto;
@@ -325,49 +325,7 @@ button.small.gold:active {
     box-shadow: 0 1px 0 var(--gold-shadow);
 }
 
-/* 10. 底部大按钮 */
-.action-footer {
-    position: fixed;
-    bottom: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    padding: 10px 15px calc(10px + env(safe-area-inset-bottom));
-    background: linear-gradient(to top, var(--pink-50) 90%, transparent);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 6px;
-    width: 100%;
-    max-width: var(--app-max-width);
-    z-index: 100;
-}
-
-.action-footer button.big-btn {
-    background: var(--gold);
-    color: var(--gold-text);
-    border: none;
-    padding: 12px 40px;
-    border-radius: 30px;
-    font-size: 1rem;
-    font-weight: bold;
-    box-shadow: 0 4px 0 var(--gold-shadow);
-    width: 100%;
-    max-width: 320px;
-    margin: 0 auto;
-}
-
-.action-footer button.big-btn:active {
-    transform: translateY(2px);
-    box-shadow: 0 2px 0 var(--gold-shadow);
-}
-
-.action-footer .hint {
-    font-size: 0.75rem;
-    color: var(--text-muted);
-    text-align: center;
-    line-height: 1.4;
-    padding: 0 10px;
-}
+/* 10. 功能栏（已迁移到 game-shell.css 的 .footer-bar，此处旧 .action-footer 死代码已清理） */
 
 /* =========================================
    11. 开始界面（旧版 .start-container，index.html 已自带内联样式，保留兼容）

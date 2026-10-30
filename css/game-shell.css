@@ -26,16 +26,16 @@ header, nav { flex: 0 0 auto; z-index: 10; }
    导致 .main-frame / .log-frame 的弹性规则无法生效，现统一到此处管理 */
 .main-pane {
     position: relative;
-    flex: 1 1 auto;          /* 占据剩余全部空间 */
+    flex: 0 0 clamp(240px, 40vh, 420px); /* 主内容区固定在上部，不再抢占剩余空间 */
     display: flex;
-    /* 主内容区最小高度按视口百分比给出，窄屏也不会被压到无法操作 */
-    min-height: clamp(180px, 42vh, 240px);
+    min-height: clamp(180px, 36vh, 240px);
     overflow: hidden;
 }
 .log-pane {
     position: relative;
-    /* 日志面板按视口百分比占位，窄屏时压缩高度把空间让给主内容区 */
-    flex: 0 0 clamp(78px, 15vh, 160px);
+    /* 日记面板居中并占据剩余主体空间，玩家可实时看到新日志 */
+    flex: 1 1 auto;
+    min-height: 0;
     overflow: hidden;
 }
 
@@ -79,8 +79,9 @@ iframe { display: block; width: 100%; height: 100%; }
 
 /* ===== 窄屏适配（手机竖屏） ===== */
 @media (max-width: 420px) {
-    /* 屏幕越小，日志面板越应该让位给主内容区 */
-    .log-pane { flex: 0 0 clamp(64px, 12vh, 110px); }
+    /* 主内容区压缩、日记面板保留主体空间，保证日志可见 */
+    .main-pane { flex: 0 0 clamp(160px, 34vh, 220px); }
+    .log-pane { min-height: 220px; }
 
     /* 底栏：文字缩小，图标与文字间距收紧，保证三个按钮不挤压 */
     .footer-btn { font-size: 11px; }
@@ -88,8 +89,8 @@ iframe { display: block; width: 100%; height: 100%; }
     .footer-time { font-size: 12px; }
 }
 
-/* 极窄屏（≤340px）：日志面板压到最薄，优先保证可玩 */
+/* 极窄屏（≤340px）：优先保障日志面板可读 */
 @media (max-width: 340px) {
-    .log-pane { flex: 0 0 56px; }
-    .main-pane { min-height: 160px; }
+    .main-pane { flex: 0 0 150px; min-height: 150px; }
+    .log-pane { min-height: 180px; }
 }

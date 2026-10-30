@@ -18,16 +18,36 @@ import './error-ui.js';
         if (barEl && percent !== undefined) barEl.style.width = `${percent}%`;
     };
 
-    // 👈 终极强杀：直接暴力移除整个 DOM 节点！
+    // 兜底放行：即使引擎迟迟未就绪，也平滑收起加载遮罩
     const forceKillLoading = () => {
-        const loadingEl = document.getElementById('app-loading');
-        if (loadingEl) {
-            console.log('🔪 [Monitor] 强杀 Loading 遮罩层！');
-            loadingEl.style.setProperty('display', 'none', 'important');
+        console.log('🔧 [Monitor] 就绪超时，放行加载遮罩层');
+        gracefulHideLoading();
+    };
+
+    // 加载遮罩最短展示时长：避免模块加载过快导致加载画面一闪而过
+    const LOADING_MIN_MS = 1200;
+    const LOADING_FADE_MS = 400;
+    const loadingShownAt = Date.now();
+
+    // 平滑隐藏加载遮罩：先把进度条拉满，再保证至少展示 LOADING_MIN_MS 后淡出
+    const gracefulHideLoading = () => {
+        const barEl = document.getElementById('loading-bar');
+        if (barEl) barEl.style.width = '100%';
+
+        const remaining = LOADING_MIN_MS - (Date.now() - loadingShownAt);
+        const doHide = () => {
+            const loadingEl = document.getElementById('app-loading');
+            if (!loadingEl || !loadingEl.isConnected) return;
+            loadingEl.style.transition = 'opacity 0.4s ease';
             loadingEl.style.setProperty('opacity', '0', 'important');
-            loadingEl.style.setProperty('z-index', '-999', 'important');
-            if (loadingEl.parentNode) loadingEl.parentNode.removeChild(loadingEl); // 直接连根拔起
-        }
+            setTimeout(() => {
+                if (!loadingEl.isConnected) return;
+                loadingEl.style.setProperty('display', 'none', 'important');
+                if (loadingEl.parentNode) loadingEl.parentNode.removeChild(loadingEl);
+            }, LOADING_FADE_MS);
+        };
+        if (remaining > 0) setTimeout(doHide, remaining);
+        else doHide();
     };
 
     let renderCheckCount = 0;

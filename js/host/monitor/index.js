@@ -76,10 +76,8 @@ import './error-ui.js';
     const script = document.createElement('script');
     script.type = 'module';
     script.src = new URL('js/main.js', document.baseURI).href;
-    script.onload = () => {
-        // 给一个兜底的强杀时间
-        setTimeout(forceKillLoading, 2500);
-    };
+    // 引擎模块脚本本身加载完成不代表内部模块装载完毕（内部多为顶层 await 串联），
+    // 因此这里不能像之前那样过早收起加载画面；真正的收起动作由 game-ready 渲染完成后触发。
     script.onerror = () => { window.CakeMonitorUI.showError('无法加载 js/main.js'); forceKillLoading(); };
     document.body.appendChild(script);
 })();

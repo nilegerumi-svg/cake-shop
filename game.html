@@ -37,13 +37,14 @@
             <div class="log-pane">
                 <iframe id="logFrame" src="pages/log/index.html" class="log-frame"></iframe>
             </div>
+            <!-- 提示条放在日志下方、主内容区上方，不再占据底栏空间挡住功能按钮 -->
+            <div class="footer-hint" id="footerHint">💡 前往【🏪 店铺】页面即可开店营业，接待顾客！</div>
             <div class="main-pane">
                 <iframe id="mainFrame" src="pages/home/index.html" class="main-frame"></iframe>
             </div>
         </div>
         
         <div class="action-footer" id="footer">
-            <div class="footer-hint" id="footerHint">💡 前往【🏪 店铺】页面即可开店营业，接待顾客！</div>
             <div class="footer-btns">
                 <div class="footer-btn" data-footer-action="sleep">
                     <span class="icon">🛌</span><span>睡觉</span>
@@ -79,44 +80,48 @@
 
             // ===== iframe 高度自适应：让嵌套子页面拼成纵向长条，随外壳整页滚动 =====
             // 子页面内容多高，iframe 就多高；外壳整体滚动，子页面内部不再各自滚动。
-            // 用 ResizeObserver 观察子页面 body 尺寸变化，替代定时轮询（不暴力刷屏）。
+            // 用 ResizeObserver 观察子页面 body 尺寸变化，加防抖避免 ResizeObserver loop 循环报错。
             function autoResizeIframe(iframe) {
                 if (!iframe || iframe.dataset.resized) return;
                 iframe.dataset.resized = 'true';
 
+                let scheduled = false;
                 const sync = () => {
+                    scheduled = false;
                     try {
                         const doc = iframe.contentDocument || iframe.contentWindow.document;
                         let h = 0;
                         if (doc && doc.documentElement) {
                             h = Math.max(doc.documentElement.scrollHeight, doc.body ? doc.body.scrollHeight : 0);
                         }
-                        if (h > 0 && iframe.style.height !== h + 'px') {
+                        if (h > 0) {
                             iframe.style.height = h + 'px';
-                            // 日记面板收起/展开时同步外层高度（如存在）
-                            const pane = iframe.closest && iframe.closest('.log-pane, .main-pane');
-                            if (pane && pane.closest) {
-                                pane.style.height = 'auto';
-                            }
                         }
                     } catch (_) { /* 跨域忽略 */ }
                 };
 
-                iframe.addEventListener('load', sync);
+                // 防抖：同一帧内只同步一次，避免 ResizeObserver loop 无限循环
+                const scheduleSync = () => {
+                    if (scheduled) return;
+                    scheduled = true;
+                    requestAnimationFrame(sync);
+                };
+
+                iframe.addEventListener('load', scheduleSync);
 
                 // 同源子页面：用 ResizeObserver 监听内容尺寸变化；跨域则退回 load 同步
                 try {
                     const doc = iframe.contentDocument;
                     if (doc && doc.body) {
-                        const ro = new ResizeObserver(() => sync());
+                        const ro = new ResizeObserver(() => scheduleSync());
                         ro.observe(doc.body);
                         if (doc.documentElement) ro.observe(doc.documentElement);
                         iframe.__resizeObserver = ro;
                     }
                 } catch (_) { /* 跨域无法观察，仅 load 时同步一次 */ }
 
-                window.addEventListener('resize', sync);
-                sync();
+                window.addEventListener('resize', scheduleSync);
+                scheduleSync();
             }
             autoResizeIframe(document.getElementById('logFrame'));
             autoResizeIframe(document.getElementById('mainFrame'));

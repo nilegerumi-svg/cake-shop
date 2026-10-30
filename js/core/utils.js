@@ -34,6 +34,14 @@
         if (typeof Cake.emit === 'function') {
             Cake.emit('refresh_ui');
         }
+
+        // 新日志弹窗提醒：作为"玩家回忆"，重要事件弹出弹窗让玩家不会忽略
+        // 只对 success 类型（成就解锁、卖出、订购到货等有意义事件）弹窗，不弹 warn/error/info
+        if (type === 'success' && typeof Cake.showModal === 'function') {
+            try {
+                Cake.showModal('📜 小店日记', `<p style="margin:0;">${escapeHtml(text)}</p>`);
+            } catch (_) {}
+        }
     };
 
     const fail = (message) => {

@@ -3,13 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🎒 食材仓库</title>
+    <title>📖 食材图鉴 · 甜蜜物语</title>
     <link rel="stylesheet" href="../../css/styles.css">
     <style>
         .back-btn { display: inline-block; margin-bottom: 15px; color: var(--pink-600); cursor: pointer; font-weight: bold; }
-        .inv-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
 
-        /* 分级变质徽标 */
+        /* 食材图鉴：多列卡片网格（2 列 / 3 列自适应），展示已持有的食材 */
+        .atlas-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            gap: 10px;
+        }
+        @media (min-width: 420px) {
+            .atlas-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+        }
+
+        .atlas-card {
+            background: #fff;
+            border: 1px solid var(--pink-100);
+            border-radius: var(--radius-item, 12px);
+            padding: 12px 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 4px;
+        }
+        .atlas-card .atlas-emoji { font-size: 26px; }
+        .atlas-card .atlas-name { font-weight: bold; font-size: 13px; color: var(--text-main); }
+        .atlas-card .atlas-meta { font-size: 11px; color: var(--text-muted); line-height: 1.5; }
+        .atlas-card .atlas-meta strong { color: var(--pink-600); }
+
+        /* 变质徽标（色弱友好：带文字+图标，不单靠颜色） */
         .spoil-badge {
             display: inline-block; margin-top: 6px;
             padding: 2px 8px; border-radius: 999px;
@@ -18,6 +43,8 @@
         .spoil-badge.warning { background: #fff8e1; color: #a06a00; border: 1px solid #ffe082; }
         .spoil-badge.spoiled { background: #fff0f0; color: #c62828; border: 1px solid #ffcdd2; }
         .spoil-badge.rotten  { background: #f5f5f5; color: #616161; border: 1px solid #e0e0e0; }
+
+        .empty-atlas { text-align: center; color: var(--text-muted); padding: 30px 12px; line-height: 1.8; }
     </style>
 </head>
 <body>
@@ -35,29 +62,34 @@
         // 返回按钮不依赖引擎，先绑定，避免页面成为死胡同
         document.getElementById('backBtn').addEventListener('click', () => history.back());
 
+        const esc = (v) => String(v ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+        const num = (v, fallback = 0) => Number.isFinite(Number(v)) ? Number(v) : fallback;
+
         const render = () => {
             const state = Cake.store.state;
             const contentEl = document.getElementById('content');
 
-            if (!state.inventory || state.inventory.length === 0) {
-                contentEl.innerHTML = '<div class="card text-center muted">仓库空空如也，快去采购吧！</div>';
+            // 只统计已持有的食材（去重汇总）
+            const inv = state.inventory || [];
+            if (inv.length === 0) {
+                contentEl.innerHTML = '<div class="card"><h2>📖 食材图鉴</h2><div class="empty-atlas">图鉴空空如也，先去采购中心或商店添置食材吧！</div></div>';
                 return;
             }
 
+            // 按 id 汇总：数量、变质数量、最短剩余、最低品质
             const summary = {};
-            state.inventory.forEach(item => {
+            inv.forEach(item => {
                 if (!summary[item.id]) {
                     summary[item.id] = {
                         count: 0, rotten: 0, spoiled: 0, warning: 0,
                         minRemain: Infinity, minQuality: Infinity,
-                        data: Cake.INGREDIENTS[item.id] || { name: item.id, emoji: '❓' }
+                        data: Cake.INGREDIENTS[item.id] || { name: item.id, emoji: '❓', price: 0 }
                     };
                 }
                 const g = summary[item.id];
                 g.count++;
                 if (item.isRotten) g.rotten++;
 
-                // 分级变质状态（保质期系统）
                 const spoil = (typeof Cake.getItemSpoilage === 'function') ? Cake.getItemSpoilage(item) : null;
                 if (spoil) {
                     if (spoil === Cake.SPOILAGE_STATES.spoiled) g.spoiled++;
@@ -73,25 +105,22 @@
             const cards = Object.values(summary).map(item => {
                 const isRotten = item.rotten > 0;
 
-                // 变质徽标：优先展示最严重的状态
+                // 变质徽标：优先展示最严重的状态（文字 + 图标，色弱可辨）
                 let badge = '';
-                if (isRotten) {
-                    badge = `<span class="spoil-badge rotten">☠️ 腐烂 ${item.rotten}</span>`;
-                } else if (item.spoiled > 0) {
-                    badge = `<span class="spoil-badge spoiled">🤢 变质 ${item.spoiled}</span>`;
-                } else if (item.warning > 0) {
-                    badge = `<span class="spoil-badge warning">⚠️ 临期 ${item.warning}</span>`;
-                }
+                if (isRotten) badge = `<span class="spoil-badge rotten">☠️ 腐烂 ${item.rotten}</span>`;
+                else if (item.spoiled > 0) badge = `<span class="spoil-badge spoiled">🤢 变质 ${item.spoiled}</span>`;
+                else if (item.warning > 0) badge = `<span class="spoil-badge warning">⚠️ 临期 ${item.warning}</span>`;
 
-                const remain = item.minRemain === Infinity ? '-' : Math.max(0, item.minRemain);
+                const remain = item.minRemain === Infinity ? '—' : Math.max(0, item.minRemain);
+                const quality = item.minQuality === Infinity ? '—' : item.minQuality;
 
                 return `
-                    <div class="item-card" style="${isRotten ? 'border-color: var(--red-line); background: #fff0f0;' : ''}">
-                        <span class="item-emoji">${item.data.emoji}</span>
-                        <span class="item-name">${item.data.name}</span>
-                        <span class="item-meta">数量：${item.count}</span>
-                        <span class="item-meta">最短剩余：${remain} 天</span>
-                        <span class="item-meta">最低品质：${item.minQuality === Infinity ? '-' : item.minQuality}</span>
+                    <div class="atlas-card" style="${isRotten ? 'border-color: var(--red-line); background: #fff0f0;' : ''}">
+                        <span class="atlas-emoji">${item.data.emoji || '📦'}</span>
+                        <span class="atlas-name">${esc(item.data.name || item.id)}</span>
+                        <span class="atlas-meta">库存 <strong>${item.count}</strong> 份</span>
+                        <span class="atlas-meta">剩余 <strong>${remain}</strong> 天</span>
+                        <span class="atlas-meta">品质 <strong>${quality}</strong></span>
                         ${badge}
                     </div>
                 `;
@@ -99,9 +128,9 @@
 
             contentEl.innerHTML = `
                 <div class="card">
-                    <h2>🎒 食材仓库</h2>
-                    <p class="muted" style="margin-bottom: 15px;">食材会随时间逐级变质：临期 → 变质 → 腐烂，品质越低做出的成品越差，请尽快使用。</p>
-                    <div class="inv-grid">${cards}</div>
+                    <h2>📖 食材图鉴</h2>
+                    <p class="muted" style="margin-bottom: 15px;">仅收录当前已持有的食材。食材会随时间逐级变质：临期 → 变质 → 腐烂，请尽快使用。</p>
+                    <div class="atlas-grid">${cards}</div>
                 </div>
             `;
         };
@@ -122,7 +151,7 @@
                 timeout: 15000,
                 // 需等食材数据到位，否则食材名会显示成原始 id
                 required: (game) => !!(game && game.store && game.store.state && game.INGREDIENTS),
-                onTimeout: () => '食材仓库：游戏引擎或食材数据加载超时，请刷新页面重试。'
+                onTimeout: () => '食材图鉴：游戏引擎或食材数据加载超时，请刷新页面重试。'
             });
         } else {
             Cake = window.parent.Cake || window.Cake;

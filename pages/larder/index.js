@@ -57,12 +57,20 @@
         const grid = $('larderGrid');
         if (!grid) return;
 
+        const state = Cake.store?.state;
+        const inv = (state && Array.isArray(state.inventory)) ? state.inventory : [];
+
+        // 只统计已持有的食材 id（未持有不展示）
+        const ownedIds = new Set(inv.map((it) => it && it.id).filter((id) => id));
+
         const ingredients = (Cake && Cake.INGREDIENTS) ? Cake.INGREDIENTS : {};
-        const ids = Object.keys(ingredients).sort((a, b) => {
-            const an = ingredients[a].name || a;
-            const bn = ingredients[b].name || b;
-            return an.localeCompare(bn, 'zh-Hans-CN');
-        });
+        const ids = Object.keys(ingredients)
+            .filter((id) => ownedIds.has(id))                     // 👈 只留持有的
+            .sort((a, b) => {
+                const an = ingredients[a].name || a;
+                const bn = ingredients[b].name || b;
+                return an.localeCompare(bn, 'zh-Hans-CN');
+            });
 
         const rows = ids
             .filter((id) => {
@@ -90,9 +98,8 @@
                         <span class="ing-emoji">${it.emoji || '📦'}</span>
                         <span class="ing-name">${escapeHtml(it.name || id)}</span>
                         <span class="ing-cat">${catLabel}</span>
-                        <span class="ing-price">💰 ${num(it.price, 0)}/份</span>
                         <span class="ing-stock">库存：${stock.total}${stock.rotten > 0 ? `（烂${stock.rotten}）` : ''}</span>
-                        <span class="ing-days">保质期约 ${shelf != null ? shelf : '—'} 天</span>
+                        <span class="ing-days">最短剩余 ${stock.minRemain != null ? stock.minRemain : '—'} 天</span>
                         ${badge}
                     </div>
                 `;
@@ -100,7 +107,7 @@
 
         grid.innerHTML = rows
             ? `<div class="larder-grid">${rows}</div>`
-            : '<div class="muted" style="padding: 20px; text-align:center;">该分类暂无食材</div>';
+            : '<div class="muted" style="padding: 20px; text-align:center;">该分类暂无持有食材，先去采购吧</div>';
     }
 
     function bindTabs() {

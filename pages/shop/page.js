@@ -11,7 +11,10 @@
     function setStatus(msg, type = '') {
         const el = shopStatusEl();
         if (!el) return;
-        el.textContent = msg;
+        // 色弱友好：成功/错误加明确符号前缀，不单靠颜色区分
+        if (type === 'success') el.textContent = '✅ ' + msg;
+        else if (type === 'error') el.textContent = '❌ ' + msg;
+        else el.textContent = msg;
         el.className = 'shop-status';
         if (type) el.classList.add(type);
     }

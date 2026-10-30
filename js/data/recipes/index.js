@@ -7,16 +7,20 @@ const RECIPE_MODULES = [
     './China_reciped/index.js'
 ];
 
-for (const path of RECIPE_MODULES) {
+// 烘焙与中餐菜系互相独立，并行加载提速，并上报文件进度
+window.setLoadTotal?.(RECIPE_MODULES.length, 'recipes');
+
+await Promise.all(RECIPE_MODULES.map(async (path) => {
     try {
         await import(path);
+        window.loadTick?.(path);
         console.log(`✅ [Recipes] 加载成功: ${path}`);
     } catch (err) {
         // 👈 终极报错放大镜：谁报错就打印谁
         console.warn(`⚠️ [Recipes] 子模块加载失败，已跳过 -> ${path}`);
         console.warn(`原因: ${err.message}`);
     }
-}
+}));
 
 window.Cake = window.Cake || {};
 

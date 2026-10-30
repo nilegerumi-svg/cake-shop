@@ -117,6 +117,7 @@ export async function initEngine(MODULES) {
             
             try {
                    await import(mod.path);
+                   window.loadTick?.(mod.path);
                 } catch (importErr) {
            // 👈 终极放大镜：榨干 Error 对象里的所有信息
                    console.error(`❌ [Engine] 模块加载失败 -> ${mod.path}`);

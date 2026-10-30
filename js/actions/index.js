@@ -10,9 +10,13 @@ const ACTION_MODULES = [
     './social/index.js'
 ];
 
+// 上报行为层文件数（行为模块存在内部依赖，保持串行加载，逐文件 tick）
+window.setLoadTotal?.(ACTION_MODULES.length, 'actions');
+
 for (const path of ACTION_MODULES) {
     try {
         await import(path);
+        window.loadTick?.(path);
         console.log(`✅ [Actions] 加载成功: ${path}`);
     } catch (err) {
         // 👈 放大镜：谁报错就打印谁

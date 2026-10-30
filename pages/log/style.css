@@ -1,10 +1,11 @@
 /* pages/log/style.css —— 小店日记（对齐全局粉色系风格） */
 * { box-sizing: border-box; }
-html, body { height: 100%; }
+/* 整页滚动架构：子页面自然撑开高度，由外壳统一滚动 */
+html, body { height: auto; }
 body {
     margin: 0; background: var(--pink-50, #fff0f5); color: var(--text-main, #333); font-size: 0.875rem;
     font-family: var(--font-stack, system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif);
-    display: flex; flex-direction: column; overflow: hidden;
+    display: flex; flex-direction: column; overflow: visible;
 }
 
 .log-header {
@@ -34,8 +35,8 @@ body {
 .log-search:focus { border-color: var(--pink-300, #ffb6c1); box-shadow: 0 0 0 3px rgba(255, 107, 129, .12); }
 
 .log-list {
-    flex: 1 1 auto; min-height: 0; overflow-y: auto;
-    padding: 10px 14px 28px; overscroll-behavior: contain;
+    flex: 0 0 auto; min-height: 0; overflow: visible;
+    padding: 10px 14px 20px; overscroll-behavior: contain;
 }
 .day-group { margin-bottom: 14px; }
 .day-head {

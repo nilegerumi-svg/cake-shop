@@ -145,24 +145,13 @@
     /* ==================== 折叠 / 展开 ==================== */
     function applyCollapsedUI() {
         if (!collapseBtn) return;
-        // 折叠只控制容器高度（CSS max-height），完整列表仍在 DOM 中，
-        // 因此"折叠界面长度随信息量大小改变"天然成立；展开即恢复完整列表。
+        // 折叠只控制列表 max-height（约3条高度），完整列表仍在 DOM 中。
+        // 外壳的 ResizeObserver 会监听本页 body 尺寸变化，自动同步 iframe 高度，
+        // 因此折叠后下方主内容区会自然上移紧贴，无需手动操作父面板。
         logList.classList.toggle('collapsed', state.isCollapsed);
         collapseBtn.textContent = state.isCollapsed ? '展开 ▴' : '收起 ▾';
         collapseBtn.setAttribute('aria-expanded', String(!state.isCollapsed));
         loadMoreBtn.hidden = state.isCollapsed || state.nextIndex >= state.groups.length;
-
-        // 同步外层·日记面板高度：折叠时收缩，避免收起后下方留白
-        try {
-            const parentDoc = window.parent && window.parent.document;
-            if (parentDoc && parentDoc !== document) {
-                const pane = parentDoc.querySelector('.log-pane');
-                if (pane) {
-                    pane.classList.toggle('collapsed', state.isCollapsed);
-                    pane.style.flexBasis = state.isCollapsed ? 'clamp(96px, 16vh, 150px)' : '';
-                }
-            }
-        } catch (_) { /* 跨域忽略 */ }
     }
 
     function rebuild(opts) {

@@ -1,5 +1,12 @@
 /* css/game-shell.css */
-body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; background: #fff0f5; }
+/* 整页拼接长条：外壳纵向滚动，子页面 iframe 高度自适应内容，子页面内部不再各自滚动 */
+body, html {
+    margin: 0; padding: 0;
+    height: 100%;
+    background: #fff0f5;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
 #app-loading {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     background: #fff0f5; z-index: 99999;
@@ -10,45 +17,50 @@ body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; background: 
 .loading-text { font-size: 0.875rem; color: #888; margin-bottom: 15px; font-weight: bold; }
 .loading-bar-wrap { width: 80%; max-width: 300px; height: 12px; background: #ffe4e1; border-radius: 6px; overflow: hidden; box-shadow: inset 0 1px 3px rgba(0,0,0,0.1); }
 .loading-bar-fill { width: 0%; height: 100%; background: #ff8fa3; transition: width 0.2s ease; }
+.loading-detail {
+    margin-top: 8px;
+    font-size: 0.75rem;
+    color: #aaa;
+    min-height: 1.2em;
+    line-height: 1.4;
+}
 
-.app-wrapper { display: flex; flex-direction: column; height: 100vh; height: 100dvh; }
+/* ===== 整页拼接长条外壳 ===== */
+.app-wrapper { display: flex; flex-direction: column; width: 100%; height: auto; min-height: 100vh; min-height: 100dvh; }
 header, nav { flex: 0 0 auto; z-index: 10; }
 .split-container {
-    flex: 1; display: flex; flex-direction: column; overflow: hidden;
+    flex: 0 0 auto; display: flex; flex-direction: column;
     width: 100%;
     max-width: var(--app-max-width, 500px);
     margin-inline: auto;
 }
 
-/* 两个分栏容器：原先写死在 game.html 的内联样式里，内联优先级高于样式表，
-   导致 .main-frame / .log-frame 的弹性规则无法生效，现统一到此处管理 */
+/* 两个分栏容器：高度随内容自适应，不再固定、不再内部滚动 */
 .main-pane {
     position: relative;
-    flex: 1 1 auto;          /* 主内容区占据剩余空间 */
-    display: flex;
+    flex: 0 0 auto;
+    display: block;
     min-height: 0;
-    overflow: hidden;
+    overflow: visible;
 }
 .log-pane {
     position: relative;
-    /* 日记面板固定在上部（紧跟信息栏），占据较大可见高度，玩家可实时看到新日志 */
-    flex: 0 0 clamp(240px, 42vh, 420px);
+    flex: 0 0 auto;
     min-height: 0;
-    overflow: hidden;
-    transition: flex-basis 0.25s ease;
+    overflow: visible;
+    transition: height 0.25s ease;
 }
 /* 日志收起时外层日记面板同步收缩，下方功能页紧贴，不留白 */
-.log-pane.collapsed {
-    flex-basis: clamp(96px, 16vh, 150px) !important;
-}
+.log-pane.collapsed .log-frame { height: 150px; }
 
-.main-frame { flex: 1 1 auto; width: 100%; border: none; background: transparent; min-height: 0; }
+/* iframe 宽度占满容器，高度由 game.html 的 autoResize 按内容动态设置 */
+.main-frame { width: 100%; border: none; background: transparent; min-height: 0; }
 .log-frame {
-    width: 100%; height: 100%; border: none; background: #fff;
+    width: 100%; border: none; background: #fff;
     border-top: 2px dashed #ffd1dc;
     box-shadow: 0 -4px 10px rgba(255, 143, 163, 0.1);
 }
-iframe { display: block; width: 100%; height: 100%; }
+iframe { display: block; width: 100%; border: none; }
 
 /* 底部增强栏（流式双行：提示条 + 按钮行） */
 .action-footer {

@@ -6,17 +6,16 @@
     <title>主页 · 甜蜜物语</title>
     <link rel="stylesheet" href="../../css/styles.css">
     <style>
-        /* 1. 让 body 填满 iframe，并自己处理滚动 */
+        /* 子页面高度自然展开：外壳 iframe 会按内容同步高度，整页统一滚动 */
         body {
             background: transparent;
             padding: 16px;
             margin: 0;
-            height: 100%; /* 不再用 100vh */
+            height: auto;
             box-sizing: border-box;
             display: block !important;
             font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
-            overflow-y: auto; /* 内容过多时内部滚动 */
-            -webkit-overflow-scrolling: touch; /* 移动端顺滑滚动 */
+            overflow: visible;
         }
         .room-card {
             display: flex;

@@ -25,6 +25,8 @@
         <div class="loading-bar-wrap">
             <div id="loading-bar" class="loading-bar-fill"></div>
         </div>
+        <div id="loading-file" class="loading-detail">正在读取：初始化…</div>
+        <div id="loading-remain" class="loading-detail">剩余文件：— 个</div>
     </div>
 
     <div class="app-wrapper" id="app-root">
@@ -74,6 +76,50 @@
                     }
                 });
             });
+
+            // ===== iframe 高度自适应：让嵌套子页面拼成纵向长条，随外壳整页滚动 =====
+            // 子页面内容多高，iframe 就多高；外壳整体滚动，子页面内部不再各自滚动。
+            // 用 ResizeObserver 观察子页面 body 尺寸变化，替代定时轮询（不暴力刷屏）。
+            function autoResizeIframe(iframe) {
+                if (!iframe || iframe.dataset.resized) return;
+                iframe.dataset.resized = 'true';
+
+                const sync = () => {
+                    try {
+                        const doc = iframe.contentDocument || iframe.contentWindow.document;
+                        let h = 0;
+                        if (doc && doc.documentElement) {
+                            h = Math.max(doc.documentElement.scrollHeight, doc.body ? doc.body.scrollHeight : 0);
+                        }
+                        if (h > 0 && iframe.style.height !== h + 'px') {
+                            iframe.style.height = h + 'px';
+                            // 日记面板收起/展开时同步外层高度（如存在）
+                            const pane = iframe.closest && iframe.closest('.log-pane, .main-pane');
+                            if (pane && pane.closest) {
+                                pane.style.height = 'auto';
+                            }
+                        }
+                    } catch (_) { /* 跨域忽略 */ }
+                };
+
+                iframe.addEventListener('load', sync);
+
+                // 同源子页面：用 ResizeObserver 监听内容尺寸变化；跨域则退回 load 同步
+                try {
+                    const doc = iframe.contentDocument;
+                    if (doc && doc.body) {
+                        const ro = new ResizeObserver(() => sync());
+                        ro.observe(doc.body);
+                        if (doc.documentElement) ro.observe(doc.documentElement);
+                        iframe.__resizeObserver = ro;
+                    }
+                } catch (_) { /* 跨域无法观察，仅 load 时同步一次 */ }
+
+                window.addEventListener('resize', sync);
+                sync();
+            }
+            autoResizeIframe(document.getElementById('logFrame'));
+            autoResizeIframe(document.getElementById('mainFrame'));
 
             function checkIframeLoaded(iframeId, pageName) {
                 const iframe = document.getElementById(iframeId);

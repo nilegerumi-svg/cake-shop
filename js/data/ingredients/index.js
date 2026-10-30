@@ -15,16 +15,20 @@ const ING_MODULES = [
     './important_shelf_life.js'
 ];
 
-for (const path of ING_MODULES) {
+// 食材分类模块各自独立挂载数据，可安全并行加载提速
+window.setLoadTotal?.(ING_MODULES.length, 'ingredients');
+
+await Promise.all(ING_MODULES.map(async (path) => {
     try {
         await import(path);
+        window.loadTick?.(path);
         console.log(`✅ [Ingredients] 成功加载: ${path}`);
     } catch (err) {
         // 👈 修改：只警告，不 throw 抛出死机！
         console.warn(`⚠️ [Ingredients] 子模块加载失败，已跳过 -> ${path}`);
         console.warn(`原因: ${err.message || err}`);
     }
-}
+}));
 
 window.Cake = window.Cake || {};
 

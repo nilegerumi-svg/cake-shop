@@ -121,6 +121,34 @@ cake-shop/
 
 ## 🔧 更新日志 (Changelog)
 
+### v1.5 · 加载体验、整页滚动与食材图鉴
+
+> 本轮聚焦于加载界面体验（进度明细 + 超时误报修复 + 并行提速）、嵌套子页面整页滚动架构改造、食材仓库升级为真正的食材图鉴，以及色弱适配落实到页面渲染层。
+
+#### ⏳ 加载体验优化
+*   **加载界面文件进度明细** —— [game.html](game.html) 加载界面新增"正在读取：xxx"与"剩余文件：N 个"两行明细；[js/host/monitor/index.js](js/host/monitor/index.js) 新增 `setLoadTotal`/`loadTick` 文件级进度上报机制，各聚合模块（data/core/actions/recipes/ingredients）逐文件上报，玩家可看到剩余文件数持续递减，不会误以为卡死。引擎就绪时明细归零并显示"🎉 已就绪"。
+*   **加载超时误报修复** —— [pages/boot-safe.js](pages/boot-safe.js) 新增 `engineStillLoading()` 检测：引擎仍处于 `INITIALIZING` 状态或文件进度未走完时，不判定为超时、不显示"🚨 致命错误"，避免正常加载被误报。
+*   **并行加载提速** —— 数据层 [js/data/index.js](js/data/index.js)、食材层 [js/data/ingredients/index.js](js/data/ingredients/index.js)、配方层 [js/data/recipes/index.js](js/data/recipes/index.js) 的独立子模块改为 `Promise.all` 并行加载（原先串行逐个 await），减少加载总耗时。
+
+#### 📜 整页滚动架构改造
+*   **嵌套子页面拼成纵向长条** —— [css/game-shell.css](css/game-shell.css) 从"固定高度 + 内部滚动"改为"整页拼接长条 + 外壳统一滚动"：body 改为 `overflow-y: auto`，`.app-wrapper` 高度 `auto`，`.main-pane`/`.log-pane` 改为 `flex: 0 0 auto; overflow: visible`，iframe 不再有固定高度。
+*   **iframe 高度自适应** —— [game.html](game.html) 新增 `autoResizeIframe`：用 `ResizeObserver` 监听子页面 body 尺寸变化（非定时轮询），子页面内容多高 iframe 就多高，嵌套页面像纵向长条一样随外壳整页滚动，子页面内部不再各自滚动。
+*   **子页面样式配合** —— [pages/home/index.html](pages/home/index.html) body 从 `height:100%; overflow-y:auto` 改为 `height:auto; overflow:visible`；[pages/log/style.css](pages/log/style.css) 同步改为自然高度，日记列表不再内部滚动。
+*   **日志折叠简化** —— [pages/log/player.js](pages/log/player.js) 折叠逻辑不再手动操作父面板（外壳 ResizeObserver 会自动同步 iframe 高度），只控制自身列表 `max-height`。
+
+#### 📖 食材图鉴
+*   **"我的 → 食材仓库"升级为食材图鉴** —— [pages/profile/inventory.html](pages/profile/inventory.html) 彻底重写为图鉴式卡片网格（`.atlas-grid`）：窄屏 2 列、宽屏 3 列；**只展示已持有的食材**，未持有的不出现；每张卡片展示 emoji、名称、库存份数、最短剩余天数、最低品质与变质徽标。[pages/profile/page.js](pages/profile/page.js) 入口文案与图标同步改为"📖 食材图鉴"。
+*   **底栏食材库同步改造** —— [pages/larder/index.js](pages/larder/index.js) 改为只展示已持有食材（`ownedIds` 过滤）；[pages/larder/style.css](pages/larder/style.css) 网格改为 2 列 / 3 列布局。
+
+#### ♿ 色弱适配落实到页面
+*   **店铺状态符号辅助** —— [pages/shop/page.js](pages/shop/page.js) 的 `setStatus` 成功/错误状态增加 `✅`/`❌` 符号前缀，不单靠颜色区分。
+*   **全局 ok/lack 符号** —— v1.4 已在 CSS 层加 `✓`/`✗` 符号，本轮确认各页面渲染路径覆盖。
+
+#### ✅ 验证
+全部改动通过静态校验（193 个 JS 文件零语法错误、6 个 CSS 文件括号平衡）。加载界面文件进度持续变动、超时误报消除、数据层并行加载提速、嵌套子页面整页滚动、食材图鉴只展示持有食材且 2/3 列网格。
+
+---
+
 ### v1.4 · 布局统一、无障碍适配与模块化深化
 
 > 本轮聚焦于布局一致性、无障碍（色弱/字号）适配与模块化深化。修复了宽度百分比不一致、文案截断、折叠留白与底栏按钮被覆盖等多个问题。

@@ -14,9 +14,13 @@ const CORE_MODULES = [
     './render/index.js'
 ];
 
+// 上报核心层文件数（串行加载，逐个 tick）
+window.setLoadTotal?.(CORE_MODULES.length, 'core');
+
 for (const path of CORE_MODULES) {
     try {
         await import(path);
+        window.loadTick?.(path);
     } catch (err) {
         // 👈 终极报错放大镜：谁坏了直接拉出来斩了
         const errMsg = `❌ [Core] 致命错误！核心模块加载失败 -> ${path}\n原因: ${err.message}`;

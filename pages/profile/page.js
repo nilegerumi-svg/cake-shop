@@ -122,10 +122,10 @@ const render = () => {
 
                 <div class="nav-card" data-href="inventory.html">
                     <div class="nav-left">
-                        <span class="nav-icon">🎒</span>
+                        <span class="nav-icon">📖</span>
                         <div>
-                            <div class="nav-title">食材仓库</div>
-                            <div class="nav-desc">当前储存 ${invCount} 份食材</div>
+                            <div class="nav-title">食材图鉴</div>
+                            <div class="nav-desc">已持有 ${invCount} 份食材，看图鉴了解状态</div>
                         </div>
                     </div>
                     <span class="arrow">→</span>

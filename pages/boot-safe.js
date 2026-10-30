@@ -52,6 +52,21 @@
         `;
     }
 
+    // 引擎是否仍在加载中（初始化中 / 文件进度仍在变动）：
+    // 此时不应判定"超时"，避免正常加载被误报致命错误
+    function engineStillLoading() {
+        try {
+            const tops = window === window.top ? window : window.top;
+            const state = tops.__engineState;
+            if (state === 'INITIALIZING') return true;
+            const info = tops.__loadInfo;
+            if (info && Number.isFinite(info.total) && info.total > 0) {
+                if (info.done < info.total) return true;
+            }
+            return false;
+        } catch (_) { return false; }
+    }
+
     function waitForCake(onReady, opts = {}) {
         const {
             timeout = 15000,
@@ -75,6 +90,12 @@
             }
 
             if (Date.now() - startedAt >= timeout) {
+                // 引擎仍在加载（初始化中 / 文件进度变动中）不算超时，继续等待
+                if (engineStillLoading()) {
+                    setTimeout(() => { tick(); }, interval);
+                    return;
+                }
+
                 const fallback = await ensureCakeRuntime();
                 if (required(fallback)) {
                     settled = true;

@@ -121,6 +121,33 @@ cake-shop/
 
 ## 🔧 更新日志 (Changelog)
 
+### v1.4 · 布局统一、无障碍适配与模块化深化
+
+> 本轮聚焦于布局一致性、无障碍（色弱/字号）适配与模块化深化。修复了宽度百分比不一致、文案截断、折叠留白与底栏按钮被覆盖等多个问题。
+
+#### 🎨 布局与视觉修复
+*   **宽度体系统一** —— [css/game-shell.css](css/game-shell.css) 中 `.split-container`（日记+主内容区）增加 `max-width: var(--app-max-width)` 并居中，与顶部栏、底栏同宽对齐，消除娱乐区/日记与其余页面宽度百分比不一致的问题。
+*   **文案截断修复** —— 全 CSS 系统补齐自动换行：`.card`、`.item-desc`、`.log-entry` 等文本容器统一 `word-break: break-word; overflow-wrap: anywhere`；底栏重构为"提示条 + 按钮行"两层结构，提示条允许换行，不再因宽度不足被隐藏。
+*   **日志折叠留白修复** —— 日志收起时外层 `.log-pane` 通过 `player.js` 同步添加 `.collapsed` 类并收缩 `flex-basis`，下方主内容区紧贴信息栏，不再产生中间空白。
+*   **底栏按钮被覆盖漏洞** —— [js/core/render/footer.js](js/core/render/footer.js) 原先用 `el.innerHTML` 把整个 `#footer`（含"睡觉/营业/食材库"按钮）覆盖成一句提示文案，既挤压文案又清空按钮。已改为只更新独立提示条 `#footerHint`，按钮稳定保留。
+*   **死变量清理** —— 移除已无引用的 `--footer-h` 变量。
+
+#### ♿ 无障碍适配
+*   **色弱友好** —— 全局"有料/缺料、够用/不够"状态（`.ok`/`.lack`）不再单靠红绿区分，新增 `✓`/`✗` 符号前缀辅助识别；变质徽标（临期/变质/腐烂）保留文字标签，弱化对颜色对比的依赖。
+*   **字号随玩家设置缩放** —— 核心 CSS（[css/styles.css](css/styles.css)、[css/game-shell.css](css/game-shell.css)、[pages/log/style.css](pages/log/style.css)）全部 `font-size` 由固定 `px` 改为 `rem`，根字号设为 `100%`，玩家调整浏览器/系统字号时全站随之缩放。
+
+#### 📦 模块化拆分（延续 v1.3 思路，不改变父路径）
+*   **js/actions/shop/sell.js**（8.1KB）→ 拆为 [sell/customer.js](js/actions/shop/sell/customer.js)（顾客自动售卖+失败品清理）与 [sell/manual.js](js/actions/shop/sell/manual.js)（手动卖出+售卖白名单），原文件保留为顶层 await 聚合入口。
+*   **js/actions/entertainment/map/location_actions.js**（8KB）→ 拆为 [location_actions/query.js](js/actions/entertainment/map/location_actions/query.js)（区域/地点/商店查询）与 [location_actions/actions.js](js/actions/entertainment/map/location_actions/actions.js)（动作列表生成与执行），原文件保留为聚合入口。
+
+#### 🐛 顺带修复
+*   **顾客购买白名单对齐** —— [sell/customer.js](js/actions/shop/sell/customer.js) 的顾客自动购买逻辑补上 `skill === 'bakery'` 过滤，与店铺手动售卖白名单口径一致，避免顾客买走料理类成品。
+
+#### ✅ 验证
+全部改动通过静态校验（所有 JS 脚本语法检查通过）与浏览器实机验证：娱乐区/日记宽度与顶栏对齐、提示文案完整换行显示、日志收起无留白、底栏按钮稳定可用、色弱下状态可辨、字号随系统设置缩放、拆分后售卖与地点系统正常挂载。
+
+---
+
 ### v1.3 · UI 优化与架构清理
 
 > 本轮聚焦于 UI 体验优化、代码架构清理与模块化拆分。修复了多个影响游戏体验的显示问题，新增食材库主界面，并对大文件进行拆分以提升可维护性。

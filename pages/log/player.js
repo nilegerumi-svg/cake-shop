@@ -151,6 +151,18 @@
         collapseBtn.textContent = state.isCollapsed ? '展开 ▴' : '收起 ▾';
         collapseBtn.setAttribute('aria-expanded', String(!state.isCollapsed));
         loadMoreBtn.hidden = state.isCollapsed || state.nextIndex >= state.groups.length;
+
+        // 同步外层·日记面板高度：折叠时收缩，避免收起后下方留白
+        try {
+            const parentDoc = window.parent && window.parent.document;
+            if (parentDoc && parentDoc !== document) {
+                const pane = parentDoc.querySelector('.log-pane');
+                if (pane) {
+                    pane.classList.toggle('collapsed', state.isCollapsed);
+                    pane.style.flexBasis = state.isCollapsed ? 'clamp(96px, 16vh, 150px)' : '';
+                }
+            }
+        } catch (_) { /* 跨域忽略 */ }
     }
 
     function rebuild(opts) {
@@ -229,5 +241,7 @@
             if (++attempts > RETRY_MAX) { showEmpty('无法连接到商店数据'); return; }
             setTimeout(tryConnect, 100);
         })();
+        // 同步一次折叠状态（外层日记面板收缩），保证刷新后仍生效
+        applyCollapsedUI();
     })();
 })();

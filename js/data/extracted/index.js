@@ -94,5 +94,7 @@ import '../characters/encounters.js';
 import '../characters/tiers.js';
 import '../shelter/index.js';
 import '../player/index.js';
+import '../ui/small_tables.js';
+
 
 

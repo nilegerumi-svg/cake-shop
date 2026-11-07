@@ -1,0 +1,14 @@
+
+/* 触屏设备：输入类控件字号不低于 16px，避免 iOS Safari / 部分 WebView 聚焦时自动放大页面 */
+@media (pointer: coarse) {
+  #container input, #container textarea, #container select { font-size: 16px !important; }
+}
+/* 小屏机型：展开状态顶栏留白收紧一点，尽量多留内容区 */
+@media (max-width: 360px) {
+  .top-bar { padding-left: 0.6rem; padding-right: 0.6rem; }
+}
+/* 矮屏（横屏手机 / 小折叠外屏）：压缩顶栏上下留白 */
+@media (max-height: 520px) and (pointer: coarse) {
+  .top-bar { padding-top: 0.4rem; padding-bottom: 0.4rem; }
+}
+    

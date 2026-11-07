@@ -1,57 +1,15 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
+<!doctype html>
+<html data-frame-id="profile">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>📊 我的 · 甜蜜物语</title>
-    <link rel="stylesheet" href="../../css/styles.css">
-    <style>
-        .nav-card {
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 15px; background: #fff; border-radius: 12px;
-            margin-bottom: 12px; cursor: pointer; border: 1px solid var(--pink-100);
-            transition: 0.2s;
-        }
-        .nav-card:active { transform: scale(0.98); background: #fff8fa; }
-        .nav-left { display: flex; align-items: center; gap: 12px; }
-        .nav-icon { font-size: 28px; }
-        .nav-title { font-weight: bold; color: var(--pink-600); font-size: 15px; }
-        .nav-desc { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
-        .arrow { color: var(--pink-300); font-size: 20px; font-weight: bold; }
-        .fatal-error { background: #ff4d4f; color: white; padding: 20px; border-radius: 10px; font-family: monospace; font-size: 14px; word-break: break-all; margin: 20px; }
-
-        /* ===== 技能熟练度面板 ===== */
-        .skill-panel {
-            background: #fff8fa; border: 1px solid var(--pink-100);
-            border-radius: 12px; padding: 12px 14px; margin-bottom: 16px;
-        }
-        .skill-row {
-            display: flex; align-items: center; flex-wrap: wrap;
-            gap: 8px; margin-bottom: 8px;
-        }
-        .skill-label { flex: 0 0 auto; min-width: 88px; font-size: 12px; color: var(--text-mid); }
-        .skill-lv { flex: 0 0 auto; width: 42px; font-size: 12px; font-weight: bold; color: var(--pink-600); }
-        /* 进度条按百分比伸缩，窄屏自动占满剩余宽度 */
-        .skill-track {
-            flex: 1 1 60px; min-width: 40px; height: 8px;
-            background: #ffe4e8; border-radius: 999px; overflow: hidden;
-        }
-        .skill-fill { height: 100%; width: 0%; background: var(--pink-400); border-radius: 999px; }
-        .skill-exp { flex: 0 0 auto; font-size: 11px; color: var(--text-muted); }
-        .skill-sub {
-            font-size: 11px; font-weight: bold; color: #d6336c;
-            margin: 10px 0 6px; padding-top: 8px; border-top: 1px dashed var(--pink-100);
-        }
-        .skill-sub.muted { color: var(--text-muted); font-weight: normal; }
-    </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>甜蜜物语 · profile</title>
+<link rel="stylesheet" href="../../css/frame-base.css" />
 </head>
 <body>
-    <div class="game-body" style="padding-top: 10px;">
-        <div class="content" id="content">
-            <div class="muted text-center" style="margin-top:50px;">⏳ 正在获取玩家档案...</div>
-        </div>
-    </div>
-
-    <script src="page.js"></script>
+<div id="container" class="min-h-screen">
+  <div id="root" class="panel-scroll pt-2 pb-32"></div>
+</div>
+<script src="../../js/frame-bootstrap.js"></script>
 </body>
 </html>

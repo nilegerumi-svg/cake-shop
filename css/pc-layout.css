@@ -1,0 +1,10 @@
+
+/* PC 宽屏适配：手机版面居中收窄，两侧留暗色背景 */
+@media (min-width:768px){
+  html{background:#241012;}
+  #container{max-width:520px;margin:0 auto;box-shadow:0 0 48px rgba(0,0,0,.4);}
+  .tab-bar{max-width:520px;margin-left:auto;margin-right:auto;}
+  .voice-command-fixed{right:calc((100vw - 520px)/2 + 12px);}
+  .bgm-toggle-title{right:calc((100vw - 520px)/2 + 12px);}
+  #global-modal-root > *{max-width:520px;margin-left:auto;margin-right:auto;}
+}

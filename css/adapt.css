@@ -32,6 +32,8 @@
     right: auto !important;
     transform: translateX(-50%) !important;
   }
+  /* 底部白条：.tab-bar::after 是手机安全区填充（34px 白），PC 下不需要 */
+  .tab-bar::after { height: 0 !important; }
 }
 
 /* 4) 小屏：字号与间距收紧，保证 320px 可玩 */

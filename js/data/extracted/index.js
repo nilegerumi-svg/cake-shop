@@ -35,3 +35,19 @@ import '../fishing/weights.js';
 import '../fishing/catches.js';
 import '../shop/shops.js';
 import '../shop/shop_map.js';
+
+// 第二轮提取
+import '../ingredients/base_ingredients.js';
+import '../ingredients/categories.js';
+import '../misc/kc.js';
+import '../misc/wg.js';
+import '../festivals/blessings.js';
+import '../festivals/map.js';
+import '../world/locations_ba.js';
+import '../characters/npc_ids.js';
+import '../characters/allergies.js';
+import '../characters/festival_greetings.js';
+import '../items/index.js';
+import '../topics/templates_lc.js';
+import '../topics/templates_tq.js';
+import '../topics/categories.js';

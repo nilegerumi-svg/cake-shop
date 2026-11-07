@@ -88,3 +88,7 @@ import '../ingredients/category_order.js';
 
 // 第六轮提取（成品服装）
 import '../outfits/index.js';
+
+// 第七轮（相遇事件 / 好感度四档）
+import '../characters/encounters.js';
+import '../characters/tiers.js';

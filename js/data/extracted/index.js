@@ -93,4 +93,6 @@ import '../outfits/index.js';
 import '../characters/encounters.js';
 import '../characters/tiers.js';
 import '../shelter/index.js';
+import '../player/index.js';
+
 

@@ -70,11 +70,29 @@ cake-shop/
 │   ├── app.bundle.js     # 现成 UI 打包（React）
 │   ├── frame-bootstrap.js# iframe 面板引导（主题 / 焦点 / 错误上报）
 │   ├── boot/             # 启动兜底（errors / a11y-shim）
-│   └── host/             # 宿主增强（auto-collapse / a11y / panel-autofit / open-tip / swipe）
+│   ├── host/             # 宿主增强（auto-collapse / a11y / panel-autofit / open-tip / swipe）
+│   └── data/             # 模块化数据（按旧版文件夹分类）
+│       ├── ingredients/  # 食材
+│       ├── recipes/      # 食谱（bakery / China_reciped）
+│       ├── characters/   # NPC（npcs.js = 58 位镇民）
+│       ├── achievements/ # 成就
+│       ├── attributes/   # 风味 / 口感 / 香气 / 温度 / 保质期
+│       ├── bundles/      # 材料包
+│       ├── seasons/      # 季节
+│       ├── shop/         # 商店
+│       ├── tool/         # 工具
+│       ├── usually_shop_events/  # 常驻事件
+│       ├── world/        # 小镇地点
+│       ├── furniture.js  # 家具
+│       ├── sewing.js     # 缝纫配方
+│       ├── books.js      # 书籍
+│       ├── stars.js      # 星图
+│       ├── solar_terms.js# 二十四节气
+│       ├── newspapers.js # 旧报纸 28 版
+│       └── health.js     # 疾病 / 心理系统
 ├── pages/                # 6 个 iframe 面板（home / market / town / fate / profile / achieve）
 ├── docs/
 │   └── 疾病与心理系统.md  # 健康/心情/饱食逻辑导出
-├── src/                  # 旧版 vanilla 实现 + 合并数据（保留，不参与线上）
 └── README.md
 ```
 

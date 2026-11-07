@@ -29,9 +29,11 @@
             { icon: '🏪', name: '店面', desc: '开店营业 · 装修 · 员工 · 货架', nav: 'pages/shop/index.html' },
             { icon: '🍰', name: '厨房', desc: '吃饭 · 备料烘焙 · 研发配方', nav: 'pages/bake/index.html' },
             { icon: '🥘', name: '工坊', desc: '制作料理 · 熬酱榨汁', nav: 'pages/recipe/index.html' },
+            { icon: '🛋️', name: '装修', desc: '家具 · 布置小楼', nav: 'pages/furniture/index.html' },
         ]},
         { name: '二楼', emoji: '🛏️', rooms: [
             { icon: '😴', name: '卧室', desc: '小憩 · 睡觉恢复精力', action: 'sleep' },
+            { icon: '🧵', name: '衣柜', desc: '缝纫 · 更换服装', nav: 'pages/sewing/index.html' },
             { icon: '🌻', name: '阳台', desc: '种菜种花', soon: true },
         ]},
         { name: '三楼', emoji: '📚', rooms: [

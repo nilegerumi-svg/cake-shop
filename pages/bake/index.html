@@ -1,31 +1,39 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🧂 烘焙工坊 · 甜蜜物语</title>
-    <!-- 独立样式 -->
-    <link rel="stylesheet" href="style.css">
-    <!-- 全局样式 -->
-    <link rel="stylesheet" href="../../css/styles.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>厨房 · 甜蜜物语</title>
+<link rel="stylesheet" href="../../css/styles.css">
+<style>
+  body { background: transparent; padding: 12px; margin: 0; font-family: "PingFang SC","Microsoft YaHei",sans-serif; }
+  .muted { color: #b08a6a; }
+  .kit-head { text-align: left; margin: 4px 0 10px; }
+  .kit-head h2 { color: #4a2c17; font-size: 20px; margin: 0 0 2px; }
+  .kit-head p { color: #b08a6a; font-size: 13px; margin: 0; }
+  .sub-tabs { display:flex; gap:8px; margin-bottom:10px; }
+  .sub-tab { flex:1; padding:8px; background:#fffdf8; border:1px solid #f0dcc0; border-radius:12px; font-size:13px; font-weight:bold; color:#b08a6a; cursor:pointer; font-family:inherit; }
+  .sub-tab.active { background:#e04a63; color:#fff; border-color:#e04a63; }
+  .search { width:100%; box-sizing:border-box; padding:10px 14px; border:2px solid #f0dcc0; border-radius:12px; font-size:14px; background:#fffdf8; color:#4a2c17; margin-bottom:10px; }
+  .cat-title { color:#8a5a44; font-size:14px; font-weight:bold; margin:12px 0 8px; }
+  .grid { display:grid; grid-template-columns:1fr; gap:8px; }
+  .rec-card { background:#fffdf8; border:1px solid #f0dcc0; border-radius:14px; padding:10px 12px; }
+  .rec-row { display:flex; align-items:center; gap:10px; }
+  .rec-emoji { font-size:26px; line-height:1; }
+  .rec-body { flex:1; min-width:0; }
+  .rec-name { font-weight:bold; color:#4a2c17; font-size:14px; }
+  .rec-meta { font-size:11px; color:#b08a6a; margin-top:2px; }
+  .rec-ing { font-size:11px; color:#6b4226; margin-top:4px; }
+  .craft-btn { background:#e04a63; color:#fff; border:none; border-radius:18px; padding:7px 14px; font-size:13px; font-weight:bold; cursor:pointer; font-family:inherit; white-space:nowrap; }
+  .craft-btn:disabled { background:#e8c9a4; cursor:not-allowed; }
+  .toast { position: fixed; top: 70px; left: 50%; transform: translateX(-50%); background: #4a2c17; color: #fff; padding: 8px 16px; border-radius: 20px; font-size: 13px; z-index: 99; opacity: 0; transition: opacity .2s; pointer-events: none; max-width: 90%; }
+</style>
 </head>
 <body>
-    <div class="game-body" style="padding-top: 10px;">
-        <h2>🧂 烘焙工坊</h2>
-        <div class="workshop-layout">
-            <!-- 左侧：配方选择栏 -->
-            <div class="recipe-menu" id="recipeMenu"></div>
-            
-            <!-- 右侧：工作台 -->
-            <div class="workbench" id="workbench">
-                <div class="muted text-center" style="margin-top:50px;">👈 请在左侧选择配方</div>
-            </div>
-        </div>
-    </div>
+<div id="content"><div class="muted" style="margin-top:40px;text-align:center;">⏳ 正在加载食谱...</div></div>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
 
-    <!-- 引擎等待器（与采购页/配方页一致） -->
-    <script src="../boot-safe.js"></script>
-    <!-- 独立逻辑模块 -->
-    <script type="module" src="index.js"></script>
+<script src="../../pages/boot-safe.js"></script>
+<script type="module" src="index.js"></script>
 </body>
 </html>

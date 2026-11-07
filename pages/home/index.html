@@ -3,13 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>主页 · 甜蜜物语</title>
+    <title>小楼 · 甜蜜物语</title>
     <link rel="stylesheet" href="../../css/styles.css">
     <style>
-        /* 子页面高度自然展开：外壳 iframe 会按内容同步高度，整页统一滚动 */
         body {
             background: transparent;
-            padding: 16px;
+            padding: 12px;
             margin: 0;
             height: auto;
             box-sizing: border-box;
@@ -17,35 +16,47 @@
             font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
             overflow: visible;
         }
-        .room-card {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 20px;
-            background: #fff;
-            border-radius: 16px;
-            margin-bottom: 15px;
-            cursor: pointer;
-            border: 1px solid rgba(255, 175, 200, 0.55);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.03);
-            transition: 0.2s;
+        .home-head { text-align: left; margin: 4px 0 14px; }
+        .home-head h2 { color: #4a2c17; font-size: 20px; margin: 0 0 4px; }
+        .home-head p { color: #b08a6a; font-size: 13px; margin: 0; }
+        .muted { color: #b08a6a; }
+
+        .floor { margin-bottom: 18px; }
+        .floor-title {
+            display: flex; align-items: center; gap: 6px;
+            color: #8a5a44; font-size: 15px; font-weight: bold;
+            margin: 0 0 8px;
         }
-        .room-card:active { transform: scale(0.98); background: #fff8fa; }
-        .room-left { display: flex; align-items: center; gap: 15px; }
-        .room-icon { font-size: 36px; }
-        .room-title { font-weight: bold; color: var(--pink-600); font-size: 18px; }
-        .room-desc { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
-        .arrow { color: var(--pink-300); font-size: 24px; font-weight: bold; }
+        .room-grid { display: flex; flex-direction: column; gap: 10px; }
+
+        .room-card {
+            display: flex; align-items: center; gap: 12px;
+            width: 100%; padding: 14px 16px;
+            background: #fffdf8;
+            border: 1px solid #f0dcc0;
+            border-radius: 16px;
+            cursor: pointer; text-align: left;
+            font-family: inherit; color: inherit;
+            box-shadow: 0 2px 6px rgba(180, 120, 60, 0.06);
+            transition: 0.15s;
+        }
+        .room-card:active { transform: scale(0.99); background: #f7ecdc; }
+        .room-icon { font-size: 30px; line-height: 1; }
+        .room-body { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+        .room-name { font-weight: bold; color: #4a2c17; font-size: 15px; }
+        .room-desc { font-size: 12px; color: #b08a6a; }
+        .room-arrow { color: #e8c9a4; font-size: 22px; font-weight: bold; }
+        .soon { font-size: 10px; color: #b08a6a; background: #f7ecdc; border-radius: 8px; padding: 1px 6px; margin-left: 4px; }
+
+        .render-error { color: #c62828; text-align: center; margin-top: 40px; padding: 16px; }
     </style>
 </head>
 <body>
     <div id="content">
-        <!-- 这个加载提示如果一直不消失，说明 index.js 报错了，或者没拿到 Cake 引擎 -->
         <div class="muted text-center" style="margin-top:50px;">⏳ 正在等待引擎加载...</div>
     </div>
 
-    <!-- 🚨 检查这里！大概率少写了一个 ../ 或 js/ -->
-    <script src="../../pages/boot-safe.js"></script> 
+    <script src="../../pages/boot-safe.js"></script>
     <script type="module" src="index.js"></script>
 </body>
 </html>

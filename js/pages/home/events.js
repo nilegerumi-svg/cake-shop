@@ -10,6 +10,18 @@ export const bindEvents = () => {
         const G = window.parent.Game || window.Game;
         if (!G || !G.state) return;
 
+        // 房间导航：让父外壳主 iframe 跳转到目标页面
+        const navBtn = e.target.closest('[data-nav]');
+        if (navBtn) {
+            const href = navBtn.dataset.nav;
+            try {
+                const mf = window.parent.document.getElementById('mainFrame');
+                if (mf) mf.src = href;
+                else window.location.href = href;
+            } catch (_) { window.location.href = href; }
+            return;
+        }
+
         const btn = e.target.closest('[data-action]');
         if (!btn) return;
 

@@ -6,13 +6,13 @@
     <title>🍰 甜蜜物语</title>
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="css/game-shell.css">
-    
+
     <script type="module" src="js/host/monitor/index.js"></script>
     <style>
         .iframe-error-overlay {
-            position: absolute; inset: 0; background: rgba(255,240,245,0.95); z-index: 999;
+            position: absolute; inset: 0; background: rgba(255,248,239,0.97); z-index: 999;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            color: #c81e3f; font-family: sans-serif; text-align: center; padding: 20px;
+            color: #c62828; font-family: sans-serif; text-align: center; padding: 20px;
         }
         .iframe-error-overlay h3 { margin: 0 0 10px 0; font-size: 18px; }
         .iframe-error-overlay p { margin: 0; font-size: 13px; word-break: break-all; }
@@ -20,6 +20,7 @@
 </head>
 <body>
     <h1 class="sr-only">甜蜜物语 - 游戏主界面</h1>
+
     <div id="app-loading" role="status" aria-live="polite" aria-label="游戏加载中">
         <div class="loading-title">🍰 甜蜜物语</div>
         <div id="loading-text" class="loading-text">正在准备启动...</div>
@@ -30,36 +31,14 @@
         <div id="loading-remain" class="loading-detail">剩余文件：— 个</div>
     </div>
 
-    <div class="app-wrapper" id="app-root">
-        <header id="header" role="banner"></header>
-        <nav id="navBar" role="navigation" aria-label="主导航"></nav>
-        
-        <div class="split-container">
-            <div class="log-pane">
-                <iframe id="logFrame" title="游戏日志" src="pages/log/index.html" class="log-frame"></iframe>
-            </div>
-            <!-- 提示条 + 功能按钮行都放在日志下方、主内容区上方，不再放底部挡住内容 -->
-            <div class="footer-bar" id="footer">
-                <div class="footer-hint" id="footerHint" aria-live="polite">💡 前往【🏪 店铺】页面即可开店营业，接待顾客！</div>
-                <div class="footer-btns">
-                    <button type="button" class="footer-btn" data-footer-action="sleep" aria-label="睡觉">
-                        <span class="icon" aria-hidden="true">🛌</span><span>睡觉</span>
-                    </button>
-                    <button type="button" class="footer-btn" data-footer-action="shop" aria-label="营业或打烊">
-                        <span class="icon" aria-hidden="true" id="f-icon-shop">🚪</span><span id="f-text-shop">营业</span>
-                    </button>
-                    <button type="button" class="footer-btn" data-footer-action="larder" aria-label="食材库">
-                        <span class="icon" aria-hidden="true">📦</span><span>食材库</span>
-                    </button>
-                    <div class="footer-btn footer-status">
-                        <span class="icon" aria-hidden="true">📅</span><span class="footer-time" id="f-time">Day 1 08:00</span>
-                    </div>
-                </div>
-            </div>
-            <div class="main-pane">
-                <iframe id="mainFrame" title="游戏主界面" src="pages/home/index.html" class="main-frame"></iframe>
-            </div>
-        </div>
+    <div class="app-wrapper">
+        <header id="header" class="app-header" role="banner"></header>
+
+        <main class="main-pane" role="main">
+            <iframe id="mainFrame" title="游戏内容" src="pages/home/index.html" class="main-frame"></iframe>
+        </main>
+
+        <nav id="tabBar" class="tab-bar" role="navigation" aria-label="主标签"></nav>
     </div>
 
     <script src="js/host/log-bridge.js"></script>
@@ -69,18 +48,7 @@
         (function() {
             'use strict';
 
-            document.querySelectorAll('[data-footer-action]').forEach((btn) => {
-                btn.addEventListener('click', () => {
-                    const action = btn.dataset.footerAction;
-                    if (typeof window.footerAction === 'function') {
-                        window.footerAction(action);
-                    }
-                });
-            });
-
-            // ===== iframe 高度自适应：让嵌套子页面拼成纵向长条，随外壳整页滚动 =====
-            // 子页面内容多高，iframe 就多高；外壳整体滚动，子页面内部不再各自滚动。
-            // 用 ResizeObserver 观察子页面 body 尺寸变化，加防抖避免 ResizeObserver loop 循环报错。
+            // ===== iframe 高度自适应：子页面拼成纵向长条，随外壳整页滚动 =====
             function autoResizeIframe(iframe) {
                 if (!iframe || iframe.dataset.resized) return;
                 iframe.dataset.resized = 'true';
@@ -94,22 +62,15 @@
                         if (doc && doc.documentElement) {
                             h = Math.max(doc.documentElement.scrollHeight, doc.body ? doc.body.scrollHeight : 0);
                         }
-                        if (h > 0) {
-                            iframe.style.height = h + 'px';
-                        }
-                    } catch (_) { /* 跨域忽略 */ }
+                        if (h > 0) iframe.style.height = h + 'px';
+                    } catch (_) {}
                 };
-
-                // 防抖：同一帧内只同步一次，避免 ResizeObserver loop 无限循环
                 const scheduleSync = () => {
                     if (scheduled) return;
                     scheduled = true;
                     requestAnimationFrame(sync);
                 };
-
                 iframe.addEventListener('load', scheduleSync);
-
-                // 同源子页面：用 ResizeObserver 监听内容尺寸变化；跨域则退回 load 同步
                 try {
                     const doc = iframe.contentDocument;
                     if (doc && doc.body) {
@@ -118,56 +79,44 @@
                         if (doc.documentElement) ro.observe(doc.documentElement);
                         iframe.__resizeObserver = ro;
                     }
-                } catch (_) { /* 跨域无法观察，仅 load 时同步一次 */ }
-
+                } catch (_) {}
                 window.addEventListener('resize', scheduleSync);
                 scheduleSync();
             }
-            autoResizeIframe(document.getElementById('logFrame'));
             autoResizeIframe(document.getElementById('mainFrame'));
 
             function checkIframeLoaded(iframeId, pageName) {
                 const iframe = document.getElementById(iframeId);
                 if (!iframe) return;
-
                 iframe.addEventListener('load', () => {
                     try {
                         const doc = iframe.contentDocument || iframe.contentWindow.document;
                         const bodyText = doc.body ? doc.body.innerText.toLowerCase() : '';
                         const titleText = doc.title ? doc.title.toLowerCase() : '';
                         const htmlContent = doc.documentElement ? doc.documentElement.innerHTML.toLowerCase() : '';
-
                         if (bodyText.includes('404') || titleText.includes('404') || bodyText.includes('file not found')) {
                             showIframeError(iframe, `${pageName} (404 找不到文件)`, iframe.src);
                         } else if (!doc.body || (doc.body.children.length === 0 && htmlContent.length < 200)) {
                             showIframeError(iframe, `${pageName} (内容为空)`, '页面似乎只有空标签，请检查 HTML 结构是否有误。');
                         }
                     } catch (err) {
-                        console.warn(`无法读取 ${iframeId} 的内容 (可能跨域)`, err);
+                        console.warn(`无法读取 ${iframeId} 的内容`, err);
                     }
                 });
             }
-
             function showIframeError(iframe, title, detail) {
                 const parent = iframe.parentNode;
                 if (!parent) return;
                 if (parent.querySelector('.iframe-error-overlay')) return;
-
                 const overlay = document.createElement('div');
                 overlay.className = 'iframe-error-overlay';
-                overlay.innerHTML = `
-                    <h3>⚠️ ${title}</h3>
-                    <p style="margin-bottom:10px; max-width:100%;">${detail}</p>
-                    <button type="button" style="padding:8px 20px; border:none; border-radius:20px; background:#ff8fa3; color:white; font-weight:bold; cursor:pointer;">关闭</button>
-                `;
-                const closeBtn = overlay.querySelector('button');
-                closeBtn.addEventListener('click', () => overlay.remove());
+                overlay.innerHTML = `<h3>⚠️ ${title}</h3><p style="margin-bottom:10px;max-width:100%;">${detail}</p>
+                    <button type="button" style="padding:8px 20px;border:none;border-radius:20px;background:#e04a63;color:white;font-weight:bold;cursor:pointer;">关闭</button>`;
+                overlay.querySelector('button').addEventListener('click', () => overlay.remove());
                 parent.appendChild(overlay);
             }
-
             document.addEventListener('DOMContentLoaded', () => {
                 checkIframeLoaded('mainFrame', '主页 iframe 加载失败');
-                checkIframeLoaded('logFrame', '日志 iframe 加载失败');
             });
         })();
     </script>

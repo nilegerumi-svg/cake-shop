@@ -14,6 +14,8 @@ const DATA_MODULES = [
     './books.js',
     './stars.js',
     './solar_terms.js',
+    './newspapers.js',
+    './health.js',
     './seasons/index.js',
     './achievements/index.js',
     './bundles/index.js',

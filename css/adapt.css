@@ -21,16 +21,16 @@
 /* 滑动手感：去掉触屏高亮与长按菜单 */
 #container { -webkit-tap-highlight-color: transparent; touch-action: pan-y; }
 
-/* 3) 平板 / 桌面：整体等比放大（保持 560px 设计比例），而不是单纯拉宽 */
+/* 3) 平板 / 桌面：适度加宽到 640px（比原生 560 更舒展，又不破坏卡片换行） */
 @media (min-width: 768px) {
   /* 去掉刺眼的竖条纹，换成暖色径向光晕 */
   html, body, #container, .top-bar, .min-h-screen {
     background-image: radial-gradient(ellipse at 50% -10%, rgba(255, 200, 130, .18), transparent 55%) !important;
   }
   body { background-color: #5d2a1a !important; }
-  /* 整体放大 1.3 倍：容器、卡片、字号一起等比变大，不再破坏换行 */
-  html { zoom: 1.3; }
-  #container { max-width: 560px !important; margin: 16px auto !important; }
+  /* 容器 640px：卡片换行不崩、内容居中 */
+  
+  #container { max-width: 640px !important; margin: 16px auto !important; }
 }
 
 /* 4) 小屏：字号与间距收紧，保证 320px 可玩 */
@@ -62,4 +62,7 @@
   outline-offset: 2px;
   border-radius: 6px;
 }
+
+
+
 

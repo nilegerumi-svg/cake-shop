@@ -37,11 +37,11 @@
             { icon: '🌻', name: '阳台', desc: '种菜种花', soon: true },
         ]},
         { name: '三楼', emoji: '📚', rooms: [
-            { icon: '📖', name: '书房', desc: '读书 · 食谱图鉴', soon: true },
+            { icon: '📖', name: '书房', desc: '读书 · 解锁食谱', nav: 'pages/books/index.html' },
             { icon: '🗃️', name: '收藏架', desc: '收藏 · 星图', soon: true },
         ]},
         { name: '天台', emoji: '🌌', rooms: [
-            { icon: '🔭', name: '观星台', desc: '看天气 · 观星', soon: true },
+            { icon: '🔭', name: '观星台', desc: '看天气 · 观星 · 节气', nav: 'pages/stargazing/index.html' },
         ]},
         { name: '地下室', emoji: '📦', rooms: [
             { icon: '🧺', name: '仓库', desc: '食材库 · 存储整理', nav: 'pages/larder/index.html' },

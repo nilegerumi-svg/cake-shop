@@ -1,4 +1,0 @@
-
-.tm-open-tip{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--flash-app-safe-area-inset-bottom, 0px) + 78px);z-index:99998;max-width:88%;background:#4a2c17;color:#ffe9c4;border:2px solid #ffe9c480;border-radius:12px;padding:8px 10px 8px 12px;font-size:12px;line-height:1.55;box-shadow:0 4px 14px rgba(0,0,0,.35);display:none;align-items:flex-start;gap:8px}
-.tm-open-tip.show{display:flex}
-.tm-open-tip .tm-open-tip-x{all:unset;cursor:pointer;color:#ffd7a8;font-size:14px;line-height:1.2;padding:2px 4px;flex:none}

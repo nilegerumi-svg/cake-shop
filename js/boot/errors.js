@@ -1,1 +1,0 @@
-window.__bootErrs=[];window.addEventListener("error",function(e){window.__bootErrs.push(String(e.message)+" @"+(e.filename||"")+":"+e.lineno+":"+e.colno);});window.addEventListener("unhandledrejection",function(e){window.__bootErrs.push("REJ: "+String(e.reason).slice(0,300));});

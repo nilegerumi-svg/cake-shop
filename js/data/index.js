@@ -27,7 +27,8 @@ const DATA_MODULES = [
     './shop/index.js',
     './descriptions.js',
     './ingredients/detailed_descs.js',
-    './subsidy.js'
+    './subsidy.js',
+    './systems.js'
 ];
 
 // 数据子模块互相独立（各自向 window.Cake 挂载数据），可并行加载提速；

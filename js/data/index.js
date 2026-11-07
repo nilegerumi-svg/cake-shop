@@ -12,6 +12,7 @@ const DATA_MODULES = [
     './gardening/index.js',
     './festivals/index.js',
     './topics/index.js',
+    './extracted/index.js',
     './furniture/index.js',
     './sewing/index.js',
     './books/index.js',

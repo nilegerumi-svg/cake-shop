@@ -52,8 +52,3 @@ html { overflow-y: auto; overflow-x: hidden; }
 #root { overflow-x: hidden; }
 
 
-/* 去掉刺眼的竖条纹，统一为暖色径向光晕（与父页面一致） */
-html, body, html.night, html.night body, #container, #container.night,
-.top-bar, .min-h-screen {
-  background-image: radial-gradient(ellipse at 50% -10%, rgba(255,200,130,.12), transparent 55%) !important;
-}

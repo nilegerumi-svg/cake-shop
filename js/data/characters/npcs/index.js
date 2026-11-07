@@ -1,4 +1,6 @@
 // js/data/characters/npcs/index.js（按地点聚合 58 位 NPC）
+import './schedule.js';
+import './backstory.js';
 import './actions_春季.js';
 import './actions_冬季.js';
 import './actions_秋季.js';

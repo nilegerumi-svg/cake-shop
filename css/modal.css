@@ -96,3 +96,24 @@ html.night #global-modal-root .modal-sheet:not(.modal-sheet-phone),
   font-size: 17px !important;
   line-height: 1.85 !important;
 }
+
+/* ===== 4) PC 宽屏：弹窗同步放大，与主容器一致 ===== */
+@media (min-width: 768px) {
+  #container .modal-sheet:not(.modal-sheet-phone),
+  #global-modal-root .modal-sheet:not(.modal-sheet-phone) {
+    width: min(92vw, 720px) !important;
+    max-width: min(92vw, 720px) !important;
+    padding: 24px 26px 28px !important;
+  }
+  #container .modal-sheet:not(.modal-sheet-phone) p,
+  #global-modal-root .modal-sheet:not(.modal-sheet-phone) p { font-size: 16px !important; }
+}
+@media (min-width: 1200px) {
+  #container .modal-sheet:not(.modal-sheet-phone),
+  #global-modal-root .modal-sheet:not(.modal-sheet-phone) {
+    width: min(90vw, 820px) !important;
+    max-width: min(90vw, 820px) !important;
+  }
+  #container .modal-sheet:not(.modal-sheet-phone) p,
+  #global-modal-root .modal-sheet:not(.modal-sheet-phone) p { font-size: 17px !important; }
+}

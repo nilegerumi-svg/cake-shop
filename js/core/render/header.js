@@ -35,10 +35,13 @@ window.Cake = window.Cake || {};
                     <span class="shop-emoji" style="font-size: 20px;">👩‍🍳</span>
                     <span>${esc(state.shop?.name ?? '甜蜜小屋')}</span>
                 </div>
-                <div class="header-stats" style="display: flex; gap: 8px; font-size: 13px; color: var(--text-mid); font-weight: bold;">
-                    <span>${seasonData.emoji} ${num(state.time?.day, 1)}天 ${timeStr}</span>
-                    <span>💰 ${num(state.money, 100)}</span>
-                    <span>🧹 ${num(state.shop?.stats?.cleanliness, 100)}%</span>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <div class="header-stats" style="display: flex; gap: 8px; font-size: 13px; color: var(--text-mid); font-weight: bold;">
+                        <span>${seasonData.emoji} ${num(state.time?.day, 1)}天 ${timeStr}</span>
+                        <span>💰 ${num(state.money, 100)}</span>
+                        <span>🧹 ${num(state.shop?.stats?.cleanliness, 100)}%</span>
+                    </div>
+                    <button type="button" class="phone-btn" onclick="window.openPhone && window.openPhone()" aria-label="打开手机" style="background:#fffdf8;border:1px solid #f0dcc0;border-radius:12px;padding:4px 8px;font-size:16px;cursor:pointer;line-height:1;">📱</button>
                 </div>
             </div>
             <div class="energy-wrap" style="display: flex; align-items: center; gap: 8px; font-size: 12px;">

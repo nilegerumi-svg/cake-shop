@@ -19,6 +19,12 @@ const updateFooter = () => {
     }
 };
 
+// 打开手机：把主 iframe 切到手机页
+window.openPhone = () => {
+    const mainFrame = document.getElementById('mainFrame');
+    if (mainFrame) mainFrame.src = 'pages/phone/index.html';
+};
+
 window.footerAction = (action) => {
     const Cake = window.Cake;
     if (!Cake) return;

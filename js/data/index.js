@@ -8,6 +8,7 @@ const DATA_MODULES = [
     './recipes/index.js',
     './tool/index.js',
     './characters/index.js',
+    './world/index.js',
     './seasons/index.js',
     './achievements/index.js',
     './bundles/index.js',

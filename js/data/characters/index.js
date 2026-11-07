@@ -3,6 +3,7 @@ import './linmo.js';
 import './guyan.js';
 import './sumu.js';
 import './xiazhi.js';
+import './npcs.js';
 
 (() => {
     'use strict';

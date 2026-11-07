@@ -9,6 +9,7 @@ const DATA_MODULES = [
     './tool/index.js',
     './characters/index.js',
     './world/index.js',
+    './gardening/index.js',
     './furniture/index.js',
     './sewing/index.js',
     './books/index.js',

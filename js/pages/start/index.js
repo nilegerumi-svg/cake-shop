@@ -1,119 +1,138 @@
 // js/pages/start/index.js
+// 新版开始设置：名字/店名/性别/年龄/季节/盲人模式 → 开始经营
 (() => {
     'use strict';
 
     const Cake = window.Cake || null;
+    const $ = (id) => document.getElementById(id);
+    const finish = () => { if (typeof window.appLoadingComplete === 'function') window.appLoadingComplete(); };
+    const fail = (msg) => { if (typeof window.appLoadingFail === 'function') window.appLoadingFail(msg); console.error('❌ [Start]', msg); };
 
-    const finish = () => {
-        if (typeof window.appLoadingComplete === 'function') {
-            window.appLoadingComplete();
-        }
-    };
-    const fail = (msg) => {
-        if (typeof window.appLoadingFail === 'function') {
-            window.appLoadingFail(msg);
-        }
-        console.error('❌ [Start]', msg);
-    };
+    const nameInput = $('playerName');
+    const shopInput = $('shopName');
+    const ageInput = $('playerAge');
+    const btnStart = $('btnStart');
+    const genderGroup = $('genderGroup');
+    const seasonGroup = $('seasonGroup');
+    const formError = $('formError');
 
-    const AVATAR_EMOJI = Object.freeze({ girl1: '👧🏻', girl2: '👩🏻', boy1: '👦🏻', cake: '🧁' });
-
-    const group       = document.getElementById('avatarGroup');
-    const btnStart    = document.getElementById('btnStart');
-    const btnContinue = document.getElementById('btnContinue');
-    const nameInput   = document.getElementById('playerName');
-    const shopInput   = document.getElementById('shopName');
-
-    if (!group || !btnStart || !btnContinue || !nameInput || !shopInput) {
+    if (!nameInput || !shopInput || !ageInput || !btnStart || !genderGroup || !seasonGroup) {
         fail('开始页 DOM 结构缺失，请检查 index.html');
         return;
     }
 
-    const options = [...group.querySelectorAll('.avatar-option')];
-    if (options.length === 0) return fail('未找到头像选项');
+    // ---------- 选项状态 ----------
+    let gender = 'female';
+    let season = 'spring';
+    const BLIND_KEY = 'sweet-blind-mode';
 
-    const DEFAULT_PLAYER_NAME = '小甜心';
-    const DEFAULT_SHOP_NAME   = '甜蜜小屋';
-    const NEXT_PAGE           = 'game.html';
+    const NAMES = ['林小雨', '苏晚晴', '陈小满', '田甜', '林知夏', '温言舟', '沈嘉禾', '周晓芸'];
+    const SHOPS = ['街角甜品屋', '甜梦小栈', '梧桐蛋糕房', '春分甜屋', '云朵烘焙坊', '小满甜品店'];
 
-    let selectedKey = 'girl1';
+    const randomOf = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
-    const select = (opt) => {
-        for (const o of options) {
-            const on = o === opt;
-            o.classList.toggle('selected', on);
-            o.setAttribute('aria-checked', String(on));
-            o.setAttribute('tabindex', on ? '0' : '-1');
-        }
-        selectedKey = opt.dataset.avatar || 'girl1';
-    };
+    // ---------- 选择组绑定 ----------
+    function bindChoice(group, attr, setter) {
+        if (!group) return;
+        group.querySelectorAll('[' + attr + ']').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                group.querySelectorAll('[' + attr + ']').forEach((b) => {
+                    const on = b === btn;
+                    b.classList.toggle('selected', on);
+                    b.setAttribute('aria-checked', String(on));
+                });
+                setter(btn.getAttribute(attr));
+            });
+        });
+    }
+    bindChoice(genderGroup, 'data-gender', (v) => { gender = v; });
+    bindChoice(seasonGroup, 'data-season', (v) => { season = v; });
 
-    const moveFocus = (idx, delta) => {
-        const next = options[(idx + delta + options.length) % options.length];
-        select(next);
-        next.focus();
-    };
-
-    options.forEach((opt, idx) => {
-        opt.addEventListener('click', () => { select(opt); opt.focus(); });
-        opt.addEventListener('keydown', (e) => {
-            switch (e.key) {
-                case 'ArrowRight': case 'ArrowDown': moveFocus(idx, 1); break;
-                case 'ArrowLeft': case 'ArrowUp': moveFocus(idx, -1); break;
-                case ' ': case 'Enter': select(opt); break;
-                default: return;
-            }
+    // ---------- 随机按钮 ----------
+    document.querySelectorAll('[data-random]').forEach((btn) => {
+        btn.addEventListener('click', (e) => {
             e.preventDefault();
+            const target = btn.getAttribute('data-random');
+            if (target === 'playerName') nameInput.value = randomOf(NAMES);
+            if (target === 'shopName') shopInput.value = randomOf(SHOPS);
         });
     });
 
-    const hasSave = () => {
+    // ---------- 盲人模式询问 ----------
+    function speak(text) {
         try {
-            if (Cake && typeof Cake.hasSave === 'function') return !!Cake.hasSave();
-            return !!localStorage.getItem(Cake.SAVE_KEY || 'cake_shop_save');
-        } catch (err) { return false; }
-    };
+            if (!('speechSynthesis' in window)) return;
+            const u = new SpeechSynthesisUtterance(text);
+            u.lang = 'zh-CN';
+            window.speechSynthesis.cancel();
+            window.speechSynthesis.speak(u);
+        } catch (_) {}
+    }
+    const blindOn = $('blindOn');
+    const blindOff = $('blindOff');
+    const blindReplay = $('blindReplay');
+    if (blindOn) blindOn.addEventListener('click', () => {
+        try { localStorage.setItem(BLIND_KEY, '1'); } catch (_) {}
+        speak('盲人游戏模式已开启。');
+        showError('✅ 盲人模式已开启，进入游戏后会有语音播报。', true);
+    });
+    if (blindOff) blindOff.addEventListener('click', () => {
+        try { localStorage.setItem(BLIND_KEY, '0'); } catch (_) {}
+    });
+    if (blindReplay) blindReplay.addEventListener('click', () => {
+        speak('是否开启盲人游戏模式？不会自动开启，请选择立即开启或不需要。');
+    });
 
-    if (hasSave()) {
-        btnContinue.style.display = '';
-        btnStart.textContent = '重新开始';
+    // ---------- 错误提示 ----------
+    function showError(msg, ok) {
+        if (!formError) return;
+        formError.textContent = msg;
+        formError.classList.add('show');
+        formError.style.background = ok ? '#eef5e8' : '';
+        formError.style.borderColor = ok ? '#b8d6a3' : '';
+        formError.style.color = ok ? '#558b2f' : '';
+    }
+    function clearError() {
+        if (formError) formError.classList.remove('show');
     }
 
-    const readInput = (input, fallback) => (input.value || '').trim().slice(0, 12) || fallback;
-    const goToGame = () => { window.location.href = NEXT_PAGE; };
-
+    // ---------- 开始经营 ----------
     btnStart.addEventListener('click', () => {
-        if (hasSave() && !confirm('已有存档，重新开始会覆盖当前进度，确定吗？')) return;
-
-        const playerName = readInput(nameInput, DEFAULT_PLAYER_NAME);
-        const shopName   = readInput(shopInput, DEFAULT_SHOP_NAME);
-        const avatar     = AVATAR_EMOJI[selectedKey] || AVATAR_EMOJI.girl1;
+        clearError();
+        const playerName = (nameInput.value || '').trim().slice(0, 12) || '小甜心';
+        const shopName = (shopInput.value || '').trim().slice(0, 12) || '甜蜜小屋';
+        const age = Number(ageInput.value) || 25;
+        if (age < 20) { showError('角色年龄不得小于 20 岁。'); return; }
 
         try {
-            // 👈 修复：使用最新的 createEmptyState
             if (Cake && typeof Cake.createEmptyState === 'function') {
                 const state = Cake.createEmptyState();
                 state.playerName = playerName;
-                state.avatar = avatar;
-                state.shop.name = shopName; // 存进嵌套结构里
+                state.shop.name = shopName;
+                state.gender = gender;
+                state.playerGender = gender;
+                state.age = age;
+                state.playerAge = age;
+                if (!state.time) state.time = {};
+                state.time.season = season;
+                state.startSeason = season;
 
                 if (Cake.store) Cake.store.state = state;
-                Cake.saveState();
+                if (typeof Cake.saveState === 'function') Cake.saveState();
             } else {
-                // 兜底
                 localStorage.setItem('playerName', playerName);
                 localStorage.setItem('shopName', shopName);
-                localStorage.setItem('playerAvatar', selectedKey);
-                if (Cake && typeof Cake.SAVE_KEY === 'string') {
-                    localStorage.removeItem(Cake.SAVE_KEY);
-                }
+                localStorage.setItem('playerGender', gender);
+                localStorage.setItem('playerAge', String(age));
+                localStorage.setItem('startSeason', season);
             }
         } catch (err) {
             console.error('保存初始状态失败:', err);
         }
-        goToGame();
+
+        // 跳转到游戏主页（新版两页式：设置页 → 游戏页）
+        window.location.href = 'game.html';
     });
 
-    btnContinue.addEventListener('click', goToGame);
     finish();
 })();

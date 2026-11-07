@@ -24,7 +24,8 @@ const DATA_MODULES = [
     './achievements/index.js',
     './bundles/index.js',
     './usually_shop_events/index.js',
-    './shop/index.js'
+    './shop/index.js',
+    './descriptions.js'
 ];
 
 // 数据子模块互相独立（各自向 window.Cake 挂载数据），可并行加载提速；
@@ -47,3 +48,27 @@ await Promise.all(DATA_MODULES.map(async (path) => {
 }));
 
 console.log('📦 [Data] 所有核心数据层装载完毕');
+
+// 用离线包提取的描述回填到食谱/食材（旧 schema 没有 desc 字段）
+(() => {
+    const C = window.Cake || {};
+    const D = C.DESCRIPTIONS || {};
+    if (!Object.keys(D).length) return;
+    const fill = (obj) => {
+        if (!obj || typeof obj !== 'object') return;
+        for (const v of Object.values(obj)) {
+            if (!v || typeof v !== 'object') continue;
+            if (!v.desc && typeof v.name === 'string' && D[v.name]) v.desc = D[v.name];
+        }
+    };
+    let filled = 0;
+    for (const key of Object.keys(C)) {
+        if (!/^(INGREDIENTS|RECIPES_|RECIPES$)/.test(key)) continue;
+        const obj = C[key];
+        if (!obj || typeof obj !== 'object' || Array.isArray(obj)) continue;
+        for (const v of Object.values(obj)) {
+            if (v && typeof v === 'object' && !v.desc && typeof v.name === 'string' && D[v.name]) { v.desc = D[v.name]; filled++; }
+        }
+    }
+    console.log('📝 [Data] 已用离线包描述回填', filled, '条');
+})();

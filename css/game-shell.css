@@ -44,6 +44,10 @@ body, html {
 .main-pane { position: relative; flex: 1 1 auto; }
 .main-frame { width: 100%; border: none; background: transparent; display: block; min-height: 60vh; }
 
+/* ===== 日志面板（放在主内容与底栏之间，固定高度、内部滚动） ===== */
+.log-pane { flex: 0 0 auto; position: relative; }
+.log-frame { width: 100%; height: 140px; border: none; background: #fffdf8; border-top: 1px solid #f0dcc0; display: block; }
+
 /* ===== 底部 6 标签导航 ===== */
 .tab-bar {
     position: fixed; bottom: 0; left: 0; right: 0; z-index: 20;

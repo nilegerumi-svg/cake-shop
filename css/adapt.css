@@ -1,4 +1,4 @@
-﻿/* css/adapt.css — 适配性增强（安全区 / 触屏滚动 / 平板·桌面 / 横屏 / 无障碍） */
+/* css/adapt.css — 适配性增强（安全区 / 触屏滚动 / 平板·桌面 / 横屏 / 无障碍） */
 
 /* 1) 安全区（刘海屏 / 手势条） */
 :root {
@@ -18,8 +18,8 @@
   overscroll-behavior-y: contain;
   scroll-behavior: smooth;
 }
-/* 滑动手感：去掉触屏高亮与长按菜单 */
-#container { -webkit-tap-highlight-color: transparent; touch-action: pan-y; }
+/* 滑动手感：只去掉触屏高亮；touch-action 交给游戏自己的 .panel-scroll/.panel-area 处理 */
+#container { -webkit-tap-highlight-color: transparent; }
 
 /* 3) 平板 / 桌面：适度加宽到 640px（保留游戏原生黑条纹背景） */
 @media (min-width: 768px) {

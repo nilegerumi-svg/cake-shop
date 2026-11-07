@@ -67,3 +67,11 @@ import '../ui/profile_tabs.js';
 import '../ui/rarity.js';
 import '../fishing/types.js';
 import '../baking/styles.js';
+
+// 第四轮提取（最后几张表）
+import '../baking/colors.js';
+import '../baking/sizes.js';
+import '../misc/random_names.js';
+import '../quests/actions.js';
+import '../ui/buy_labels.js';
+import '../ui/filter_all.js';

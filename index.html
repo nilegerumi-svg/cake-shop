@@ -1,137 +1,33 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>甜蜜物语蛋糕店模拟器</title>
-<style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif; background: linear-gradient(160deg, #fff8ef 0%, #f7ecdc 55%, #f2e4cf 100%); min-height: 100vh; min-height: 100dvh; color: #4a2c17; }
-  #app-root { min-height: 100vh; min-height: 100dvh; display: flex; align-items: flex-start; justify-content: center; padding: 20px; padding-bottom: calc(30px + env(safe-area-inset-bottom)); }
-  .start-card { background: #fffdf8; width: 100%; max-width: 520px; padding: 28px 22px 30px; border-radius: 24px; border: 1px solid #f0dcc0; box-shadow: 0 10px 30px rgba(180, 120, 60, 0.18); }
-
-  .game-header { text-align: center; margin-bottom: 18px; }
-  .game-header .brand { font-size: 15px; color: #b08a6a; font-weight: bold; letter-spacing: 2px; }
-  .game-header h1 { color: #4a2c17; font-size: 28px; margin: 6px 0 4px; }
-  .game-header .subtitle { color: #8a5a44; font-size: 13px; font-weight: bold; }
-
-  /* 盲人模式询问条 */
-  .blind-banner { background: #fff3bf; border: 1px dashed #e0b070; border-radius: 14px; padding: 12px 14px; margin-bottom: 16px; }
-  .blind-banner p { font-size: 13px; color: #7a4a1f; line-height: 1.6; margin-bottom: 8px; }
-  .blind-banner .blind-actions { display: flex; gap: 8px; flex-wrap: wrap; }
-  .blind-banner button { flex: 1 1 auto; min-width: 92px; padding: 9px 10px; border-radius: 999px; border: 1px solid #e0b070; background: #fffdf8; color: #8a5a44; font-size: 13px; font-weight: bold; cursor: pointer; font-family: inherit; }
-  .blind-banner button.primary { background: #e04a63; color: #fff; border-color: #e04a63; }
-
-  .form-group { margin-bottom: 14px; }
-  .form-group label { display: flex; align-items: center; justify-content: space-between; font-size: 13px; font-weight: bold; color: #8a5a44; margin-bottom: 6px; }
-  .form-group input { width: 100%; padding: 12px 14px; border: 2px solid #f0dcc0; border-radius: 12px; font-size: 15px; background: #fffdf8; color: #4a2c17; font-family: inherit; }
-  .form-group input:focus { outline: none; border-color: #e04a63; box-shadow: 0 0 0 3px rgba(224, 74, 99, 0.15); }
-  .random-btn { background: #f7ecdc; border: 1px solid #f0dcc0; border-radius: 999px; padding: 3px 10px; font-size: 12px; color: #8a5a44; font-weight: bold; cursor: pointer; font-family: inherit; }
-
-  .choice-group { display: flex; gap: 8px; flex-wrap: wrap; }
-  .choice-group button { flex: 1 1 40%; padding: 10px; border-radius: 12px; border: 2px solid #f0dcc0; background: #fffdf8; color: #6b4226; font-size: 14px; font-weight: bold; cursor: pointer; font-family: inherit; }
-  .choice-group button.selected { border-color: #e04a63; background: #ffe9ef; color: #b3304a; }
-
-  .btn-start { width: 100%; margin-top: 8px; padding: 16px; border: none; border-radius: 999px; background: #e04a63; color: #fff; font-size: 17px; font-weight: bold; cursor: pointer; box-shadow: 0 6px 18px rgba(224, 74, 99, 0.35); font-family: inherit; }
-  .btn-start:active { transform: scale(0.99); }
-  .btn-start:disabled { background: #e8c9a4; box-shadow: none; }
-
-  .form-error { display: none; margin-bottom: 12px; padding: 10px 14px; background: #fdecea; border: 1px solid #e6a5a5; border-radius: 10px; color: #c62828; font-size: 13px; }
-  .form-error.show { display: block; }
-
-  #app-loading { position: fixed; inset: 0; z-index: 9998; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; background: linear-gradient(160deg, #fff8ef 0%, #f7ecdc 55%, #f2e4cf 100%); color: #4a2c17; transition: opacity .3s ease; }
-  .loading-title { font-size: 22px; font-weight: bold; color: #b3304a; }
-  #loading-bar-wrap { width: 220px; height: 8px; background: rgba(224, 74, 99, .18); border-radius: 999px; overflow: hidden; }
-  #loading-bar { width: 0%; height: 100%; background: linear-gradient(90deg, #e04a63, #b3304a); transition: width .25s ease; }
-  #loading-text { font: 14px/1.5 system-ui, sans-serif; color: #8a5a44; }
-</style>
+<!doctype html>
+<html data-framework="react" data-version="13">
+  <head><script src="js/boot/errors.js"></script>
+<script src="js/boot/a11y-shim.js"></script>
+    <meta name="asap-build-time" content="2026-11-05T06:40:12.757Z">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <title>甜蜜物语蛋糕店模拟器 - 灵光闪应用</title>
+    <script id="app-manifest" type="application/json">
+{"navigationBar":{"visible":false,"title":"甜蜜物语蛋糕店模拟器","backgroundColor":"#FFFFFF","foregroundColor":"#000000"},"localStorage":true}
+    </script>
+    <script type="module" src="js/app.bundle.js"></script>
+    
+    <link rel="stylesheet" href="css/game.css">
+<link rel="stylesheet" href="css/safe-area.css">
+      <!-- asap-vite-contract:a4167c51ba36d6fb9d742332 -->
+    <meta name="asap-vite-contract" content="a4167c51ba36d6fb9d742332">
+      <link rel="stylesheet" href="css/device-adapt.css">
+<link rel="stylesheet" href="css/pc-layout.css">
 </head>
-<body>
+  <body>
+                                                        <div id="root"></div>
+  <script id="tm-auto-collapse" src="js/host/auto-collapse.js"></script>
+<link rel="stylesheet" href="css/a11y.css">
+<script id="tm-a11y" src="js/host/a11y.js"></script>
 
-<div id="app-root" aria-busy="true">
-  <main class="start-card">
-    <div class="game-header">
-      <div class="brand">🍰 🏪 甜蜜物语</div>
-      <h1>甜蜜物语蛋糕店模拟器</h1>
-      <div class="subtitle">开一家属于自己的蛋糕店吧</div>
-    </div>
-
-    <div class="blind-banner" id="blindBanner" role="group" aria-label="盲人游戏模式">
-      <p>♿ 是否开启盲人游戏模式？不会自动开启，请选择下方按钮；也可随时在语音设置中调整。</p>
-      <div class="blind-actions">
-        <button type="button" id="blindOn" class="primary">立即开启</button>
-        <button type="button" id="blindOff">不需要</button>
-        <button type="button" id="blindReplay">🔊 重播询问</button>
-      </div>
-    </div>
-
-    <div class="form-error" id="formError" role="alert" aria-live="assertive"></div>
-
-    <div class="form-group">
-      <label for="playerName">店主名字 <button type="button" class="random-btn" data-random="playerName">🎲 随机</button></label>
-      <input id="playerName" type="text" maxlength="12" value="林小雨" autocomplete="off">
-    </div>
-
-    <div class="form-group">
-      <label for="shopName">店名 <button type="button" class="random-btn" data-random="shopName">🎲 随机</button></label>
-      <input id="shopName" type="text" maxlength="12" value="街角甜品屋" autocomplete="off">
-    </div>
-
-    <div class="form-group">
-      <label>角色性别（决定可购买的服饰）</label>
-      <div class="choice-group" id="genderGroup" role="radiogroup" aria-label="角色性别">
-        <button type="button" data-gender="female" class="selected" role="radio" aria-checked="true">👩 女生</button>
-        <button type="button" data-gender="male" role="radio" aria-checked="false">👨 男生</button>
-      </div>
-    </div>
-
-    <div class="form-group">
-      <label for="playerAge">角色年龄（不得小于 20 岁）</label>
-      <input id="playerAge" type="number" min="20" max="99" value="25">
-    </div>
-
-    <div class="form-group">
-      <label>开始季节（决定开局日期与节气天气）</label>
-      <div class="choice-group" id="seasonGroup" role="radiogroup" aria-label="开始季节">
-        <button type="button" data-season="spring" class="selected" role="radio" aria-checked="true">🌸 春季</button>
-        <button type="button" data-season="summer" role="radio" aria-checked="false">☀️ 夏季</button>
-        <button type="button" data-season="autumn" role="radio" aria-checked="false">🍂 秋季</button>
-        <button type="button" data-season="winter" role="radio" aria-checked="false">❄️ 冬季</button>
-      </div>
-    </div>
-
-    <button type="button" class="btn-start" id="btnStart">开始经营 🚀</button>
-  </main>
-</div>
-
-<div id="app-loading" role="status" aria-live="polite" aria-label="应用加载中">
-  <div class="loading-title">🍰 甜蜜物语</div>
-  <div id="loading-text">正在准备…</div>
-  <div id="loading-bar-wrap"><div id="loading-bar"></div></div>
-</div>
-
-<script>
-  (function () {
-    'use strict';
-    const rootEl = document.getElementById('app-root');
-    const loadingEl = document.getElementById('app-loading');
-    const loadingBar = document.getElementById('loading-bar');
-    const loadingText = document.getElementById('loading-text');
-    window.appLoadingComplete = function () {
-      if (rootEl) rootEl.setAttribute('aria-busy', 'false');
-      if (loadingBar) loadingBar.style.width = '100%';
-      if (loadingEl) {
-        loadingEl.style.opacity = '0';
-        setTimeout(function () { loadingEl.style.display = 'none'; }, 320);
-      }
-    };
-    window.appLoadingFail = function (msg) {
-      if (loadingText) loadingText.textContent = msg || '加载失败';
-    };
-    setTimeout(function () { if (document.querySelector('.start-card')) window.appLoadingComplete(); }, 800);
-  })();
-</script>
-
-<script type="module" src="js/pages/index.js"></script>
+<link rel="stylesheet" href="css/hide-scrollbar.css">
+<script id="tm-panel-autofit" src="js/host/panel-autofit.js"></script>
+<link rel="stylesheet" href="css/open-tip.css">
+<div class="tm-open-tip" id="tm-open-tip"><span>当前是「文件预览」打开，滑动可能无效。建议：长按本文件选「用浏览器打开」，或上传 GitHub 后访问网页版游玩。</span><button class="tm-open-tip-x" id="tm-open-tip-x" aria-label="关闭提示">✕</button></div>
+<script id="tm-open-tip-script" src="js/host/open-tip.js"></script>
 </body>
 </html>

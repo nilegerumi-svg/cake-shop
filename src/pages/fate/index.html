@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>缘分 · 甜蜜物语</title>
+<link rel="stylesheet" href="../../css/styles.css">
+<style>
+  body { background: transparent; padding: 12px; margin: 0; font-family: "PingFang SC","Microsoft YaHei",sans-serif; }
+  .muted { color: #b08a6a; }
+  .fate-head { text-align: left; margin: 4px 0 10px; }
+  .fate-head h2 { color: #4a2c17; font-size: 20px; margin: 0 0 2px; }
+  .fate-head p { color: #b08a6a; font-size: 13px; margin: 0; }
+  .search { width:100%; box-sizing:border-box; padding:10px 14px; border:2px solid #f0dcc0; border-radius:12px; font-size:14px; background:#fffdf8; color:#4a2c17; margin-bottom:10px; }
+  .place-title { display:flex; align-items:center; gap:6px; color:#8a5a44; font-size:14px; font-weight:bold; margin:14px 0 8px; }
+  .npc-list { display:flex; flex-direction:column; gap:10px; }
+  .npc-card { background:#fffdf8; border:1px solid #f0dcc0; border-radius:16px; padding:12px 14px; }
+  .npc-top { display:flex; align-items:center; gap:10px; }
+  .npc-emoji { font-size:30px; line-height:1; }
+  .npc-body { flex:1; min-width:0; }
+  .npc-name { font-weight:bold; color:#4a2c17; font-size:15px; }
+  .npc-title { font-size:12px; color:#e04a63; font-weight:bold; margin-top:1px; }
+  .npc-meta { font-size:11px; color:#b08a6a; margin-top:3px; }
+  .npc-intro { font-size:12px; color:#6b4226; line-height:1.6; margin-top:8px; }
+  .npc-actions { margin-top:8px; display:flex; gap:8px; }
+  .npc-btn { flex:1; background:#fffdf8; color:#8a5a44; border:1px solid #f0dcc0; border-radius:18px; padding:7px; font-size:12px; font-weight:bold; cursor:pointer; font-family:inherit; }
+  .npc-btn.chat { background:#e04a63; color:#fff; border-color:#e04a63; }
+  .toast { position: fixed; top: 70px; left: 50%; transform: translateX(-50%); background: #4a2c17; color: #fff; padding: 8px 16px; border-radius: 20px; font-size: 13px; z-index: 99; opacity: 0; transition: opacity .2s; pointer-events: none; max-width: 90%; }
+</style>
+</head>
+<body>
+<div id="content"><div class="muted" style="margin-top:40px;text-align:center;">⏳ 正在加载伙伴...</div></div>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<script src="../../pages/boot-safe.js"></script>
+<script>
+(() => {
+  'use strict';
+  function getCake() {
+    try { if (window.parent && window.parent !== window && window.parent.Cake) return window.parent.Cake; } catch (_) {}
+    return window.Cake || null;
+  }
+  function esc(v) { return String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+  function pick(arr) { return Array.isArray(arr) && arr.length ? arr[Math.floor(Math.random() * arr.length)] : ''; }
+  function toast(msg) {
+    const t = document.getElementById('toast');
+    if (!t) return; t.textContent = msg; t.style.opacity = '1';
+    clearTimeout(t.__timer); t.__timer = setTimeout(() => { t.style.opacity = '0'; }, 2200);
+  }
+  function resolveName(Cake, id) {
+    if (!id) return '';
+    return Cake.RECIPES?.[id]?.name || Cake.INGREDIENTS?.[id]?.name || id;
+  }
+  let q = '';
+
+  function render() {
+    const Cake = getCake();
+    const el = document.getElementById('content');
+    if (!el) return;
+    const npcs = Cake?.NPCS;
+    if (!npcs) return;
+    const kw = q.trim().toLowerCase();
+
+    // 按地点分组
+    const groups = {};
+    for (const [id, n] of Object.entries(npcs)) {
+      const hay = [n.name, n.title, n.place, n.intro].join(' ').toLowerCase();
+      if (kw && !hay.includes(kw)) continue;
+      const place = (n.place || '小镇').replace(/^镇医院.*$/, '镇医院').replace(/^苏记.*$/, '苏记甜品');
+      (groups[place] = groups[place] || []).push([id, n]);
+    }
+
+    let html = `<div class="fate-head"><h2>💕 缘分</h2><p class="muted">小镇伙伴共 ${Object.keys(npcs).length} 位</p></div>`;
+    html += `<input type="search" class="search" id="search" placeholder="搜索伙伴 / 职业 / 地点…" aria-label="搜索伙伴" value="${esc(q)}">`;
+
+    const places = Object.keys(groups).sort((a, b) => a.localeCompare(b, 'zh'));
+    if (places.length === 0) html += `<div class="muted">没有找到匹配的伙伴</div>`;
+    for (const p of places) {
+      const items = groups[p].sort((a, b) => (a[1].name || '').localeCompare(b[1].name || '', 'zh'));
+      html += `<div class="place-title">📍 ${esc(p)} <span class="muted">(${items.length})</span></div><div class="npc-list">`;
+      for (const [id, n] of items) {
+        const like = n.likes ? resolveName(Cake, n.likes) : '';
+        html += `<div class="npc-card">
+          <div class="npc-top">
+            <span class="npc-emoji" aria-hidden="true">${n.emoji || '🙂'}</span>
+            <div class="npc-body">
+              <div class="npc-name">${esc(n.name)}</div>
+              <div class="npc-title">${esc(n.title || '')}</div>
+              <div class="npc-meta">${like ? '喜欢：' + esc(like) : ''}${n.birthday ? ' · 生日 ' + n.birthday.month + '/' + n.birthday.day : ''}</div>
+            </div>
+          </div>
+          <div class="npc-intro">${esc((n.intro || '').slice(0, 120))}${(n.intro || '').length > 120 ? '…' : ''}</div>
+          <div class="npc-actions">
+            <button type="button" class="npc-btn chat" data-greet="${esc(id)}" aria-label="和${esc(n.name)}打招呼">💬 打招呼</button>
+          </div>
+        </div>`;
+      }
+      html += `</div>`;
+    }
+    el.innerHTML = html;
+  }
+
+  document.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-greet]');
+    if (!b) return;
+    const Cake = getCake();
+    const n = Cake?.NPCS?.[b.dataset.greet];
+    if (!n) return;
+    const line = pick(n.chats);
+    if (line) Cake.addLog?.(`💬 ${n.name}：${line}`);
+    else Cake.addLog?.(`💬 你和${n.name}打了个招呼。`);
+    if (Cake.refreshPage) Cake.refreshPage();
+    toast(line || '你好呀');
+  });
+  document.addEventListener('input', (e) => {
+    if (e.target && e.target.id === 'search') { q = e.target.value; render(); const s = document.getElementById('search'); if (s) s.focus(); }
+  });
+
+  if (window.safePageBoot) {
+    window.safePageBoot.waitForCake(() => { render(); if (typeof getCake().initPage === 'function') getCake().initPage('fate', render, false); },
+      { timeout: 15000, required: g => !!(g && g.store?.state && g.NPCS), onTimeout: () => '游戏引擎加载超时，请刷新页面' });
+  } else if (getCake()) { render(); }
+})();
+</script>
+</body>
+</html>

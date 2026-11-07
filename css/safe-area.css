@@ -1,0 +1,2 @@
+/* 异型屏/刘海屏：把写死为0的安全区变量接到系统真实值，顶栏、页签、内容区自动避开挖孔与手势条 */
+:root{--flash-app-safe-area-inset-top:env(safe-area-inset-top,0px);--flash-app-safe-area-inset-right:env(safe-area-inset-right,0px);--flash-app-safe-area-inset-bottom:env(safe-area-inset-bottom,0px);--flash-app-safe-area-inset-left:env(safe-area-inset-left,0px);}

@@ -1,0 +1,5 @@
+
+.panel-area{scrollbar-width:none;-ms-overflow-style:none;touch-action:none;overscroll-behavior:contain;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;}
+.panel-area::-webkit-scrollbar{width:0;height:0;display:none;}
+html::-webkit-scrollbar{width:0;height:0;display:none;}
+body::-webkit-scrollbar{width:0;height:0;display:none;}

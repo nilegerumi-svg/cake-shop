@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>订购 · 甜蜜物语</title>
+<link rel="stylesheet" href="../../css/styles.css">
+<style>
+  body { background: transparent; padding: 12px; margin: 0; font-family: "PingFang SC","Microsoft YaHei",sans-serif; }
+  .muted { color: #b08a6a; }
+  .mkt-head { text-align: left; margin: 4px 0 14px; }
+  .mkt-head h2 { color: #4a2c17; font-size: 20px; margin: 0 0 4px; }
+  .mkt-head p { color: #b08a6a; font-size: 13px; margin: 0; }
+  .cat-title { display:flex; align-items:center; gap:6px; color:#8a5a44; font-size:14px; font-weight:bold; margin:14px 0 8px; }
+  .ing-list { display:flex; flex-direction:column; gap:8px; }
+  .ing-item {
+    display:flex; align-items:center; gap:10px; padding:10px 12px;
+    background:#fffdf8; border:1px solid #f0dcc0; border-radius:14px;
+  }
+  .ing-emoji { font-size:24px; line-height:1; }
+  .ing-name { flex:1; font-size:14px; color:#4a2c17; font-weight:bold; }
+  .ing-price { font-size:12px; color:#b08a6a; }
+  .order-btn {
+    background:#e04a63; color:#fff; border:none; border-radius:20px;
+    padding:6px 14px; font-size:13px; font-weight:bold; cursor:pointer; font-family:inherit;
+  }
+  .order-btn:disabled { background:#e8c9a4; cursor:not-allowed; }
+  .orders-card { margin-top:16px; background:#fffdf8; border:1px solid #f0dcc0; border-radius:14px; padding:12px 14px; }
+  .orders-card h3 { color:#4a2c17; font-size:14px; margin:0 0 8px; }
+  .order-line { font-size:13px; color:#6b4226; padding:3px 0; }
+  .toast { position:fixed; top:70px; left:50%; transform:translateX(-50%); background:#4a2c17; color:#fff; padding:8px 16px; border-radius:20px; font-size:13px; z-index:99; opacity:0; transition:opacity .2s; pointer-events:none; }
+</style>
+</head>
+<body>
+<div id="content"><div class="muted" style="margin-top:40px;text-align:center;">⏳ 正在加载食材清单...</div></div>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<script src="../../pages/boot-safe.js"></script>
+<script>
+(() => {
+  'use strict';
+  function getCake() {
+    try { if (window.parent && window.parent !== window && window.parent.Cake) return window.parent.Cake; } catch (_) {}
+    return window.Cake || null;
+  }
+  function esc(v) { return String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+  const CAT_LABEL = {
+    meat: '🥩 肉类·水产', vegetable: '🥬 蔬菜', grain: '🌾 谷物', seasoning: '🧂 调味',
+    egg: '🥚 蛋类', fruit: '🍎 水果', dairy: '🥛 奶制品', additive: '🧪 辅料', material: '🪵 建材',
+  };
+  const CAT_ORDER = ['meat','vegetable','grain','seasoning','egg','fruit','dairy','additive','material'];
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    if (!t) return;
+    t.textContent = msg; t.style.opacity = '1';
+    clearTimeout(t.__timer); t.__timer = setTimeout(() => { t.style.opacity = '0'; }, 1800);
+  }
+
+  function render() {
+    const Cake = getCake();
+    const contentEl = document.getElementById('content');
+    if (!contentEl) return;
+    if (!Cake || !Cake.INGREDIENTS || !Cake.store?.state) return;
+
+    const state = Cake.store.state;
+    const money = Number(state.money) || 0;
+
+    // 按 shelfCategory 分组
+    const groups = {};
+    for (const [id, ing] of Object.entries(Cake.INGREDIENTS)) {
+      const cat = ing.shelfCategory || 'material';
+      (groups[cat] = groups[cat] || []).push([id, ing]);
+    }
+
+    let html = `<div class="mkt-head"><h2>📦 订购</h2><p class="muted">余额 💰 ${money} · 下单后 2 小时送达</p></div>`;
+
+    for (const cat of CAT_ORDER) {
+      const items = groups[cat];
+      if (!items || !items.length) continue;
+      items.sort((a, b) => (a[1].name || '').localeCompare(b[1].name || '', 'zh'));
+      html += `<div class="cat-title">${CAT_LABEL[cat] || cat}</div><div class="ing-list">`;
+      for (const [id, ing] of items) {
+        html += `
+          <div class="ing-item">
+            <span class="ing-emoji" aria-hidden="true">${ing.emoji || '❓'}</span>
+            <span class="ing-name">${esc(ing.name)}</span>
+            <span class="ing-price">¥${ing.price ?? 0}</span>
+            <button type="button" class="order-btn" data-order="${esc(id)}" aria-label="订购 ${esc(ing.name)}">订购</button>
+          </div>`;
+      }
+      html += `</div>`;
+    }
+
+    // 待送达订单
+    const orders = Array.isArray(state.orders) ? state.orders : [];
+    html += `<div class="orders-card"><h3>🚚 待送达（${orders.length} 件）</h3>`;
+    if (orders.length === 0) {
+      html += `<div class="muted">暂无订单</div>`;
+    } else {
+      for (const o of orders) {
+        const ing = Cake.INGREDIENTS[o.itemId] || Cake.TOOLS?.[o.itemId];
+        html += `<div class="order-line">${ing?.emoji || '📦'} ${esc(ing?.name || o.itemId)} ×${o.quantity}</div>`;
+      }
+    }
+    html += `</div>`;
+
+    contentEl.innerHTML = html;
+  }
+
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-order]');
+    if (!btn) return;
+    const Cake = getCake();
+    if (!Cake || typeof Cake.orderItem !== 'function') return;
+    const id = btn.dataset.order;
+    const before = Cake.store.state.money;
+    Cake.orderItem(id, 1);
+    const after = Cake.store.state.money;
+    if (after < before) showToast('📞 已下单，2 小时后送达');
+    else showToast('💸 钱不够啦！');
+    render();
+  });
+
+  if (window.safePageBoot) {
+    window.safePageBoot.waitForCake(() => { render(); if (typeof getCake().initPage === 'function') getCake().initPage('market', render, false); },
+      { timeout: 15000, required: g => !!(g && g.INGREDIENTS && g.store?.state), onTimeout: () => '游戏引擎加载超时，请刷新页面' });
+  } else {
+    if (getCake()) render();
+  }
+})();
+</script>
+</body>
+</html>

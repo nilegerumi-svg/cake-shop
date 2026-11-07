@@ -75,3 +75,13 @@ import '../misc/random_names.js';
 import '../quests/actions.js';
 import '../ui/buy_labels.js';
 import '../ui/filter_all.js';
+
+// 第五轮提取（零星配置表）
+import '../baking/fruits.js';
+import '../baking/creams.js';
+import '../baking/bread_ids.js';
+import '../ui/tabs.js';
+import '../ui/bakery_labels.js';
+import '../ui/floor_labels.js';
+import '../time/labels.js';
+import '../ingredients/category_order.js';

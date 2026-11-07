@@ -1,4 +1,4 @@
-// js/data/extracted/index.js
+﻿// js/data/extracted/index.js
 // 从离线包批量提取的其余数据表（每张表一个文件，已从离线包删除）
 import '../achievements/explore_achievements.js';
 import '../world/explore_events.js';
@@ -92,3 +92,5 @@ import '../outfits/index.js';
 // 第七轮（相遇事件 / 好感度四档）
 import '../characters/encounters.js';
 import '../characters/tiers.js';
+import '../shelter/index.js';
+

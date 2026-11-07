@@ -11,7 +11,8 @@ export const restReady = (async () => {
         './nap.js',
         './sleep.js',
         './monitor.js',
-        './town/index.js'
+        './town/index.js',
+        './town/events/index.js'   // 👈 接线休息事件库：注册 REST_EVENTS，供 RestMonitor.check 触发随机事件
     ];
 
     for (const path of REST_MODULES) {

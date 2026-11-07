@@ -10,11 +10,13 @@ import './SiChuan/index.js';
 import './ZheJiang/index.js';
 import './cantonese/index.js';     // 注意：这个文件夹首字母是小写 c
 import './home_cooking.js';
+import './home_cooking_more.js';
 
 window.Cake = window.Cake || {};
 window.Cake.RECIPES_CHINA = Object.assign(
     {},
     window.Cake.RECIPES_CHINA_HOME || {},
+    window.Cake.RECIPES_CHINA_HOME_MORE || {},
     // 八大菜系
     window.Cake.RECIPES_CHINA_SICHUAN || {},
     window.Cake.RECIPES_CHINA_CANTONESE || {},

@@ -51,3 +51,19 @@ import '../items/index.js';
 import '../topics/templates_lc.js';
 import '../topics/templates_tq.js';
 import '../topics/categories.js';
+
+// 第三轮提取（UI 配置 / 钓鱼类型 / 蛋糕样式）
+import '../ui/game_menu.js';
+import '../ui/voice_tabs.js';
+import '../ui/eat_tabs.js';
+import '../ui/floors_sm.js';
+import '../ui/floors_qf.js';
+import '../ui/store_menu.js';
+import '../ui/furniture_menu.js';
+import '../ui/achievement_categories.js';
+import '../ui/ingredient_tabs.js';
+import '../ui/ingredient_labels.js';
+import '../ui/profile_tabs.js';
+import '../ui/rarity.js';
+import '../fishing/types.js';
+import '../baking/styles.js';

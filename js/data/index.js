@@ -25,7 +25,8 @@ const DATA_MODULES = [
     './bundles/index.js',
     './usually_shop_events/index.js',
     './shop/index.js',
-    './descriptions.js'
+    './descriptions.js',
+    './ingredients/detailed_descs.js'
 ];
 
 // 数据子模块互相独立（各自向 window.Cake 挂载数据），可并行加载提速；
@@ -71,4 +72,13 @@ console.log('📦 [Data] 所有核心数据层装载完毕');
         }
     }
     console.log('📝 [Data] 已用离线包描述回填', filled, '条');
+
+    // 旧版精细食材按 id 补充描述
+    const DD = C.INGREDIENT_DESCS_DETAILED || {};
+    let filled2 = 0;
+    for (const [id, desc] of Object.entries(DD)) {
+        const ing = C.INGREDIENTS && C.INGREDIENTS[id];
+        if (ing && !ing.desc) { ing.desc = desc; filled2++; }
+    }
+    if (filled2) console.log('📝 [Data] 精细食材补充描述', filled2, '条');
 })();

@@ -11,7 +11,27 @@ import './ZheJiang/index.js';
 import './cantonese/index.js';     // 注意：这个文件夹首字母是小写 c
 import './home_cooking.js';
 import './home_cooking_more.js';
-import './imported.js';
+import './imported_indian.js';
+import './imported_korean.js';
+import './imported_vietnamese.js';
+import './imported_american.js';
+import './imported_french.js';
+import './imported_sichuan.js';
+import './imported_home_1.js';
+import './imported_home_2.js';
+import './imported_home_3.js';
+import './imported_shandong.js';
+import './imported_german.js';
+import './imported_hunan.js';
+import './imported_spanish.js';
+import './imported_huaiyang.js';
+import './imported_japanese.js';
+import './imported_british.js';
+import './imported_cantonese.js';
+import './imported_thai.js';
+import './imported_anhui.js';
+import './imported_italian.js';
+import './imported_fujian.js';
 
 window.Cake = window.Cake || {};
 window.Cake.RECIPES_CHINA = Object.assign(

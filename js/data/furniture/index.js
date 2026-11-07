@@ -1,0 +1,12 @@
+// furniture/index.js
+import './furniture_table.js';
+import './furniture_storage.js';
+import './furniture_light.js';
+import './furniture_decor.js';
+import './furniture_toy.js';
+import './furniture_aquarium.js';
+import './furniture_tablecloth.js';
+import './furniture_ornament.js';
+import './furniture_hanging.js';
+import './furniture_aqua_decor.js';
+import './furniture_appliance.js';

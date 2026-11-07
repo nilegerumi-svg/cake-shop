@@ -1,0 +1,11 @@
+// sewing/index.js
+import './sewing_under.js';
+import './sewing_top.js';
+import './sewing_socks.js';
+import './sewing_bottom.js';
+import './sewing_head.js';
+import './sewing_bag.js';
+import './sewing_coat.js';
+import './sewing_dress.js';
+import './sewing_rain.js';
+import './sewing_accessory.js';

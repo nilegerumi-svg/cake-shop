@@ -4,7 +4,11 @@ import './reputation.js';
 import './recipes.js';
 import './social.js';
 import './shop.js';
-import './new_achievements.js';
+import './new_bake.js';
+import './new_shop.js';
+import './new_town.js';
+import './new_fate.js';
+import './new_milestones.js';
 
 (function () {
     'use strict';

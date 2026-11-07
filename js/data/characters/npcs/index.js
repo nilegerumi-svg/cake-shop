@@ -1,0 +1,36 @@
+// js/data/characters/npcs/index.js（按地点聚合 58 位 NPC）
+import './农贸市场·果园批发.js';
+import './别墅区.js';
+import './动物收容所·宿舍.js';
+import './商店街·中医馆.js';
+import './商店街·书店.js';
+import './商店街·修车行.js';
+import './商店街·家具店.js';
+import './商店街·布料行.js';
+import './商店街·快餐店.js';
+import './商店街·早点铺.js';
+import './商店街·水果摊.js';
+import './商店街·沈氏集团.js';
+import './商店街·理发店.js';
+import './商店街·画材店.js';
+import './商店街·综合超市.js';
+import './商店街·药店.js';
+import './商店街·菜市场.js';
+import './商店街·邮局.js';
+import './图书馆.js';
+import './学校.js';
+import './学校·学生宿舍.js';
+import './学校·小学部.js';
+import './学校·幼儿园.js';
+import './学校·幼儿园食堂.js';
+import './小镇广场·慈善活动.js';
+import './居民区_1.js';
+import './居民区_2.js';
+import './居民区_3.js';
+import './市政府.js';
+import './广场中学.js';
+import './苏记甜品面包店.js';
+import './镇医院.js';
+import './高中.js';
+
+console.log('👥 [NPC] 已装载', Object.keys(window.Cake.NPCS || {}).length, '位镇民');

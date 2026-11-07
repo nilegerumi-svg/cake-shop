@@ -1,0 +1,14 @@
+// index.js
+import './new_year.js';
+import './lantern.js';
+import './new_year_solar.js';
+import './valentine.js';
+import './sakura.js';
+import './labor.js';
+import './sweet_fest.js';
+import './qixi.js';
+import './mid_autumn.js';
+import './harvest.js';
+import './national.js';
+import './winter_solstice.js';
+import './christmas.js';

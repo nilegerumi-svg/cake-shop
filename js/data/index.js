@@ -10,6 +10,8 @@ const DATA_MODULES = [
     './characters/index.js',
     './world/index.js',
     './gardening/index.js',
+    './festivals/index.js',
+    './topics/index.js',
     './furniture/index.js',
     './sewing/index.js',
     './books/index.js',

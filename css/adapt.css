@@ -1,0 +1,68 @@
+/* css/adapt.css — 适配性增强（安全区 / 触屏滚动 / 平板·桌面 / 横屏 / 无障碍） */
+
+/* 1) 安全区（刘海屏 / 手势条） */
+:root {
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+}
+#container { padding-left: var(--safe-left); padding-right: var(--safe-right); }
+.top-bar { padding-top: calc(0.5rem + var(--safe-top)); }
+.tab-bar { padding-bottom: var(--safe-bottom); }
+#global-modal-root > * { padding-bottom: var(--safe-bottom); }
+
+/* 2) 触屏滚动：惯性 + 顺滑（面板与可滚动区域） */
+#container, .panel-scroll, [class*="overflow-y-auto"], [class*="overflow-y-scroll"], [class*="overflow-auto"] {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  scroll-behavior: smooth;
+}
+/* 滑动手感：去掉触屏高亮与长按菜单 */
+#container { -webkit-tap-highlight-color: transparent; touch-action: pan-y; }
+
+/* 3) 平板 / 桌面：放宽容器（默认 520 → 560），两侧留暗背景 */
+@media (min-width: 768px) {
+  #container { max-width: 560px; }
+  .tab-bar { max-width: 560px; }
+  .voice-command-fixed { right: calc((100vw - 560px) / 2 + 12px); }
+  .bgm-toggle-title { right: calc((100vw - 560px) / 2 + 12px); }
+  #global-modal-root > * { max-width: 560px; }
+}
+@media (min-width: 1200px) {
+  #container { max-width: 600px; }
+  .tab-bar { max-width: 600px; }
+  .voice-command-fixed { right: calc((100vw - 600px) / 2 + 12px); }
+  .bgm-toggle-title { right: calc((100vw - 600px) / 2 + 12px); }
+  #global-modal-root > * { max-width: 600px; }
+}
+
+/* 4) 小屏：字号与间距收紧，保证 320px 可玩 */
+@media (max-width: 360px) {
+  #container { font-size: 14px; }
+  .top-bar { padding-left: 0.55rem !important; padding-right: 0.55rem !important; }
+  .tab-item { min-height: 50px; }
+}
+
+/* 5) 横屏（矮屏）：压缩顶栏，内容区优先 */
+@media (orientation: landscape) and (max-height: 560px) {
+  .top-bar { padding-top: calc(0.25rem + var(--safe-top)) !important; padding-bottom: 0.25rem !important; }
+  .tab-item { min-height: 44px; }
+}
+
+/* 6) 无障碍：尊重“减少动态效果” */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* 7) 键盘可达：统一可见焦点环 */
+:focus-visible {
+  outline: 3px solid #e0a030;
+  outline-offset: 2px;
+  border-radius: 6px;
+}

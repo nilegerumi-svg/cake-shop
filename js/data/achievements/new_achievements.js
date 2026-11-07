@@ -149,6 +149,671 @@
         "name": "蛋糕艺术家",
         "emoji": "🧁",
         "desc": "累计制作 10 个定制蛋糕"
+    },
+    "earn_500": {
+        "id": "earn_500",
+        "category": "shop",
+        "name": "第一桶金",
+        "emoji": "🪙",
+        "desc": "累计收入 500 金币"
+    },
+    "earn_5000": {
+        "id": "earn_5000",
+        "category": "shop",
+        "name": "万元户",
+        "emoji": "💰",
+        "desc": "累计收入 5000 金币"
+    },
+    "earn_20000": {
+        "id": "earn_20000",
+        "category": "shop",
+        "name": "大富翁",
+        "emoji": "🏦",
+        "desc": "累计收入 20000 金币"
+    },
+    "sold_10": {
+        "id": "sold_10",
+        "category": "shop",
+        "name": "小有名气",
+        "emoji": "🍰",
+        "desc": "卖出 10 件点心"
+    },
+    "sold_50": {
+        "id": "sold_50",
+        "category": "shop",
+        "name": "回头客",
+        "emoji": "🤝",
+        "desc": "卖出 50 件点心"
+    },
+    "sold_200": {
+        "id": "sold_200",
+        "category": "shop",
+        "name": "门庭若市",
+        "emoji": "🎉",
+        "desc": "卖出 200 件点心"
+    },
+    "coin_1000": {
+        "id": "coin_1000",
+        "category": "shop",
+        "name": "小有积蓄",
+        "emoji": "🧧",
+        "desc": "持有 1000 金币"
+    },
+    "coin_10000": {
+        "id": "coin_10000",
+        "category": "shop",
+        "name": "富甲一方",
+        "emoji": "🏝️",
+        "desc": "持有 10000 金币"
+    },
+    "earn_50000": {
+        "id": "earn_50000",
+        "category": "shop",
+        "name": "金碧辉煌",
+        "emoji": "🏆",
+        "desc": "累计收入 50000 金币"
+    },
+    "sold_500": {
+        "id": "sold_500",
+        "category": "shop",
+        "name": "供不应求",
+        "emoji": "🔥",
+        "desc": "卖出 500 件点心"
+    },
+    "coin_50000": {
+        "id": "coin_50000",
+        "category": "shop",
+        "name": "小镇首富",
+        "emoji": "💎",
+        "desc": "持有 50000 金币"
+    },
+    "employee_1": {
+        "id": "employee_1",
+        "category": "shop",
+        "name": "开店帮手",
+        "emoji": "👩‍🍳",
+        "desc": "雇佣第 1 名员工"
+    },
+    "employee_3": {
+        "id": "employee_3",
+        "category": "shop",
+        "name": "团队壮大",
+        "emoji": "🧑‍🍳",
+        "desc": "雇佣 3 名员工"
+    },
+    "upgrade_3": {
+        "id": "upgrade_3",
+        "category": "shop",
+        "name": "店面升级",
+        "emoji": "📈",
+        "desc": "店铺升级到 Lv.3"
+    },
+    "upgrade_6": {
+        "id": "upgrade_6",
+        "category": "shop",
+        "name": "豪华店面",
+        "emoji": "🏬",
+        "desc": "店铺升级到 Lv.6"
+    },
+    "earn_100000": {
+        "id": "earn_100000",
+        "category": "shop",
+        "name": "百万甜心",
+        "emoji": "🏰",
+        "desc": "累计收入 100000 金币"
+    },
+    "sold_1000": {
+        "id": "sold_1000",
+        "category": "shop",
+        "name": "千单达成",
+        "emoji": "🚀",
+        "desc": "卖出 1000 件点心"
+    },
+    "coin_100000": {
+        "id": "coin_100000",
+        "category": "shop",
+        "name": "糖果巨富",
+        "emoji": "👑",
+        "desc": "持有 100000 金币"
+    },
+    "upgrade_10": {
+        "id": "upgrade_10",
+        "category": "shop",
+        "name": "殿堂级店面",
+        "emoji": "🏆",
+        "desc": "店铺升级到满级 Lv.10"
+    },
+    "shelf_10": {
+        "id": "shelf_10",
+        "category": "shop",
+        "name": "货架满满",
+        "emoji": "🧺",
+        "desc": "货架上同时摆上 10 件点心"
+    },
+    "shelf_20": {
+        "id": "shelf_20",
+        "category": "shop",
+        "name": "琳琅满目",
+        "emoji": "🗄️",
+        "desc": "货架上同时摆上 20 件点心"
+    },
+    "employee_2": {
+        "id": "employee_2",
+        "category": "shop",
+        "name": "双人成行",
+        "emoji": "👥",
+        "desc": "雇佣全部 2 名员工"
+    },
+    "truck_1": {
+        "id": "truck_1",
+        "category": "shop",
+        "name": "移动美食家",
+        "emoji": "🚚",
+        "desc": "买下夜市餐车"
+    },
+    "explore_5": {
+        "id": "explore_5",
+        "category": "town",
+        "name": "迈开脚步",
+        "emoji": "🏃",
+        "desc": "锻炼身体 5 次"
+    },
+    "explore_20": {
+        "id": "explore_20",
+        "category": "town",
+        "name": "健康达人",
+        "emoji": "💪",
+        "desc": "锻炼身体 20 次"
+    },
+    "explore_50": {
+        "id": "explore_50",
+        "category": "town",
+        "name": "运动健将",
+        "emoji": "🥇",
+        "desc": "锻炼身体 50 次"
+    },
+    "sport_50": {
+        "id": "sport_50",
+        "category": "town",
+        "name": "身强体壮",
+        "emoji": "🏋️",
+        "desc": "运动技能达到 50"
+    },
+    "fish_1": {
+        "id": "fish_1",
+        "category": "town",
+        "name": "河边初钓",
+        "emoji": "🎣",
+        "desc": "完成第一次钓鱼"
+    },
+    "fish_10": {
+        "id": "fish_10",
+        "category": "town",
+        "name": "钓鱼高手",
+        "emoji": "🐟",
+        "desc": "累计钓鱼 10 次"
+    },
+    "loach_5": {
+        "id": "loach_5",
+        "category": "town",
+        "name": "摸泥鳅小能手",
+        "emoji": "🪱",
+        "desc": "累计抓到 5 次泥鳅"
+    },
+    "day_10": {
+        "id": "day_10",
+        "category": "town",
+        "name": "久居小镇",
+        "emoji": "🏘️",
+        "desc": "经营满 10 天"
+    },
+    "day_120": {
+        "id": "day_120",
+        "category": "town",
+        "name": "四季轮回",
+        "emoji": "🍃",
+        "desc": "经营满 120 天，走过四季"
+    },
+    "day_30": {
+        "id": "day_30",
+        "category": "town",
+        "name": "月满小镇",
+        "emoji": "🌙",
+        "desc": "经营满 30 天"
+    },
+    "day_365": {
+        "id": "day_365",
+        "category": "town",
+        "name": "周年庆典",
+        "emoji": "🎂",
+        "desc": "经营满 365 天"
+    },
+    "bigfish_1": {
+        "id": "bigfish_1",
+        "category": "town",
+        "name": "大鱼上钩",
+        "emoji": "🐋",
+        "desc": "钓到第一条大物（≥50cm）"
+    },
+    "bigfish_5": {
+        "id": "bigfish_5",
+        "category": "town",
+        "name": "钓鱼传奇",
+        "emoji": "🏅",
+        "desc": "累计钓到 5 条大物"
+    },
+    "met_10": {
+        "id": "met_10",
+        "category": "town",
+        "name": "广结善缘",
+        "emoji": "🧑‍🤝‍🧑",
+        "desc": "认识 10 位伙伴"
+    },
+    "met_25": {
+        "id": "met_25",
+        "category": "town",
+        "name": "小镇名人",
+        "emoji": "⭐",
+        "desc": "认识 25 位伙伴"
+    },
+    "shelter_50": {
+        "id": "shelter_50",
+        "category": "town",
+        "name": "收容所之友",
+        "emoji": "🐾",
+        "desc": "收容所友好度达到 50"
+    },
+    "shelter_150": {
+        "id": "shelter_150",
+        "category": "town",
+        "name": "暖心天使",
+        "emoji": "🕊️",
+        "desc": "收容所友好度达到 150"
+    },
+    "bank_1000": {
+        "id": "bank_1000",
+        "category": "town",
+        "name": "存钱罐",
+        "emoji": "🏦",
+        "desc": "银行存款达到 1000"
+    },
+    "fest_3": {
+        "id": "fest_3",
+        "category": "town",
+        "name": "节庆收藏家",
+        "emoji": "🎐",
+        "desc": "获得 3 件节日纪念品"
+    },
+    "star_10": {
+        "id": "star_10",
+        "category": "town",
+        "name": "星空守望者",
+        "emoji": "🌌",
+        "desc": "点亮 10 颗星星"
+    },
+    "sew_1": {
+        "id": "sew_1",
+        "category": "town",
+        "name": "针线初体验",
+        "emoji": "🪡",
+        "desc": "亲手缝制第 1 件衣服"
+    },
+    "sew_5": {
+        "id": "sew_5",
+        "category": "town",
+        "name": "缝纫巧手",
+        "emoji": "🧵",
+        "desc": "亲手缝制 5 件衣服"
+    },
+    "exercise_100": {
+        "id": "exercise_100",
+        "category": "town",
+        "name": "百炼成钢",
+        "emoji": "🏆",
+        "desc": "锻炼身体 100 次"
+    },
+    "sport_100": {
+        "id": "sport_100",
+        "category": "town",
+        "name": "运动满级",
+        "emoji": "💯",
+        "desc": "运动技能达到 100"
+    },
+    "fish_30": {
+        "id": "fish_30",
+        "category": "town",
+        "name": "垂钓常客",
+        "emoji": "🎏",
+        "desc": "累计钓鱼 30 次"
+    },
+    "fish_50": {
+        "id": "fish_50",
+        "category": "town",
+        "name": "河边传说",
+        "emoji": "🐠",
+        "desc": "累计钓鱼 50 次"
+    },
+    "loach_20": {
+        "id": "loach_20",
+        "category": "town",
+        "name": "摸鱼大师",
+        "emoji": "🪱",
+        "desc": "累计抓到 20 次泥鳅"
+    },
+    "bigfish_10": {
+        "id": "bigfish_10",
+        "category": "town",
+        "name": "大物猎手",
+        "emoji": "🐳",
+        "desc": "累计钓到 10 条大物"
+    },
+    "fishdex_10": {
+        "id": "fishdex_10",
+        "category": "town",
+        "name": "图鉴入门",
+        "emoji": "🐡",
+        "desc": "鱼类图鉴收录 10 种"
+    },
+    "fishdex_25": {
+        "id": "fishdex_25",
+        "category": "town",
+        "name": "水产行家",
+        "emoji": "🐟",
+        "desc": "鱼类图鉴收录 25 种"
+    },
+    "met_40": {
+        "id": "met_40",
+        "category": "town",
+        "name": "小镇社交王",
+        "emoji": "🏙️",
+        "desc": "认识 40 位伙伴"
+    },
+    "shelter_200": {
+        "id": "shelter_200",
+        "category": "town",
+        "name": "毛孩子守护神",
+        "emoji": "🐕",
+        "desc": "收容所友好度达到 200"
+    },
+    "bank_5000": {
+        "id": "bank_5000",
+        "category": "town",
+        "name": "理财新星",
+        "emoji": "🏦",
+        "desc": "银行存款达到 5000"
+    },
+    "bank_20000": {
+        "id": "bank_20000",
+        "category": "town",
+        "name": "存款大户",
+        "emoji": "💰",
+        "desc": "银行存款达到 20000"
+    },
+    "fest_6": {
+        "id": "fest_6",
+        "category": "town",
+        "name": "节日收藏家",
+        "emoji": "🎑",
+        "desc": "获得 6 件节日纪念品"
+    },
+    "fest_10": {
+        "id": "fest_10",
+        "category": "town",
+        "name": "节庆全勤王",
+        "emoji": "🏮",
+        "desc": "获得 10 件节日纪念品"
+    },
+    "star_all": {
+        "id": "star_all",
+        "category": "town",
+        "name": "银河漫游者",
+        "emoji": "🌌",
+        "desc": "点亮全部 12 颗星星"
+    },
+    "sew_10": {
+        "id": "sew_10",
+        "category": "town",
+        "name": "裁缝铺老板",
+        "emoji": "🧵",
+        "desc": "亲手缝制 10 件衣服"
+    },
+    "sewing_skill_50": {
+        "id": "sewing_skill_50",
+        "category": "town",
+        "name": "缝纫学徒",
+        "emoji": "✂️",
+        "desc": "缝纫技能达到 50"
+    },
+    "sewing_skill_100": {
+        "id": "sewing_skill_100",
+        "category": "town",
+        "name": "国手裁缝",
+        "emoji": "🧶",
+        "desc": "缝纫技能达到 100"
+    },
+    "tool_skill_100": {
+        "id": "tool_skill_100",
+        "category": "town",
+        "name": "工具大师",
+        "emoji": "🔧",
+        "desc": "工具熟练度达到 100"
+    },
+    "material_100": {
+        "id": "material_100",
+        "category": "town",
+        "name": "材料通",
+        "emoji": "📚",
+        "desc": "材料理解度达到 100"
+    },
+    "furniture_10": {
+        "id": "furniture_10",
+        "category": "town",
+        "name": "装修大师",
+        "emoji": "👑",
+        "desc": "家具等级升到 Lv.10"
+    },
+    "craft_1": {
+        "id": "craft_1",
+        "category": "town",
+        "name": "木工初体验",
+        "emoji": "🛋️",
+        "desc": "亲手制作第 1 件家具"
+    },
+    "craft_10": {
+        "id": "craft_10",
+        "category": "town",
+        "name": "匠人作坊",
+        "emoji": "🛏️",
+        "desc": "亲手制作 10 件家具"
+    },
+    "books_5": {
+        "id": "books_5",
+        "category": "town",
+        "name": "书虫初长成",
+        "emoji": "📖",
+        "desc": "读完 5 本书"
+    },
+    "books_20": {
+        "id": "books_20",
+        "category": "town",
+        "name": "博览群书",
+        "emoji": "📚",
+        "desc": "读完 20 本书"
+    },
+    "flowers_10": {
+        "id": "flowers_10",
+        "category": "town",
+        "name": "花满阳台",
+        "emoji": "🌸",
+        "desc": "累计收获 10 束鲜花"
+    },
+    "bonsai_1": {
+        "id": "bonsai_1",
+        "category": "town",
+        "name": "方寸山水",
+        "emoji": "🪴",
+        "desc": "收获第 1 盆盆景"
+    },
+    "aquarium_1": {
+        "id": "aquarium_1",
+        "category": "town",
+        "name": "金鱼入缸",
+        "emoji": "🐠",
+        "desc": "在水族缸里养起第一条金鱼"
+    },
+    "aquarium_decor": {
+        "id": "aquarium_decor",
+        "category": "town",
+        "name": "水底乐园",
+        "emoji": "🧸",
+        "desc": "水族缸布置 3 件装饰"
+    },
+    "vehicles_3": {
+        "id": "vehicles_3",
+        "category": "town",
+        "name": "出行自由",
+        "emoji": "🚗",
+        "desc": "集齐公交卡、小三轮与私家车"
+    },
+    "health_100": {
+        "id": "health_100",
+        "category": "town",
+        "name": "元气满满",
+        "emoji": "💖",
+        "desc": "健康值达到 100"
+    },
+    "aff_20": {
+        "id": "aff_20",
+        "category": "fate",
+        "name": "初次相识",
+        "emoji": "🤝",
+        "desc": "与任一伙伴好感度达到 20"
+    },
+    "aff_50": {
+        "id": "aff_50",
+        "category": "fate",
+        "name": "好朋友",
+        "emoji": "💛",
+        "desc": "与任一伙伴好感度达到 50"
+    },
+    "aff_80": {
+        "id": "aff_80",
+        "category": "fate",
+        "name": "挚友",
+        "emoji": "💖",
+        "desc": "与任一伙伴好感度达到 80"
+    },
+    "date_1": {
+        "id": "date_1",
+        "category": "fate",
+        "name": "甜蜜约会",
+        "emoji": "🌙",
+        "desc": "完成第 1 次约会"
+    },
+    "date_10": {
+        "id": "date_10",
+        "category": "fate",
+        "name": "情投意合",
+        "emoji": "💘",
+        "desc": "累计约会 10 次"
+    },
+    "gift_10": {
+        "id": "gift_10",
+        "category": "fate",
+        "name": "送礼达人",
+        "emoji": "🎁",
+        "desc": "累计送礼 10 次"
+    },
+    "aff_100": {
+        "id": "aff_100",
+        "category": "fate",
+        "name": "知己知彼",
+        "emoji": "💞",
+        "desc": "与任一伙伴好感度达到 100"
+    },
+    "friend_3": {
+        "id": "friend_3",
+        "category": "fate",
+        "name": "朋友圈",
+        "emoji": "👫",
+        "desc": "与 3 位伙伴好感度达到 50"
+    },
+    "gift_50": {
+        "id": "gift_50",
+        "category": "fate",
+        "name": "慷慨大方",
+        "emoji": "🎀",
+        "desc": "累计送礼 50 次"
+    },
+    "date_30": {
+        "id": "date_30",
+        "category": "fate",
+        "name": "两情相悦",
+        "emoji": "💑",
+        "desc": "累计约会 30 次"
+    },
+    "chat_100": {
+        "id": "chat_100",
+        "category": "fate",
+        "name": "谈天说地",
+        "emoji": "💬",
+        "desc": "累计聊天 100 次"
+    },
+    "chat_500": {
+        "id": "chat_500",
+        "category": "fate",
+        "name": "话痨之王",
+        "emoji": "🗣️",
+        "desc": "累计聊天 500 次"
+    },
+    "aff_120": {
+        "id": "aff_120",
+        "category": "fate",
+        "name": "亲密无间",
+        "emoji": "💗",
+        "desc": "与任一伙伴好感度达到 120"
+    },
+    "aff_150": {
+        "id": "aff_150",
+        "category": "fate",
+        "name": "此生不渝",
+        "emoji": "❤️",
+        "desc": "与任一伙伴好感度达到 150"
+    },
+    "friend_5": {
+        "id": "friend_5",
+        "category": "fate",
+        "name": "好友满堂",
+        "emoji": "👯",
+        "desc": "与 5 位伙伴好感度达到 50"
+    },
+    "friend_80_3": {
+        "id": "friend_80_3",
+        "category": "fate",
+        "name": "知心小圈",
+        "emoji": "💝",
+        "desc": "与 3 位伙伴好感度达到 80"
+    },
+    "gift_100": {
+        "id": "gift_100",
+        "category": "fate",
+        "name": "赠礼大师",
+        "emoji": "🎁",
+        "desc": "累计送礼 100 次"
+    },
+    "chat_1000": {
+        "id": "chat_1000",
+        "category": "fate",
+        "name": "小镇社牛",
+        "emoji": "🗨️",
+        "desc": "累计聊天 1000 次"
+    },
+    "date_50": {
+        "id": "date_50",
+        "category": "fate",
+        "name": "白头之约",
+        "emoji": "💒",
+        "desc": "累计约会 50 次"
     }
 };
     window.Cake.MILESTONES_NEW = {

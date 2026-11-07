@@ -64,12 +64,19 @@
     </div>`;
 
     if (tab === 'ach') {
-      html += `<div class="cat-title">🍰 烘焙成就</div><div class="grid">`;
-      for (const a of Object.values(ACH)) {
-        html += `<div class="ach-card"><span class="ach-emoji" aria-hidden="true">${a.emoji || '🏅'}</span>
-          <span class="ach-body"><span class="ach-name">${esc(a.name)}</span><span class="ach-desc">${esc(a.desc || '')}</span></span></div>`;
+      const CATS = { bake: '🍰 烘焙', shop: '🏪 经营', town: '🏘️ 小镇', fate: '💕 缘分' };
+      const groups = {};
+      for (const a of Object.values(ACH)) { (groups[a.category || 'other'] = groups[a.category || 'other'] || []).push(a); }
+      for (const c of Object.keys(CATS).concat(Object.keys(groups).filter(k => !CATS[k]))) {
+        const list = groups[c];
+        if (!list || !list.length) continue;
+        html += `<div class="cat-title">${CATS[c] || c} <span class="count-pill">${list.length}</span></div><div class="grid">`;
+        for (const a of list) {
+          html += `<div class="ach-card"><span class="ach-emoji" aria-hidden="true">${a.emoji || '🏅'}</span>
+            <span class="ach-body"><span class="ach-name">${esc(a.name)}</span><span class="ach-desc">${esc(a.desc || '')}</span></span></div>`;
+        }
+        html += `</div>`;
       }
-      html += `</div>`;
     } else {
       html += `<div class="cat-title">🎖️ 里程碑 <span class="count-pill">${nm}</span></div><div class="grid">`;
       for (const m of Object.values(MS || {})) {

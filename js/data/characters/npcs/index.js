@@ -1,4 +1,5 @@
 // js/data/characters/npcs/index.js（按地点聚合 58 位 NPC）
+import './actions.js';
 import './农贸市场·果园批发.js';
 import './别墅区.js';
 import './动物收容所·宿舍.js';

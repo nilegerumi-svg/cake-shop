@@ -85,3 +85,6 @@ import '../ui/bakery_labels.js';
 import '../ui/floor_labels.js';
 import '../time/labels.js';
 import '../ingredients/category_order.js';
+
+// 第六轮提取（成品服装）
+import '../outfits/index.js';

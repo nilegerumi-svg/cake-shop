@@ -19,7 +19,8 @@
     </style>
 </head>
 <body>
-    <div id="app-loading">
+    <h1 class="sr-only">甜蜜物语 - 游戏主界面</h1>
+    <div id="app-loading" role="status" aria-live="polite" aria-label="游戏加载中">
         <div class="loading-title">🍰 甜蜜物语</div>
         <div id="loading-text" class="loading-text">正在准备启动...</div>
         <div class="loading-bar-wrap">
@@ -30,33 +31,33 @@
     </div>
 
     <div class="app-wrapper" id="app-root">
-        <header id="header"></header>
-        <nav id="navBar"></nav>
+        <header id="header" role="banner"></header>
+        <nav id="navBar" role="navigation" aria-label="主导航"></nav>
         
         <div class="split-container">
             <div class="log-pane">
-                <iframe id="logFrame" src="pages/log/index.html" class="log-frame"></iframe>
+                <iframe id="logFrame" title="游戏日志" src="pages/log/index.html" class="log-frame"></iframe>
             </div>
             <!-- 提示条 + 功能按钮行都放在日志下方、主内容区上方，不再放底部挡住内容 -->
             <div class="footer-bar" id="footer">
-                <div class="footer-hint" id="footerHint">💡 前往【🏪 店铺】页面即可开店营业，接待顾客！</div>
+                <div class="footer-hint" id="footerHint" aria-live="polite">💡 前往【🏪 店铺】页面即可开店营业，接待顾客！</div>
                 <div class="footer-btns">
-                    <div class="footer-btn" data-footer-action="sleep">
-                        <span class="icon">🛌</span><span>睡觉</span>
-                    </div>
-                    <div class="footer-btn" data-footer-action="shop">
-                        <span class="icon" id="f-icon-shop">🚪</span><span id="f-text-shop">营业</span>
-                    </div>
-                    <div class="footer-btn" data-footer-action="larder">
-                        <span class="icon">📦</span><span>食材库</span>
-                    </div>
-                    <div class="footer-btn" style="cursor:default;">
-                        <span class="icon">📅</span><span class="footer-time" id="f-time">Day 1 08:00</span>
+                    <button type="button" class="footer-btn" data-footer-action="sleep" aria-label="睡觉">
+                        <span class="icon" aria-hidden="true">🛌</span><span>睡觉</span>
+                    </button>
+                    <button type="button" class="footer-btn" data-footer-action="shop" aria-label="营业或打烊">
+                        <span class="icon" aria-hidden="true" id="f-icon-shop">🚪</span><span id="f-text-shop">营业</span>
+                    </button>
+                    <button type="button" class="footer-btn" data-footer-action="larder" aria-label="食材库">
+                        <span class="icon" aria-hidden="true">📦</span><span>食材库</span>
+                    </button>
+                    <div class="footer-btn footer-status">
+                        <span class="icon" aria-hidden="true">📅</span><span class="footer-time" id="f-time">Day 1 08:00</span>
                     </div>
                 </div>
             </div>
             <div class="main-pane">
-                <iframe id="mainFrame" src="pages/home/index.html" class="main-frame"></iframe>
+                <iframe id="mainFrame" title="游戏主界面" src="pages/home/index.html" class="main-frame"></iframe>
             </div>
         </div>
     </div>

@@ -2,40 +2,54 @@
    甜蜜物语 - 专属全局样式表（现代化整理版）
    ================================================== */
 
-/* 1. 主题变量 */
+/* 1. 主题变量（暖奶油/棕烘焙美学，对齐新版设计语言） */
 :root {
-    --pink-50:  #fff0f5;
-    --pink-100: #ffe4e1;
-    --pink-200: #ffd1dc;
-    --pink-300: #ffb6c1;
-    --pink-400: #ff8fa3;
-    --pink-500: #ff6b81;
-    --pink-600: #d6336c;
-    --pink-700: #d85c74;
-    --pink-deep: #ff4757;
+    /* 背景与卡片：暖奶油/米色 */
+    --pink-50:  #fff8ef;   /* 页面底色：暖奶油 */
+    --pink-100: #f7ecdc;   /* 浅米 */
+    --pink-200: #f0dcc0;   /* 描边：米棕 */
+    --pink-300: #e8c9a4;   /* 深米 */
+    --pink-400: #e07a8a;   /* 强调（浅玫瑰） */
+    --pink-500: #e04a63;   /* 主强调（玫瑰红） */
+    --pink-600: #b3304a;   /* 深玫瑰 */
+    --pink-700: #8a5a44;   /* 暖棕 */
+    --pink-deep: #c62828;  /* 错误红 */
 
-    --text-main:  #333;
-    --text-mid:   #555;
-    --text-muted: #888;
+    --text-main:  #4a2c17; /* 主文字：深棕 */
+    --text-mid:   #6b4226; /* 次级文字 */
+    --text-muted: #b08a6a; /* 弱化文字 */
 
-    --gold:        #ffd700;
-    --gold-shadow: #e6c200;
-    --gold-text:   #8b4513;
+    --gold:        #ffd9a0; /* 金黄 */
+    --gold-shadow: #e0b070;
+    --gold-text:   #7a4a1f;
 
-    --green-ok:    #2e7d32;
-    --green-bg:    #e8f5e9;
-    --green-line:  #a5d6a7;
+    --green-ok:    #558b2f;
+    --green-bg:    #eef5e8;
+    --green-line:  #b8d6a3;
     --red-lack:    #c62828;
-    --red-bg:      #ffebee;
-    --red-line:    #ef9a9a;
+    --red-bg:      #fdecea;
+    --red-line:    #e6a5a5;
 
     --app-max-width: 500px;
-    --radius-card:   16px;
-    --radius-item:   12px;
-    --radius-pill:   20px;
-    --shadow-card:   0 4px 12px rgba(255, 105, 180, 0.08);
+    --radius-card:   18px;
+    --radius-item:   14px;
+    --radius-pill:   22px;
+    --shadow-card:   0 4px 14px rgba(180, 120, 60, 0.12);
 
     --font-stack: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+}
+
+/* 键盘焦点可见性：任何可聚焦元素统一显示暖色焦点环 */
+:focus-visible {
+    outline: 3px solid #e04a63;
+    outline-offset: 2px;
+    border-radius: 6px;
+}
+
+/* 视觉隐藏但可供屏幕阅读器读取 */
+.sr-only {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
 }
 
 /* 2. 基础重置 */

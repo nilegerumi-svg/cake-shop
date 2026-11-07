@@ -4,6 +4,7 @@ import './reputation.js';
 import './recipes.js';
 import './social.js';
 import './shop.js';
+import './new_achievements.js';
 
 (function () {
     'use strict';

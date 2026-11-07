@@ -1,0 +1,98 @@
+/* css/modal.css — 统一弹窗样式
+ * 目标：除“手机界面”弹窗(.modal-sheet-phone)外，所有弹窗统一为同一套外观；
+ *       并统一排版弹窗内文字（行高 / 段距 / 标题 / 列表）。
+ */
+
+/* ===== 1) 统一卡片外观 ===== */
+#container .modal-sheet:not(.modal-sheet-phone),
+#global-modal-root .modal-sheet:not(.modal-sheet-phone) {
+  background: #fffdf8 !important;
+  background-image: none !important;
+  border: 2px solid #6b4226 !important;
+  border-radius: 22px !important;
+  box-shadow: 0 14px 44px rgba(60, 30, 10, 0.3) !important;
+  padding: 20px 20px 24px !important;
+  color: #4a2c17 !important;
+  width: min(94vw, 560px) !important;
+  max-width: min(94vw, 560px) !important;
+  margin: 0 auto !important;
+  box-sizing: border-box !important;
+}
+
+/* 夜间模式：统一深色卡片 */
+html.night #container .modal-sheet:not(.modal-sheet-phone),
+html.night #global-modal-root .modal-sheet:not(.modal-sheet-phone),
+#container.night .modal-sheet:not(.modal-sheet-phone) {
+  background: #382a2c !important;
+  background-image: none !important;
+  color: #f3e3cb !important;
+  border-color: rgba(255, 255, 255, 0.35) !important;
+  box-shadow: 0 14px 44px rgba(0, 0, 0, 0.55) !important;
+}
+
+/* ===== 2) 弹窗内文字排版 ===== */
+#container .modal-sheet:not(.modal-sheet-phone),
+#global-modal-root .modal-sheet:not(.modal-sheet-phone) {
+  line-height: 1.7 !important;
+  word-break: break-word !important;
+  overflow-wrap: anywhere !important;
+}
+
+/* 段落：统一行高、段距，避免贴边 */
+#container .modal-sheet:not(.modal-sheet-phone) p,
+#global-modal-root .modal-sheet:not(.modal-sheet-phone) p {
+  line-height: 1.7 !important;
+  margin: 0 0 10px !important;
+  font-size: 15px !important;
+  text-align: left !important;
+}
+#container .modal-sheet:not(.modal-sheet-phone) p:last-child,
+#global-modal-root .modal-sheet:not(.modal-sheet-phone) p:last-child { margin-bottom: 0 !important; }
+
+/* 标题：层级清晰 */
+#container .modal-sheet:not(.modal-sheet-phone) h1,
+#container .modal-sheet:not(.modal-sheet-phone) h2,
+#container .modal-sheet:not(.modal-sheet-phone) h3,
+#global-modal-root .modal-sheet:not(.modal-sheet-phone) h1,
+#global-modal-root .modal-sheet:not(.modal-sheet-phone) h2,
+#global-modal-root .modal-sheet:not(.modal-sheet-phone) h3 {
+  line-height: 1.35 !important;
+  margin: 0 0 12px !important;
+  font-weight: 800 !important;
+}
+
+/* 列表：统一缩进与行距 */
+#container .modal-sheet:not(.modal-sheet-phone) ul,
+#container .modal-sheet:not(.modal-sheet-phone) ol,
+#global-modal-root .modal-sheet:not(.modal-sheet-phone) ul,
+#global-modal-root .modal-sheet:not(.modal-sheet-phone) ol {
+  padding-left: 1.3em !important;
+  margin: 0 0 10px !important;
+  line-height: 1.7 !important;
+}
+#container .modal-sheet:not(.modal-sheet-phone) li,
+#global-modal-root .modal-sheet:not(.modal-sheet-phone) li {
+  margin-bottom: 6px !important;
+}
+#container .modal-sheet:not(.modal-sheet-phone) li:last-child,
+#global-modal-root .modal-sheet:not(.modal-sheet-phone) li:last-child { margin-bottom: 0 !important; }
+
+/* 按钮：底部留白与间距统一 */
+#container .modal-sheet:not(.modal-sheet-phone) button,
+#global-modal-root .modal-sheet:not(.modal-sheet-phone) button {
+  margin-top: 8px !important;
+}
+
+/* 弹窗内滚动区：顺滑 + 内边距 */
+#container .modal-sheet:not(.modal-sheet-phone) [class*="overflow-y-auto"],
+#global-modal-root .modal-sheet:not(.modal-sheet-phone) [class*="overflow-y-auto"] {
+  -webkit-overflow-scrolling: touch;
+  padding-right: 4px;
+}
+
+/* ===== 3) 盲人模式：弹窗文字放大、行距更松 ===== */
+#container.blind-mode .modal-sheet:not(.modal-sheet-phone) p,
+#container.blind-mode .modal-sheet:not(.modal-sheet-phone) li {
+  font-size: 17px !important;
+  line-height: 1.85 !important;
+}

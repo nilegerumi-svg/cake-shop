@@ -1,5 +1,5 @@
 // 顶层 await：保证父模块 await import() 时本文件已真正加载完毕
-const SMALL_MODULES = ['./cake.js', './bread.js', './dessert.js', './western.js', './imported.js'];
+const SMALL_MODULES = ['./cake.js', './bread.js', './dessert.js', './western.js', './imported_1.js', './imported_2.js', './imported_3.js'];
 
 for (const path of SMALL_MODULES) {
     try {

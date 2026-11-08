@@ -25,11 +25,7 @@
 
 /* 3) 平板 / 桌面：适度加宽到 640px（保留游戏原生黑条纹背景） */
 @media (min-width:768px){
-  /* 顶部所有文字统一到 12px × 倍数（含 音乐开/语音/字体/夜间/休息一天 这一排小按钮） */
-  .top-bar, .top-bar *{font-size:calc(12px * var(--fs)) !important;}
 
-  /* 顶部那条棕带：改为透明，露出红色条纹 */
-  .top-bar{background:transparent !important;border-bottom-color:transparent !important;}
   /* 小按钮字号跟随倍数（原本写死 11px） */
   #container .text-\[11px\]{font-size:calc(11px * var(--fs)) !important;}
   #container .text-\[10px\]{font-size:calc(10px * var(--fs)) !important;}
@@ -42,7 +38,7 @@
   html{--player-font-scale:2 !important;}
 
   /* 所有容器/面板/弹窗统一 1080 */
-  #container{max-width:none !important;width:100% !important;margin:0 !important;font-size:calc(18px * var(--fs)) !important;}
+  #container{max-width:1080px !important;margin:16px auto !important;font-size:calc(18px * var(--fs)) !important;}
   .tab-bar{width:min(1080px,100vw) !important;max-width:1080px !important;left:50% !important;right:auto !important;transform:translateX(-50%) !important;}
   .top-bar{max-width:1080px !important;margin-left:auto !important;margin-right:auto !important;}
   #global-modal-root > *{max-width:1080px !important;margin-left:auto !important;margin-right:auto !important;}

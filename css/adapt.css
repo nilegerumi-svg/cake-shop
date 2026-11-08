@@ -29,7 +29,7 @@
     max-width: 1080px !important;
     margin: 16px auto !important;
     /* PC 端：字号 / 字距 / 行距 */
-    font-size: calc(18px * var(--fs, 2)) !important;
+    font-size: 36px !important;
     letter-spacing: 0.02em;
     line-height: 1.75;
   }

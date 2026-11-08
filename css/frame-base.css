@@ -22,7 +22,7 @@
 /* PC 宽屏适配：完整覆盖游戏原生 560px 桌面设计 */
 @media (min-width:768px){
   /* PC 端：字号 / 字距 / 行距 */
-  #container{font-size:calc(18px * var(--fs, 2))!important;line-height:1.75!important;}
+  #container{font-size:36px!important;line-height:1.75!important;}
   #container p,#container li,#container div,#container span{letter-spacing:0.02em;line-height:1.75;}
 
   body{background-color:#5d2a1a;background-image:radial-gradient(ellipse at 50% -10%,rgba(255,200,130,.18),transparent 55%);}

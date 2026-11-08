@@ -21,13 +21,15 @@
 
 /* PC 宽屏适配：完整覆盖游戏原生 560px 桌面设计 */
 @media (min-width:768px){
+  /* content-1080：内容列 1080 居中，红色条纹铺满 */
+  #container .max-w-md,#container .max-w-lg,#container .max-w-xl,#container .max-w-2xl,#container .max-w-3xl,#container .max-w-4xl,#container .max-w-5xl,#container .max-w-6xl,#container .max-w-7xl{max-width:1080px !important;margin-left:auto !important;margin-right:auto !important;}
   /* 统一 1.8 倍：600 × 1.8 = 1080 */
   :root{--pc-width:1080px;--pc-scale:1.8;}
   html{font-size:32px !important;}
   html{--player-font-scale:2 !important;}
 
   /* 所有容器/面板/弹窗统一 1080 */
-  #container{max-width:1080px !important;margin:16px auto !important;font-size:calc(18px * var(--fs)) !important;}
+  #container{max-width:none !important;width:100% !important;margin:0 !important;font-size:calc(18px * var(--fs)) !important;}
   .tab-bar{width:min(1080px,100vw) !important;max-width:1080px !important;left:50% !important;right:auto !important;transform:translateX(-50%) !important;}
   .top-bar{max-width:1080px !important;margin-left:auto !important;margin-right:auto !important;}
   #global-modal-root > *{max-width:1080px !important;margin-left:auto !important;margin-right:auto !important;}

@@ -1,4 +1,4 @@
-// js/data/index.js
+﻿// js/data/index.js
 // 顶层 await：保证调用方 await import() 时，全部数据字典已装载完毕
 console.log('🟢 [Data] 开始加载 Data 模块...');
 
@@ -28,6 +28,7 @@ const DATA_MODULES = [
     './descriptions.js',
     './ingredients/detailed_descs.js',
     './ingredients/merged_for_game.js',
+    './recipes/merged_for_game.js',
     './subsidy.js',
     './systems.js',
     './systems2.js'
@@ -86,4 +87,5 @@ console.log('📦 [Data] 所有核心数据层装载完毕');
     }
     if (filled2) console.log('📝 [Data] 精细食材补充描述', filled2, '条');
 })();
+
 

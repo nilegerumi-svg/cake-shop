@@ -44,7 +44,7 @@ const DATA_MODULES = [
 // 文件级进度上报让加载界面的"剩余文件数"持续变动。
 window.setLoadTotal?.(DATA_MODULES.length);
 
-await Promise.all(DATA_MODULES.map(async (path) => {
+window.__cakeDataReady = Promise.all(DATA_MODULES.map(async (path) => {
     try {
         console.log(`⏳ [Data] 准备加载: ${path}`);
         await import(path);
@@ -59,6 +59,7 @@ await Promise.all(DATA_MODULES.map(async (path) => {
     }
 }));
 
+await window.__cakeDataReady;
 console.log('📦 [Data] 所有核心数据层装载完毕');
 
 // 用离线包提取的描述回填到食谱/食材（旧 schema 没有 desc 字段）

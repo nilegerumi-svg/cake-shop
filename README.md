@@ -118,7 +118,10 @@ cake-shop/
 │   ├── profile/  # 档案
 │   └── achieve/  # 成就
 ├── docs/
-│   └── 疾病与心理系统.md  # 健康 / 心情 / 饱食逻辑导出
+│   ├── 疾病与心理系统.md  # 健康 / 心情 / 饱食逻辑导出
+│   └── 内容接线清单.md    # 仅存在于 bundle、尚未下沉 js/data 的 397 个数据对象（下轮接线任务）
+├── tools/
+│   └── verify-content.js  # 字段级内容回归校验：以离线包/旧版为基线，逐字段验证项目内容一致
 └── README.md
 ```
 
@@ -133,6 +136,18 @@ cake-shop/
 - **跨文档只用 postMessage**：外壳与面板之间通过 `frame:theme`（主题 / 字号 / 盲人模式）、`frame:ready`、`frame:save-focus` / `frame:restore-focus`（切换标签时保留焦点）、`frame:pointerdown`、`flash-app-error`（面板异常上报）等消息通信，不跨文档读写 DOM，避免被浏览器安全策略拦截。
 - **手写区与打包区分明**：`app.bundle.js` / `game.css` 是打包压缩产物，不逐行解读、不在其内部打补丁；所有增强一律以 `tm-` 前缀的手写 CSS / JS 叠加实现，可读可维护。
 - **无障碍**：内置盲人模式与语音播报；键盘可操作；焦点环统一；`aria-label` 自动补齐。
+
+---
+
+## 内容回归校验
+
+每次把数据从 bundle 下沉到 `js/data/`（见 [docs/内容接线清单.md](docs/内容接线清单.md)）后，用字段级校验器确认内容没有被搬坏：
+
+```bash
+# 以离线包 / 概念版为基线，逐字段验证项目 js/ 中同名同值（引号、空白、键序、!0/!1 均不敏感）
+node tools/verify-content.js "甜蜜物语蛋糕店-离线版 (4).html"
+# 末行输出命中率，退出码 0 = 零差异
+```
 
 ---
 

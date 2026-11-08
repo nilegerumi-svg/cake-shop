@@ -20,6 +20,18 @@
 <link rel="stylesheet" href="css/pc-layout.css?v=20261108b">
 <link rel="stylesheet" href="css/adapt.css?v=20261108b">
 <link rel="stylesheet" href="css/modal.css?v=20261108b">
+    <!-- PC 端：宽度 1080 + 字号放大（内联在 HTML 里，避免缓存问题） -->
+    <style id="pc-inline">
+      @media (min-width:768px){
+        html{font-size:32px !important;--player-font-scale:2 !important;}
+        #container{max-width:1080px !important;margin:16px auto !important;font-size:calc(18px * var(--fs)) !important;}
+        .tab-bar{width:min(1080px,100vw) !important;max-width:1080px !important;left:50% !important;right:auto !important;transform:translateX(-50%) !important;}
+        .top-bar{max-width:1080px !important;margin-left:auto !important;margin-right:auto !important;}
+        #global-modal-root > *{max-width:1080px !important;margin-left:auto !important;margin-right:auto !important;}
+        .modal-sheet:not(.modal-sheet-phone){max-width:min(92vw,1080px) !important;}
+        .voice-command-fixed,.bgm-toggle-title{right:max(12px,calc((100vw - 1080px)/2 + 12px)) !important;}
+      }
+    </style>
 </head>
   <body>
                                                         <div id="root"></div>

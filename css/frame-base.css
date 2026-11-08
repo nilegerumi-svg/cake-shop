@@ -24,7 +24,7 @@
   html,body{overflow-x:hidden !important;}
   ::-webkit-scrollbar{width:0 !important;height:0 !important;display:none !important;}
   *{scrollbar-width:none !important;}
-  body{background-color:#7f1d1d !important;background-image:none !important;}
+  body{background-color:#7f1d1d !important;background-image:repeating-linear-gradient(90deg,#000 0 10px,rgba(0,0,0,0) 10px 30px) !important;}
 
   /* 顶栏右侧留位，避免胶囊压在收起箭头上 */
   .top-bar{padding-right:64px !important;}

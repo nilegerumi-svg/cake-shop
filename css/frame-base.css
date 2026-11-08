@@ -21,6 +21,10 @@
 
 /* PC 宽屏适配：完整覆盖游戏原生 560px 桌面设计 */
 @media (min-width:768px){
+  /* PC 端：字号 / 字距 / 行距 */
+  #container{font-size:17px!important;line-height:1.75!important;}
+  #container p,#container li,#container div,#container span{letter-spacing:0.02em;line-height:1.75;}
+
   body{background-color:#5d2a1a;background-image:radial-gradient(ellipse at 50% -10%,rgba(255,200,130,.18),transparent 55%);}
   #container{max-width:640px !important;margin:16px auto !important;min-height:calc(100vh - 32px) !important;border-radius:22px !important;border-left:2px solid rgba(255,255,255,.08);border-right:2px solid rgba(255,255,255,.08);box-shadow:0 0 40px rgba(0,0,0,.45) !important;overflow:clip !important;font-size:16.5px;}
   .tab-bar{width:min(640px,100vw) !important;max-width:640px !important;left:50% !important;right:auto !important;transform:translateX(-50%) !important;}

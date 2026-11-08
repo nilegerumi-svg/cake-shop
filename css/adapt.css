@@ -1,4 +1,4 @@
-/* css/adapt.css — 适配性增强（安全区 / 触屏滚动 / 平板·桌面 / 横屏 / 无障碍） */
+﻿/* css/adapt.css — 适配性增强（安全区 / 触屏滚动 / 平板·桌面 / 横屏 / 无障碍） */
 
 /* 1) 安全区（刘海屏 / 手势条）
    注意：底部安全区由游戏原生 .tab-bar::after 填充（height:max(34px,安全区)），
@@ -25,7 +25,18 @@
 
 /* 3) 平板 / 桌面：适度加宽到 640px（保留游戏原生黑条纹背景） */
 @media (min-width: 768px) {
-  #container { max-width: 640px !important; margin: 16px auto !important; }
+  #container {
+    max-width: 640px !important;
+    margin: 16px auto !important;
+    /* PC 端：字号 / 字距 / 行距 */
+    font-size: 17px;
+    letter-spacing: 0.02em;
+    line-height: 1.75;
+  }
+  #container p, #container li, #container span {
+    letter-spacing: 0.02em;
+    line-height: 1.75;
+  }
   /* 底部标签栏与容器同宽，否则会窄一截 */
   .tab-bar {
     width: min(640px, 100vw) !important;

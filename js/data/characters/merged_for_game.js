@@ -1,4 +1,4 @@
-// js/data/characters/merged_for_game.js（bundle 58 位 + 旧版补充字段）
+// js/data/characters/merged_for_game.js（离线包并集 + mbti/bg 档案）
 (function () {
     'use strict';
     window.Cake = window.Cake || {};

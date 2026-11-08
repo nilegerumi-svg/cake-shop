@@ -25,6 +25,15 @@
 
 /* 3) 平板 / 桌面：适度加宽到 640px（保留游戏原生黑条纹背景） */
 @media (min-width:768px){
+  /* 顶部所有文字统一到 12px × 倍数（含 音乐开/语音/字体/夜间/休息一天 这一排小按钮） */
+  .top-bar, .top-bar *{font-size:calc(12px * var(--fs)) !important;}
+
+  /* 顶部那条棕带：改为透明，露出红色条纹 */
+  .top-bar{background:transparent !important;border-bottom-color:transparent !important;}
+  /* 小按钮字号跟随倍数（原本写死 11px） */
+  #container .text-\[11px\]{font-size:calc(11px * var(--fs)) !important;}
+  #container .text-\[10px\]{font-size:calc(10px * var(--fs)) !important;}
+
   /* content-1080：内容列 1080 居中，红色条纹铺满 */
   #container .max-w-md,#container .max-w-lg,#container .max-w-xl,#container .max-w-2xl,#container .max-w-3xl,#container .max-w-4xl,#container .max-w-5xl,#container .max-w-6xl,#container .max-w-7xl{max-width:1080px !important;margin-left:auto !important;margin-right:auto !important;}
   /* 统一 1.8 倍：600 × 1.8 = 1080 */

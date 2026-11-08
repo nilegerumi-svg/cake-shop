@@ -1,4 +1,4 @@
-﻿// js/data/index.js
+// js/data/index.js
 // 顶层 await：保证调用方 await import() 时，全部数据字典已装载完毕
 console.log('🟢 [Data] 开始加载 Data 模块...');
 
@@ -27,6 +27,7 @@ const DATA_MODULES = [
     './shop/index.js',
     './descriptions.js',
     './ingredients/detailed_descs.js',
+    './ingredients/merged_for_game.js',
     './subsidy.js',
     './systems.js',
     './systems2.js'

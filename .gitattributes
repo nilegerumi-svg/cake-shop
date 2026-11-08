@@ -1,0 +1,3 @@
+# 打包产物及其分片：禁止换行转换，保证「分片拼接 == 原始 bundle」逐字节成立
+js/app.bundle.js          text eol=lf
+js/app.bundle/*.js        text eol=lf

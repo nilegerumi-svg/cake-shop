@@ -90,7 +90,8 @@ cake-shop/
 │   ├── safe-area.css / device-adapt.css
 │   └── a11y.css / hide-scrollbar.css / open-tip.css
 ├── js/
-│   ├── app.bundle.js     # 现成 UI 打包（React，≈1.8MB）
+│   ├── app.bundle.js     # 拆分加载器（按序取回分片并拼成原样执行）
+│   ├── app.bundle/       # 现成 UI 打包产物分片（12 片，合计 ≈1.8MB）
 │   ├── frame-bootstrap.js# iframe 面板引导：主题 / 字号 / 焦点 / 错误上报 / 键盘防遮挡
 │   ├── boot/             # 启动兜底：errors.js / a11y-shim.js（语音兜底、空点提示、close 中文化）
 │   ├── host/             # 宿主增强（全部为手写可读区，以 tm- 前缀标记）

@@ -24,7 +24,12 @@
 #container { -webkit-tap-highlight-color: transparent; }
 
 /* 3) 平板 / 桌面：适度加宽到 640px（保留游戏原生黑条纹背景） */
-@media (min-width:768px){
+@media (min-width:768px){  /* iframe 透明后，面板容器底色换成红色，避免露出灰带 */
+  .panel-area,.panel-wrap,.panel{background:transparent !important;}
+
+  /* 顶栏右侧留位，避免胶囊压在收起箭头上 */
+  .top-bar{padding-right:64px !important;}
+
 
   /* 小按钮字号跟随倍数（原本写死 11px） */
   #container .text-\[11px\]{font-size:calc(11px * var(--fs)) !important;}

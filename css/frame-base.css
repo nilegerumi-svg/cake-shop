@@ -52,3 +52,62 @@ html { overflow-y: auto; overflow-x: hidden; }
 #root { overflow-x: hidden; }
 
 
+
+
+/* ===== 七色分层滤镜（卡片嵌套层级） ===== */
+/* css/rainbow-filter.css —— 卡片嵌套层级的七色分层滤镜
+   最外层卡片 = 赤，往里一层 = 橙，依次：赤 → 橙 → 黄 → 绿 → 青 → 蓝 → 紫
+   每层用 ::before 叠一层色，opacity .15，不挡点击。 */
+
+/* 卡片基础：让 ::before 能定位 */
+.game-card,
+[class*="game-card"],
+.rounded-xl,
+[class*="rounded-xl"] {
+  position: relative;
+}
+
+/* 公共叠色层 */
+.rainbow-depth-1::before,
+.rainbow-depth-2::before,
+.rainbow-depth-3::before,
+.rainbow-depth-4::before,
+.rainbow-depth-5::before,
+.rainbow-depth-6::before,
+.rainbow-depth-7::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  mix-blend-mode: overlay;
+  opacity: 0.15;              /* 15/100 */
+  z-index: 0;
+}
+
+/* 1 层 赤 */
+.rainbow-depth-1::before { background: #ff0000; }
+/* 2 层 橙 */
+.rainbow-depth-2::before { background: #ff7f00; }
+/* 3 层 黄 */
+.rainbow-depth-3::before { background: #ffff00; }
+/* 4 层 绿 */
+.rainbow-depth-4::before { background: #00ff00; }
+/* 5 层 青 */
+.rainbow-depth-5::before { background: #00ffff; }
+/* 6 层 蓝 */
+.rainbow-depth-6::before { background: #0000ff; }
+/* 7 层 紫 */
+.rainbow-depth-7::before { background: #8b00ff; }
+
+/* 开关：<html class="no-rainbow-filter"> 时全部关闭 */
+html.no-rainbow-filter .rainbow-depth-1::before,
+html.no-rainbow-filter .rainbow-depth-2::before,
+html.no-rainbow-filter .rainbow-depth-3::before,
+html.no-rainbow-filter .rainbow-depth-4::before,
+html.no-rainbow-filter .rainbow-depth-5::before,
+html.no-rainbow-filter .rainbow-depth-6::before,
+html.no-rainbow-filter .rainbow-depth-7::before {
+  display: none;
+}
+

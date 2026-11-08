@@ -1,0 +1,70 @@
+/* css/rainbow-filter.css —— 七色分层滤镜（赤橙黄绿青蓝紫，每层 opacity .15） */
+
+.rainbow-filter {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  pointer-events: none;
+  overflow: hidden;
+  /* 整层也做一次柔化，避免色带边缘太硬 */
+  filter: blur(28px);
+}
+
+.rainbow-filter > span {
+  position: absolute;
+  inset: -10%;
+  pointer-events: none;
+  mix-blend-mode: overlay;
+  opacity: 0.15;              /* 每层 15/100 透明度 */
+  will-change: opacity;
+}
+
+/* 赤 */
+.rainbow-filter > span:nth-child(1) {
+  background: radial-gradient(60% 55% at 12% 18%, #ff2d2d 0%, transparent 70%);
+}
+/* 橙 */
+.rainbow-filter > span:nth-child(2) {
+  background: radial-gradient(60% 55% at 30% 8%, #ff8a1e 0%, transparent 70%);
+}
+/* 黄 */
+.rainbow-filter > span:nth-child(3) {
+  background: radial-gradient(60% 55% at 50% 10%, #ffe11a 0%, transparent 70%);
+}
+/* 绿 */
+.rainbow-filter > span:nth-child(4) {
+  background: radial-gradient(60% 55% at 70% 20%, #2ecc40 0%, transparent 70%);
+}
+/* 青 */
+.rainbow-filter > span:nth-child(5) {
+  background: radial-gradient(60% 55% at 82% 45%, #22e0e0 0%, transparent 70%);
+}
+/* 蓝 */
+.rainbow-filter > span:nth-child(6) {
+  background: radial-gradient(60% 55% at 60% 78%, #2f6bff 0%, transparent 70%);
+}
+/* 紫 */
+.rainbow-filter > span:nth-child(7) {
+  background: radial-gradient(60% 55% at 25% 72%, #a24bff 0%, transparent 70%);
+}
+
+/* 减少动态效果时不做动画（保留静态叠色） */
+@media (prefers-reduced-motion: no-preference) {
+  .rainbow-filter > span {
+    animation: rainbow-breathe 14s ease-in-out infinite alternate;
+  }
+  .rainbow-filter > span:nth-child(2) { animation-delay: -2s; }
+  .rainbow-filter > span:nth-child(3) { animation-delay: -4s; }
+  .rainbow-filter > span:nth-child(4) { animation-delay: -6s; }
+  .rainbow-filter > span:nth-child(5) { animation-delay: -8s; }
+  .rainbow-filter > span:nth-child(6) { animation-delay: -10s; }
+  .rainbow-filter > span:nth-child(7) { animation-delay: -12s; }
+}
+
+@keyframes rainbow-breathe {
+  from { opacity: 0.10; transform: scale(1.00); }
+  to   { opacity: 0.20; transform: scale(1.06); }
+}
+
+/* 关闭开关：给 <html> 加 no-rainbow-filter 即可整体关掉 */
+html.no-rainbow-filter .rainbow-filter { display: none; }

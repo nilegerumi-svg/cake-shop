@@ -26,10 +26,10 @@
 /* 3) 平板 / 桌面：适度加宽到 640px（保留游戏原生黑条纹背景） */
 @media (min-width: 768px) {
   #container {
-    max-width: 640px !important;
+    max-width: 1080px !important;
     margin: 16px auto !important;
     /* PC 端：字号 / 字距 / 行距 */
-    font-size: 17px;
+    font-size: calc(18px * var(--fs, 2)) !important;
     letter-spacing: 0.02em;
     line-height: 1.75;
   }
@@ -39,8 +39,8 @@
   }
   /* 底部标签栏与容器同宽，否则会窄一截 */
   .tab-bar {
-    width: min(640px, 100vw) !important;
-    max-width: 640px !important;
+    width: min(1080px, 100vw) !important;
+    max-width: 1080px !important;
     left: 50% !important;
     right: auto !important;
     transform: translateX(-50%) !important;

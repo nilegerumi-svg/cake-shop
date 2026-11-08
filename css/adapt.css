@@ -24,25 +24,26 @@
 #container { -webkit-tap-highlight-color: transparent; }
 
 /* 3) 平板 / 桌面：适度加宽到 640px（保留游戏原生黑条纹背景） */
-@media (min-width: 768px) {
-  /* 宽度 1080 + 字体放大（其余不动） */
-  html { font-size: 32px !important; }
-  html { --player-font-scale: 2 !important; }
-  #container {
-    max-width: 1080px !important;
-    margin: 16px auto !important;
-    font-size: calc(18px * var(--fs)) !important;
-  }
-  .tab-bar {
-    width: min(1080px, 100vw) !important;
-    max-width: 1080px !important;
-    left: 50% !important;
-    right: auto !important;
-    transform: translateX(-50%) !important;
-  }
-  /* 手机安全区白条，PC 不需要 */
-  .tab-bar::after { height: 0 !important; }
+@media (min-width:768px){
+  /* 统一 1.8 倍：600 × 1.8 = 1080 */
+  :root{--pc-width:1080px;--pc-scale:1.8;}
+  html{font-size:32px !important;}
+  html{--player-font-scale:2 !important;}
+
+  /* 所有容器/面板/弹窗统一 1080 */
+  #container{max-width:1080px !important;margin:16px auto !important;font-size:calc(18px * var(--fs)) !important;}
+  .tab-bar{width:min(1080px,100vw) !important;max-width:1080px !important;left:50% !important;right:auto !important;transform:translateX(-50%) !important;}
+  .top-bar{max-width:1080px !important;margin-left:auto !important;margin-right:auto !important;}
+  #global-modal-root > *{max-width:1080px !important;margin-left:auto !important;margin-right:auto !important;}
+  .modal-sheet:not(.modal-sheet-phone){max-width:min(92vw,1080px) !important;}
+  .panel-area, .panel-frame, iframe{max-width:1080px !important;}
+
+  /* 顶部：数值与日期都不换行，避免挤成两行 */
+
+  /* 语音钮 / 音乐钮 贴容器右缘 */
+  .voice-command-fixed,.bgm-toggle-title{right:max(12px,calc((100vw - 1080px)/2 + 12px)) !important;}
 }
+
 
 
 

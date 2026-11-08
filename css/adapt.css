@@ -25,18 +25,26 @@
 
 /* 3) 平板 / 桌面：适度加宽到 640px（保留游戏原生黑条纹背景） */
 @media (min-width: 768px) {
-  #container { max-width: 640px !important; margin: 16px auto !important; }
-  /* 底部标签栏与容器同宽，否则会窄一截 */
+  /* 宽度 1080 + 字体放大（其余不动） */
+  html { font-size: 32px !important; }
+  html { --player-font-scale: 2 !important; }
+  #container {
+    max-width: 1080px !important;
+    margin: 16px auto !important;
+    font-size: calc(18px * var(--fs)) !important;
+  }
   .tab-bar {
-    width: min(640px, 100vw) !important;
-    max-width: 640px !important;
+    width: min(1080px, 100vw) !important;
+    max-width: 1080px !important;
     left: 50% !important;
     right: auto !important;
     transform: translateX(-50%) !important;
   }
-  /* 底部白条：.tab-bar::after 是手机安全区填充（34px 白），PC 下不需要 */
+  /* 手机安全区白条，PC 不需要 */
   .tab-bar::after { height: 0 !important; }
 }
+
+
 
 /* 4) 小屏：字号与间距收紧，保证 320px 可玩 */
 @media (max-width: 360px) {

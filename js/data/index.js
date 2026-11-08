@@ -29,6 +29,7 @@ const DATA_MODULES = [
     './ingredients/detailed_descs.js',
     './ingredients/merged_for_game.js',
     './recipes/merged_for_game.js',
+    './characters/merged_for_game.js',
     './subsidy.js',
     './systems.js',
     './systems2.js'
@@ -87,5 +88,6 @@ console.log('📦 [Data] 所有核心数据层装载完毕');
     }
     if (filled2) console.log('📝 [Data] 精细食材补充描述', filled2, '条');
 })();
+
 
 

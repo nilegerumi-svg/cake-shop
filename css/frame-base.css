@@ -20,13 +20,11 @@
     
 
 /* PC 宽屏适配：完整覆盖游戏原生 560px 桌面设计 */
-@media (min-width:768px){  /* PC：把面板内容整体往上提，盖住顶部那条灰带 */
-  .panel-scroll{padding-top:0 !important;margin-top:-34px !important;}
-  /* 那条灰色带是 iframe 的横向滚动条，隐藏掉 */
+@media (min-width:768px){  /* 那条灰色带是 iframe 的横向滚动条，隐藏掉 */
   html,body{overflow-x:hidden !important;}
   ::-webkit-scrollbar{width:0 !important;height:0 !important;display:none !important;}
   *{scrollbar-width:none !important;}
-  body{background-color:transparent !important;background-image:none !important;}
+  body{background-color:#7f1d1d !important;background-image:none !important;}
 
   /* 顶栏右侧留位，避免胶囊压在收起箭头上 */
   .top-bar{padding-right:64px !important;}

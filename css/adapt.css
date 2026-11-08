@@ -1,6 +1,8 @@
 /* css/adapt.css — 适配性增强（安全区 / 触屏滚动 / 平板·桌面 / 横屏 / 无障碍） */
 
-/* 1) 安全区（刘海屏 / 手势条） */
+/* 1) 安全区（刘海屏 / 手势条）
+   注意：底部安全区由游戏原生 .tab-bar::after 填充（height:max(34px,安全区)），
+   这里不要再给 .tab-bar 加 padding-bottom，否则刘海机上会双倍留白。 */
 :root {
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
@@ -9,14 +11,14 @@
 }
 #container { padding-left: var(--safe-left); padding-right: var(--safe-right); }
 .top-bar { padding-top: calc(0.5rem + var(--safe-top)); }
-.tab-bar { padding-bottom: var(--safe-bottom); }
 #global-modal-root > * { padding-bottom: var(--safe-bottom); }
 
-/* 2) 触屏滚动：惯性 + 顺滑（面板与可滚动区域） */
+/* 2) 触屏滚动：惯性 + 顺滑（面板与可滚动区域）
+   注意：不要加 scroll-behavior:smooth —— 触摸管线(panel-autofit.js)自己按帧写 scrollTop 做惯性滑停，
+   smooth 会让每次赋值再被浏览器动画一遍，直接和惯性打架。 */
 #container, .panel-scroll, [class*="overflow-y-auto"], [class*="overflow-y-scroll"], [class*="overflow-auto"] {
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: contain;
-  scroll-behavior: smooth;
 }
 /* 滑动手感：只去掉触屏高亮；touch-action 交给游戏自己的 .panel-scroll/.panel-area 处理 */
 #container { -webkit-tap-highlight-color: transparent; }

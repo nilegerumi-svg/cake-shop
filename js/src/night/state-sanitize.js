@@ -185,6 +185,62 @@ function isBridgeMessage(e) {
   return !e || typeof e != "object" ? !1 : e.type === "flash-app-bridge";
 }
 
+const BRIDGE_KEY_RE = /^[A-Za-z0-9_.:-]{1,128}$/,
+  BRIDGE_MAX_DEPTH = 5,
+  BRIDGE_MAX_ITEMS = 5e3,
+  BRIDGE_MAX_STRING = 16e6;
+
+function isPlainBridgeObject(e) {
+  return !!e && typeof e == "object" && !Array.isArray(e);
+}
+
+function isBlockedBridgeKey(e) {
+  return e === "__proto__" || e === "constructor" || e === "prototype";
+}
+
+function sanitizeBridgeValue(e, n) {
+  const s = typeof e;
+  if (s == "string") return e.length <= BRIDGE_MAX_STRING ? e : void 0;
+  if (s == "number") return Number.isFinite(e) ? e : void 0;
+  if (s == "boolean" || e === null) return e;
+  if (s != "object" || n >= BRIDGE_MAX_DEPTH) return void 0;
+  if (Array.isArray(e)) {
+    const a = [];
+    for (const o of e.slice(0, BRIDGE_MAX_ITEMS)) {
+      const l = sanitizeBridgeValue(o, n + 1);
+      l !== void 0 && a.push(l);
+    }
+    return a;
+  }
+  const a = {};
+  for (const o of Object.keys(e).slice(0, BRIDGE_MAX_ITEMS)) {
+    if (isBlockedBridgeKey(o)) continue;
+    const l = sanitizeBridgeValue(e[o], n + 1);
+    l !== void 0 && (a[o] = l);
+  }
+  return a;
+}
+
+// 宿主快照只接受「受限键名 + 原始值」的扁平 KV，外部对象不直接成为存储内容
+function sanitizeMemorySnapshot(e) {
+  const n = Object.create(null);
+  if (!isPlainBridgeObject(e)) return n;
+  for (const s of Object.keys(e)) {
+    if (isBlockedBridgeKey(s) || !BRIDGE_KEY_RE.test(s)) continue;
+    const a = sanitizeBridgeValue(e[s], 0);
+    (typeof a == "string" || typeof a == "number" || typeof a == "boolean") && (n[s] = String(a));
+  }
+  return n;
+}
+
+function sanitizeBridgeReply(e) {
+  return {
+    success: e.success === !0,
+    message: typeof e.message == "string" ? e.message.slice(0, 500) : void 0,
+    data: sanitizeBridgeValue(e.data, 0),
+  };
+}
+
 function flushReadyCallbacks() {
   if (readyCallbacksFlushed) return;
   readyCallbacksFlushed = !0;
@@ -198,20 +254,30 @@ function resolveBridgeRequest(e, n) {
 }
 
 window.addEventListener("message", (e) => {
+  // 桥接回包只认父窗口（宿主可能跨源，故不校验 origin）：避免任意页面伪造存储快照与 DB 回包
+  if (e.source !== window.parent) return;
   const n = e.data;
   if (isBridgeMessage(n))
     switch (n.kind) {
       case "shell:ready":
         ((bridgeReady = !0),
-          n.snapshot && typeof n.snapshot == "object" && ((memoryStore = n.snapshot), (isMemoryStoreMode = !0)),
+          n.snapshot && typeof n.snapshot == "object"
+            ? ((memoryStore = sanitizeMemorySnapshot(n.snapshot)),
+              (memoryStoreMap = null),
+              (isMemoryStoreMode = !0))
+            : void 0,
           flushReadyCallbacks());
         break;
-      case "db:reply":
-        resolveBridgeRequest(n.requestId, { success: n.success, data: n.data ?? [], message: n.message });
+      case "db:reply": {
+        const s = sanitizeBridgeReply(n);
+        resolveBridgeRequest(n.requestId, { success: s.success, data: s.data ?? [], message: s.message });
         break;
-      case "file:reply":
-        resolveBridgeRequest(n.requestId, { success: n.success, data: n.data ?? null, message: n.message });
+      }
+      case "file:reply": {
+        const s = sanitizeBridgeReply(n);
+        resolveBridgeRequest(n.requestId, { success: s.success, data: s.data ?? null, message: s.message });
         break;
+      }
       case "tts:done":
         resolveBridgeRequest(n.requestId, void 0);
         break;

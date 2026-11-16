@@ -1010,7 +1010,7 @@ function buildFrameBootstrapScript(e) {
     "  }",
     "",
     '  window.addEventListener("message", function (ev) {',
-    "    // 只接受同源父窗口的指令",
+    "    // 只接受同源父窗口的指令：阻断跨源页面嵌入后伪造 frame:theme（同源脚本不在此防护范围）",
     "    if (ev.source !== window.parent || ev.origin !== location.origin) return;",
     "    var data = ev.data;",
     "    if (!data || !data.type) return;",

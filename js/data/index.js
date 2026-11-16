@@ -43,6 +43,13 @@ const DATA_MODULES = [
     './systems2.js'
 ];
 
+// 数据层版本号：由 tools/version-assets.js 自动写入，请勿手改。
+// 取值 = js/data 下全部数据文件内容的联合哈希，任一数据文件变更即改变，
+// 使下面的动态 import 全部换 URL 重新拉取，避免缓存导致「代码新、数据旧」。
+const DATA_VERSION = '89b5279b';
+const withV = (p) =>
+    DATA_VERSION && DATA_VERSION !== '00000000' ? p + (p.indexOf('?') > -1 ? '&' : '?') + 'v=' + DATA_VERSION : p;
+
 // 数据子模块互相独立（各自向 window.Cake 挂载数据），可并行加载提速；
 // 文件级进度上报让加载界面的"剩余文件数"持续变动。
 window.setLoadTotal?.(DATA_MODULES.length);
@@ -58,7 +65,7 @@ window.__cakeDataReady = (async () => {
     await Promise.all(DATA_MODULES.map(async (path) => {
         try {
             console.log(`⏳ [Data] 准备加载: ${path}`);
-            await import(path);
+            await import(withV(path));
             window.loadTick?.(path);
             console.log(`✅ [Data] 加载成功: ${path}`);
         } catch (err) {
@@ -75,7 +82,7 @@ window.__cakeDataReady = (async () => {
     // 【大文件拆分】merged_for_game.js 因超过 100KB 被切成主表（前 130 道）+ 续篇
     // （后 117 道）。续篇必须等主表装载完毕再追加，才能保持与原对象字面量一致的
     // 键序；用串行 import 而不是塞进 DATA_MODULES，避免并行加载打乱顺序。
-    await import('./recipes/merged_for_game_part2.js');
+    await import(withV('./recipes/merged_for_game_part2.js'));
 
     // 【第三批移植 · v53 新增 8 道配方】DATA_MODULES 是并行加载，不保证
     // v53_additions.js 与 merged_for_game.js 的先后，故等全部模块装载完毕后再

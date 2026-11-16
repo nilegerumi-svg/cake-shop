@@ -177,6 +177,36 @@ node tools/verify-content.js "甜蜜物语蛋糕店-离线版 (4).html"
 
 ---
 
+## 资源版本号
+
+静态资源统一带**内容哈希**版本号，避免发版窗口内浏览器缓存造成「新 HTML + 旧 JS」混拼。仓库里有三层需要在运行时用代码算 URL 去取资源，光靠手写 `?v=` 覆盖不到，所以统一交给工具处理：
+
+| 层 | 版本号写入位置 | 取值 |
+|---|---|---|
+| 页面引用 | `index.html`、`pages/*/index.html` 里的 js/css | 各文件内容 md5 前 8 位 |
+| 游戏主体 | `js/app.bundle.js` 的 `TM_VERSION` | 56 个模块联合哈希 + 加载器自身（剔除该行后）哈希 |
+| 数据层 | `js/data/index.js` 的 `DATA_VERSION` | `js/data/` 下全部数据文件联合哈希 |
+
+改完代码、**提交前跑一次**：
+
+```bash
+node tools/version-assets.js          # 写入版本号
+node tools/version-assets.js --check  # 只检查不写，退出码 1 = 需要更新
+```
+
+工具是幂等的：内容没变时重复运行不产生任何改动。`TM_VERSION` 与 `DATA_VERSION` 由脚本写入，**不要手改**。
+
+> **边界（务必知道）**：`js/data/` 下共 336 个 `.js`，其中 **40 个**由带版本号的 URL 加载（38 个 `DATA_MODULES` + `merged_for_game_part2.js`，以及 HTML 里带 `?v=` 的 `index.js` 本身），**剩下 296 个仍受托管方 10 分钟缓存约束**。这 296 个分两类：
+>
+> | 类别 | 数量 | 为什么覆盖不到 |
+> |---|---|---|
+> | 被静态 `import './xxx.js'` 引用 | 264 | query 不沿模块图传播，要覆盖得改写全部静态 import 语句，一次改动波及数百个文件 |
+> | 被嵌套动态聚合器 `import(path)` 加载 | 32 | `ingredients/index.js`、`recipes/index.js` 等 5 个聚合器各自维护清单，未接线版本号 |
+>
+> 也就是说：改了一个深层数据文件（如某道菜的定价），最坏情况下**新代码可能读到旧数据，最长 10 分钟**。强制刷新（Ctrl+F5）可立即生效。这一层刻意没做，代价与收益不成比例。
+
+---
+
 ## 本地运行
 
 ```bash

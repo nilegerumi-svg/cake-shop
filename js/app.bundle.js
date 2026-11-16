@@ -78,10 +78,17 @@ const TM_SOURCE_PARTS = [
     "react/console-meta-selector.js"
 ];
 
+// 模块版本号：由 tools/version-assets.js 自动写入，请勿手改。
+// 取值 = 前 56 个模块内容联合哈希 + 本文件（剔除本行后）内容哈希，因此
+// 「任一模块变更」与「加载器自身变更」都会改变它，进而让全部模块 URL 一起失效，
+// 避免浏览器缓存导致新旧模块混拼。
+const TM_VERSION = 'fffe4e8f';
+
 const TM_BASE = new URL('./src/', import.meta.url);
+const TM_QS = TM_VERSION && TM_VERSION !== '00000000' ? '?v=' + TM_VERSION : '';
 
 const TM_CODE = await Promise.all(TM_SOURCE_PARTS.map(async (name) => {
-    const res = await fetch(new URL(name, TM_BASE), { credentials: 'same-origin' });
+    const res = await fetch(new URL(name + TM_QS, TM_BASE), { credentials: 'same-origin' });
     if (!res.ok) throw new Error('[Source] 模块加载失败: ' + name + ' (HTTP ' + res.status + ')');
     return res.text();
 }));

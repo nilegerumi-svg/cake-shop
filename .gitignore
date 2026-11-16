@@ -1,0 +1,13 @@
+# 系统与编辑器
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+
+# 扫描与工具产物（本地产物，不入库）
+.codebuddy/
+node_modules/
+
+# 临时目录
+_tmp/
+_tmp_*/

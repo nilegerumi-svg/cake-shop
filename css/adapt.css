@@ -23,38 +23,36 @@
 /* 滑动手感：只去掉触屏高亮；touch-action 交给游戏自己的 .panel-scroll/.panel-area 处理 */
 #container { -webkit-tap-highlight-color: transparent; }
 
-/* 3) 平板 / 桌面：适度加宽到 640px（保留游戏原生黑条纹背景） */
-@media (min-width:768px){  /* iframe 透明后，面板容器底色换成红色，避免露出灰带 */
-  .panel-area,.panel-wrap,.panel{background:transparent !important;}
+/* 3) 桌面鼠标放大档（1080 列 / 2 倍字号）
+   v24：由 @media(min-width:768px) 改为 html[data-tm-wide] 属性驱动，判定源统一交给
+   js/host/layout-sync.js。原因：折叠屏展开态 / 平板是触屏设备，宽度会跨过 768px，
+   若仍用媒体查询就会被错误套上桌面放大档（字号翻倍、顶栏吃掉内容区）。
+   触屏宽屏改走 css/fold.css 的 html[data-tm-fold] 档。 */
+html[data-tm-wide] .panel-area,html[data-tm-wide] .panel-wrap,html[data-tm-wide] .panel{background:transparent !important;}
 
-  /* 顶栏右侧留位，避免胶囊压在收起箭头上 */
-  .top-bar{padding-right:64px !important;}
+/* 顶栏右侧留位，避免胶囊压在收起箭头上 */
+html[data-tm-wide] .top-bar{padding-right:64px !important;}
 
+/* 小按钮字号跟随倍数（原本写死 11px） */
+html[data-tm-wide] #container .text-\[11px\]{font-size:calc(11px * var(--fs)) !important;}
+html[data-tm-wide] #container .text-\[10px\]{font-size:calc(10px * var(--fs)) !important;}
 
-  /* 小按钮字号跟随倍数（原本写死 11px） */
-  #container .text-\[11px\]{font-size:calc(11px * var(--fs)) !important;}
-  #container .text-\[10px\]{font-size:calc(10px * var(--fs)) !important;}
+/* content-1080：内容列 1080 居中，红色条纹铺满 */
+html[data-tm-wide] #container .max-w-md,html[data-tm-wide] #container .max-w-lg,html[data-tm-wide] #container .max-w-xl,html[data-tm-wide] #container .max-w-2xl,html[data-tm-wide] #container .max-w-3xl,html[data-tm-wide] #container .max-w-4xl,html[data-tm-wide] #container .max-w-5xl,html[data-tm-wide] #container .max-w-6xl,html[data-tm-wide] #container .max-w-7xl{max-width:1080px !important;margin-left:auto !important;margin-right:auto !important;}
+/* 统一 1.8 倍：600 × 1.8 = 1080 */
+html[data-tm-wide]{--pc-width:1080px;--pc-scale:1.8;font-size:32px !important;--player-font-scale:2 !important;}
 
-  /* content-1080：内容列 1080 居中，红色条纹铺满 */
-  #container .max-w-md,#container .max-w-lg,#container .max-w-xl,#container .max-w-2xl,#container .max-w-3xl,#container .max-w-4xl,#container .max-w-5xl,#container .max-w-6xl,#container .max-w-7xl{max-width:1080px !important;margin-left:auto !important;margin-right:auto !important;}
-  /* 统一 1.8 倍：600 × 1.8 = 1080 */
-  :root{--pc-width:1080px;--pc-scale:1.8;}
-  html{font-size:32px !important;}
-  html{--player-font-scale:2 !important;}
+/* 所有容器/面板/弹窗统一 1080 */
+html[data-tm-wide] #container{max-width:1080px !important;margin:16px auto !important;font-size:calc(18px * var(--fs)) !important;}
+html[data-tm-wide] .tab-bar{width:min(1080px,100vw) !important;max-width:1080px !important;left:50% !important;right:auto !important;transform:translateX(-50%) !important;}
+html[data-tm-wide] .top-bar{max-width:1080px !important;margin-left:auto !important;margin-right:auto !important;}
+html[data-tm-wide] #global-modal-root > *{max-width:1080px !important;margin-left:auto !important;margin-right:auto !important;}
+html[data-tm-wide] .modal-sheet:not(.modal-sheet-phone){max-width:min(92vw,1080px) !important;}
+html[data-tm-wide] .panel-area,html[data-tm-wide] .panel-frame,html[data-tm-wide] iframe{max-width:1080px !important;}
 
-  /* 所有容器/面板/弹窗统一 1080 */
-  #container{max-width:1080px !important;margin:16px auto !important;font-size:calc(18px * var(--fs)) !important;}
-  .tab-bar{width:min(1080px,100vw) !important;max-width:1080px !important;left:50% !important;right:auto !important;transform:translateX(-50%) !important;}
-  .top-bar{max-width:1080px !important;margin-left:auto !important;margin-right:auto !important;}
-  #global-modal-root > *{max-width:1080px !important;margin-left:auto !important;margin-right:auto !important;}
-  .modal-sheet:not(.modal-sheet-phone){max-width:min(92vw,1080px) !important;}
-  .panel-area, .panel-frame, iframe{max-width:1080px !important;}
-
-  /* 顶部：数值与日期都不换行，避免挤成两行 */
-
-  /* 语音钮 / 音乐钮 贴容器右缘 */
-  .voice-command-fixed,.bgm-toggle-title{right:max(12px,calc((100vw - 1080px)/2 + 12px)) !important;}
-}
+/* 语音钮 / 音乐钮 贴容器右缘 */
+html[data-tm-wide] .voice-command-fixed{left:max(12px,calc((100vw - 1080px)/2 + 12px)) !important;right:auto !important;}
+html[data-tm-wide] .bgm-toggle-title{right:max(12px,calc((100vw - 1080px)/2 + 12px)) !important;}
 
 
 
@@ -88,7 +86,3 @@
   outline-offset: 2px;
   border-radius: 6px;
 }
-
-
-
-

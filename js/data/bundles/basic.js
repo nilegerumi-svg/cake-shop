@@ -9,7 +9,7 @@
             name: '基础烘焙包', 
             emoji: '🎁',
             desc: '低筋面粉×3 · 鸡蛋×3 · 糖×3',
-            cost: 50,
+            cost: 30,
             contents: { flour_low: 3, chicken_egg: 3, sugar: 3 },
         }
     ];

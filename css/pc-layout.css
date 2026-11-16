@@ -1,10 +1,11 @@
 
-/* PC 宽屏适配：手机版面居中收窄，两侧留暗色背景 */
-@media (min-width:768px){
-  html{background:#241012;}
-  #container{max-width:1080px;margin:0 auto;box-shadow:0 0 48px rgba(0,0,0,.4);}
-  .tab-bar{max-width:1080px;margin-left:auto;margin-right:auto;}
-  .voice-command-fixed{right:calc((100vw - 1080px)/2 + 12px);}
-  .bgm-toggle-title{right:calc((100vw - 1080px)/2 + 12px);}
-  #global-modal-root > *{max-width:1080px;margin-left:auto;margin-right:auto;}
-}
+/* 桌面鼠标放大档：手机版面居中收窄，两侧留暗色背景
+   v24：改为 html[data-tm-wide] 属性驱动，与 index.html#pc-inline / css/adapt.css /
+   css/frame-wide.css 共用 js/host/layout-sync.js 的同一判定，避免触屏宽屏（折叠屏展开）
+   被 768px 媒体查询误判进桌面档。触屏宽屏走 css/fold.css。 */
+html[data-tm-wide]{background:#241012;}
+html[data-tm-wide] #container{max-width:1080px;margin:0 auto;box-shadow:0 0 48px rgba(0,0,0,.4);}
+html[data-tm-wide] .tab-bar{max-width:1080px;margin-left:auto;margin-right:auto;}
+html[data-tm-wide] .voice-command-fixed{left:calc((100vw - 1080px)/2 + 12px);right:auto;}
+html[data-tm-wide] .bgm-toggle-title{right:calc((100vw - 1080px)/2 + 12px);}
+html[data-tm-wide] #global-modal-root > *{max-width:1080px;margin-left:auto;margin-right:auto;}

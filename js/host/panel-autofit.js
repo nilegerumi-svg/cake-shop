@@ -1,6 +1,14 @@
 
-/* ===== 手写区·触摸滚动管线（v4→v21，完整修复史见事项目录《触摸系统修复史.md》） =====
+/* ===== 手写区·触摸滚动管线（v4→v22） =====
+   v22 及触摸体系全貌见 docs/已知问题与修复.md 第七章；v4→v21 原始逐版修复史
+   见事项目录《触摸系统修复史.md》（原工程文档，未随本仓库分发）。
    本块及全部 tm- 开头的样式/脚本是手写可读区；其余 95% 为打包压缩的框架代码，勿逐行解读，勿在其内打补丁。
+   v22 触摸体系修正（详见 docs/已知问题与修复.md）：
+     · 明显横向手势整体让位给 js/host/swipe.js 的左右切页，不再当纵向滚动吞掉
+     · 编辑控件（input/textarea/select/contenteditable）一律让路，恢复选字与长按菜单
+     · PC 鼠标桥合成事件打 __tmSynth 标记，避免被手势层误判为切页
+     · __tmConsumeTouch 挂到每个 attach 文档的 defaultView，iframe 内长按也能消费
+     · 注入样式与 css/hide-scrollbar.css、css/frame-base/02.css 三处保持一致
    变量与函数速查：
      panState    当前手势状态对象；null=无手势。字段：took=已接管滚动、pressLock=按压锁定、
                  coasting=减速滑停中、consumed=长按转触已消费本手势、vel=当前速度、rampT0=柔性跟随起点
@@ -9,15 +17,23 @@
                                否则 .panel-area（跨 frame 时回查父层）
      dx0k(t)     落点是否在天生横滚小容器（横向可滚且横向明显→放行原生横滑）
      glideIfFresh(st,e)        松手惯性：封顶 28px/帧，摩擦系数 0.93，被新触摸/长按打断即停
-     window.__tmConsumeTouch  供长按转触调用：通知管线本手势已消费，不再滚背景
+     __tmConsumeTouch         供长按转触调用：通知管线本手势已消费，不再滚背景。
+                               每个 attach 文档的 defaultView 各挂一份（含 iframe）
      synthT/mDrag              PC 鼠标桥（v21）：无触摸设备把按住拖动合成为触摸事件喂进本管线，
-                               编辑类控件（input 等）不接管
+                               编辑类控件（input 等）不接管；事件带 __tmSynth 标记
 ========================================================================== */
 (function(){
   function fit(f){
     try{
       var d=f.contentDocument; if(!d||!d.documentElement) return;
-      var h=Math.max(d.documentElement.scrollHeight, d.body?d.body.scrollHeight:0);
+      /* v31：原来取 documentElement.scrollHeight —— 它至少等于 iframe 当前高度，
+         于是「内容 → 设高」只会单向变大，内容变短也缩不回来，滚到底一片空条纹。
+         改为优先取 body / #root 的实际高度，让 iframe 能跟着内容缩。 */
+      var root=d.getElementById('root');
+      var bodyH=d.body?(d.body.scrollHeight||0):0;
+      var rootH=root?(root.scrollHeight||Math.ceil(root.getBoundingClientRect().height)||0):0;
+      var h=Math.max(bodyH,rootH);
+      if(h<48) h=Math.max(h,d.documentElement.scrollHeight||0);
       if(h>0 && Math.abs((parseInt(f.style.height,10)||0)-h)>1){ f.style.height=h+'px'; }
     }catch(e){}
   }
@@ -35,7 +51,10 @@
       if(!d.__tmPan){ d.__tmPan=true; attachPan(d); }
       if(!d.getElementById('tm-hide-scrollbar')){
         var s=d.createElement('style'); s.id='tm-hide-scrollbar';
-        s.textContent='.panel-area{scrollbar-width:none;-ms-overflow-style:none;touch-action:none;overscroll-behavior:contain;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;}.panel-area::-webkit-scrollbar{width:0;height:0;display:none;}#root{scrollbar-width:none;touch-action:none;overscroll-behavior:contain;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;}#root::-webkit-scrollbar{width:0;height:0;display:none;}html,body{overscroll-behavior:contain;}';
+        s.textContent='.panel-area{scrollbar-width:none;-ms-overflow-style:none;touch-action:none;overscroll-behavior:contain;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;}.panel-area::-webkit-scrollbar{width:0;height:0;display:none;}#root{scrollbar-width:none;touch-action:none;overscroll-behavior:contain;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;}#root::-webkit-scrollbar{width:0;height:0;display:none;}html,body{overscroll-behavior:contain;}'
+          +'.panel-area input,.panel-area textarea,.panel-area select,.panel-area [contenteditable],'
+          +'#root input,#root textarea,#root select,#root [contenteditable]{'
+          +'-webkit-user-select:text;user-select:text;-webkit-touch-callout:default;touch-action:manipulation;}';
         d.head.appendChild(s);
       }
     }catch(e){}
@@ -85,9 +104,15 @@
   var glideToken=0;
   function attachPan(doc){
     if(doc.__tmPanAttached) return; doc.__tmPanAttached=true;
+    /* 每个文档都拿到自己的「长按消费」入口：iframe 内的长按组件不必绕道 parent。
+       panState 是同一条管线上共享的手势状态，任一文档标记即对本手势生效。 */
+    try{ if(doc.defaultView) doc.defaultView.__tmConsumeTouch=function(){ if(panState){ panState.consumed=true; } }; }catch(e){}
     doc.addEventListener('touchstart', function(e){
       glideToken++;  /* 触控暂停：新触摸立刻刹停在途惯性 */
       if(e.touches.length!==1){ panState=null; return; }
+      /* 编辑控件让路：光标定位 / 选中文本 / 长按粘贴菜单不能被软件滚动接管。
+         与 swipe.js 的 EDIT 选择器保持一致。 */
+      if(e.target && e.target.closest && e.target.closest('input, textarea, select, [contenteditable="true"], [contenteditable=""]')){ panState=null; return; }
       var sc=getScroller(doc, e.target); if(!sc){ panState=null; return; }
       panState={mode:null,x0:e.touches[0].clientX,y0:e.touches[0].clientY,xg:e.touches[0].clientX,yg:e.touches[0].clientY,prevY:e.touches[0].clientY,scroll0:sc.scrollTop,
                 vel:0,lastY:e.touches[0].clientY,lastT:performance.now(),sc:sc,
@@ -117,6 +142,10 @@
         var ndx=t.clientX-panState.xg, ndy=t.clientY-panState.yg;
         /* 方向定死纵向：游戏只需要上下滑；落在天生横着滚的小容器（横向可滚）内且横向明显，放行原生横滑 */
         if(dx0k(t) && Math.abs(ndx)>10 && Math.abs(ndy)<Math.abs(ndx)*0.6){ panState=null; return; }
+        /* 明显横向手势：让位给 swipe.js 的左右切页。不接管、也不 preventDefault，
+           否则横向滑动会被本管线当纵向滚动吞掉，切页手势永远拿不到默认行为。
+           阈值/比例与 swipe.js 保持一致。 */
+        if(Math.abs(dx)>12 && Math.abs(dx)>Math.abs(dy)*1.4){ panState=null; return; }
         /* 按压即静止：未定型阶段的移动都拦下，画面保持不动 */
         e.preventDefault();
         if(Math.abs(dx)>6||Math.abs(dy)>6||Math.abs(ndx)>6||Math.abs(ndy)>6){ panState.mode='v'; }
@@ -232,6 +261,7 @@
       var mDrag = null;
       function synthT(type, x, y, target){
         var ev = new Event(type, {bubbles:true, cancelable:true});
+        ev.__tmSynth = true;   /* 合成事件标记：swipe.js 据此跳过，PC 鼠标拖动不误切页 */
         var t = {identifier:1, target:target, clientX:x, clientY:y, pageX:x, pageY:y, screenX:x, screenY:y, radiusX:1, radiusY:1, rotationAngle:0, force:1};
         ev.touches = [t]; ev.changedTouches = [t]; ev.targetTouches = [t];
         return ev;

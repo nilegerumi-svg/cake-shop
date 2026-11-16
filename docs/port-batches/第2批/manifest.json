@@ -1,0 +1,61 @@
+{
+ "batch": 2,
+ "name": "第二批移植：数据桥 + v53 档案增量",
+ "base": "第一批移植后的克隆仓库（393 文件）",
+ "source": "甜蜜物语-离线版-v53.html（原件未修改）",
+ "policy": "增量覆盖：upload/ 按相对路径覆盖；不删除任何既有文件。两处 index 改动若已有他人修改，用 patch/接线片段.txt 手工追加",
+ "result_files": 396,
+ "added": [
+  {
+   "path": "js/data/characters/npcs/profiles_v53.js",
+   "sha256": "ef0a22d44b511ff48bc215a230e6ef482934405f4bcd920a5bc8a3db60c87512",
+   "bytes": 9978
+  },
+  {
+   "path": "js/host/tm-bridges.js",
+   "sha256": "5d5c0f3cf6e68fb8f048aa51f8e6599f5a66fbd4f538ab5d3f36ba60f00c2896",
+   "bytes": 4323
+  },
+  {
+   "path": "docs/第二批移植清单.md",
+   "sha256": "0eef80fbf78ed12ddae8cdcc866d9e3077c9c4d1f7df57857d49eaf1b7875a58",
+   "bytes": 4816
+  }
+ ],
+ "modified": [
+  {
+   "path": "js/data/characters/npcs/index.js",
+   "sha256": "fe9bf577d78059dd7f3057331fed42be8eb71a21661aed86341f8b92c1a96ed2",
+   "bytes": 1533
+  },
+  {
+   "path": "index.html",
+   "sha256": "16473e5ec01d077ccf0202995700685f3515519cc3153f6ad6610d9eee63b5d4",
+   "bytes": 3597
+  }
+ ],
+ "bridges": {
+  "__TM_NPC__": "58 人",
+  "__TM_ITEM_MAP__": "445 项",
+  "__TM_AFF_GET__": "活好感字典",
+  "__TM_STATE_GET__": "存档 main（只读）"
+ },
+ "verification": {
+  "pageerror": 0,
+  "console_error": 0,
+  "people_rows": 58,
+  "aff_threshold": "0 隐藏 / 240 显形，均零报错"
+ },
+ "known_limits": [
+  "__TM_STATE_GET__ 只读不回写，熟客簿登记暂不持久化",
+  "8 个配方仅补名称未下沉数据层",
+  "__TM_LONG_PROFILES__ 仍为空占位"
+ ],
+ "untouched": [
+  "js/app.bundle.js",
+  "js/app.bundle/app-01..12.js",
+  "css/pc-layout.css",
+  "第一批 7 个手写块"
+ ],
+ "not_final": true
+}

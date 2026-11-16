@@ -1,0 +1,52 @@
+/* css/frame-wide.css — iframe 面板的「宽屏放大档」
+   与原 css/frame-base/02.css 里 @media(min-width:768px) 的规则等价，但不再按 iframe
+   自身宽度判断：由 js/host/layout-sync.js 在父页统一决策后给 <html> 挂 data-tm-wide。
+   这样父文档（顶栏/页签）与 iframe 文档（内容面板）的 html font-size 与
+   --player-font-scale 永远一致，避免 768~836px 平板上「上层放大、下层不放大」。
+   矮屏横屏手机（高 <560）父页不进放大档，本文件也不会被激活。
+
+   注意：.tab-bar / .top-bar / .panel-frame / iframe 等元素属于父文档，不在 iframe 内，
+   故这里不再重复声明；父页对应规则见 index.html#pc-inline 与 css/adapt.css。
+========================================================================== */
+html[data-tm-wide] {
+  font-size: 32px !important;
+  --player-font-scale: 2 !important;
+  --pc-width: 1080px;
+  --pc-scale: 1.8;
+  overflow-x: hidden !important;
+}
+html[data-tm-wide] body {
+  overflow-x: hidden !important;
+  background-color: #7f1d1d !important;
+  background-image: repeating-linear-gradient(90deg,#000 0 10px,rgba(0,0,0,0) 10px 30px) !important;
+}
+html[data-tm-wide] ::-webkit-scrollbar { width:0 !important; height:0 !important; display:none !important; }
+html[data-tm-wide] * { scrollbar-width: none !important; }
+
+/* 内容列 1080 居中；覆盖 frame-base/02.css 在 min-width:641px 下的 max-width:560px */
+html[data-tm-wide] #container {
+  max-width: 1080px !important;
+  margin: 16px auto !important;
+  font-size: calc(18px * var(--fs)) !important;
+}
+html[data-tm-wide] #container .text-\[11px\] { font-size: calc(11px * var(--fs)) !important; }
+html[data-tm-wide] #container .text-\[10px\] { font-size: calc(10px * var(--fs)) !important; }
+html[data-tm-wide] #container .max-w-md,
+html[data-tm-wide] #container .max-w-lg,
+html[data-tm-wide] #container .max-w-xl,
+html[data-tm-wide] #container .max-w-2xl,
+html[data-tm-wide] #container .max-w-3xl,
+html[data-tm-wide] #container .max-w-4xl,
+html[data-tm-wide] #container .max-w-5xl,
+html[data-tm-wide] #container .max-w-6xl,
+html[data-tm-wide] #container .max-w-7xl {
+  max-width: 1080px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+html[data-tm-wide] #global-modal-root > * {
+  max-width: 1080px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+html[data-tm-wide] .modal-sheet:not(.modal-sheet-phone) { max-width: min(92vw,1080px) !important; }

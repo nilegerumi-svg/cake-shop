@@ -1,0 +1,37 @@
+【第四批接线片段】2 个文件、2 处最小改动。
+本批基于第三批（v53_additions.js 已接入）。若目标仓库的 index.js 已有别的改动，
+照此手工追加，不要整体覆盖。
+
+===== 1) js/data/index.js · DATA_MODULES 数组 =====
+在 './recipes/v53_additions.js', 之后加一行：
+    './recipes/v53_pricing.js',
+
+===== 2) js/data/index.js · 第三批「新增配方并入」IIFE 之后、描述回填之前 =====
+    // 【第四批移植 · v53 定价跟进】原地改属性，勿替换整表
+    (() => {
+        const C = window.Cake || {};
+        const patch = C.RECIPE_BASECOST_V53;
+        const g = C.RECIPES_GAME;
+        if (!patch || !g) return;
+        let n = 0, miss = 0;
+        for (const id of Object.keys(patch)) {
+            if (!g[id]) { miss++; continue; }
+            g[id].baseCost = patch[id];
+            n++;
+        }
+        console.log('💰 [Recipes/v53] 定价已跟进', n, '项', miss ? ('（缺 ' + miss + ' 项）') : '');
+    })();
+
+===== 新增文件（直接复制，无需改动）=====
+    js/data/recipes/v53_pricing.js
+    docs/第四批移植清单.md
+
+===== 关键约束 =====
+ge = window.Cake.RECIPES_GAME 是 bundle 顶层的引用赋值，app-01.js 首行
+await window.__cakeDataReady 保证 bundle 在数据层之后执行。
+必须原地改 g[id].baseCost，不能写 C.RECIPES_GAME = {...} 替换整表。
+
+===== 回滚 =====
+删除 v53_pricing.js、上面 1 行 import、上面这段 IIFE，即恢复 126 项原价。
+
+patch/ 内另存「移植前原版」（= 第三批完成态），可 diff 复核本批改动范围。

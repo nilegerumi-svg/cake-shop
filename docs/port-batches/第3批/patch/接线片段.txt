@@ -1,0 +1,38 @@
+【第三批接线片段】共 3 个文件、4 处最小改动。
+若目标仓库的这些文件已有其他改动，请照此手工追加，不要整体覆盖。
+
+===== 1) js/data/index.js · DATA_MODULES 数组 =====
+在 './recipes/merged_for_game.js', 之后加一行：
+    './recipes/v53_additions.js',
+
+===== 2) js/data/index.js · await window.__cakeDataReady 之后 =====
+    (() => {
+        const C = window.Cake || {};
+        const extra = C.RECIPES_GAME_V53;
+        if (!extra) return;
+        C.RECIPES_GAME = C.RECIPES_GAME || {};
+        let n = 0;
+        for (const id of Object.keys(extra)) {
+            if (C.RECIPES_GAME[id]) continue;
+            C.RECIPES_GAME[id] = extra[id];
+            n++;
+        }
+        console.log('📖 [Recipes/v53] 新增配方已并入', n, '道，当前', Object.keys(C.RECIPES_GAME).length, '道');
+    })();
+
+===== 3) js/host/tm-bridges.js · 删除 EXTRA_NAMES 与 build() 兜底 =====
+删除 var EXTRA_NAMES = {...} 整块（8 个名称硬编码），
+删除 build() 末尾的：
+    for (var e in EXTRA_NAMES) if (...) put(IMAP, e, EXTRA_NAMES[e]);
+
+===== 4) js/host/tm-bridges.js · wait() 条件 =====
+原：if (C && C.NPCS && Object.keys(C.NPCS).length >= 58) { build(); return; }
+改为：
+    if (C && C.NPCS && Object.keys(C.NPCS).length >= 58 &&
+        C.RECIPES_GAME && C.RECIPES_GAME.macaron) { build(); return; }
+
+===== 新增文件（直接复制，无需改动）=====
+    js/data/recipes/v53_additions.js
+    docs/第三批移植清单.md
+
+patch/ 内另存两个「移植前原版」，可用来 diff 复核本批改动范围。

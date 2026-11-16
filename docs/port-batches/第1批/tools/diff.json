@@ -1,0 +1,266 @@
+{
+ "blocks": [
+  {
+   "tag": "style",
+   "id": "tm-safe-area-env",
+   "raw": 316,
+   "n": 313,
+   "h": "fb8550e007",
+   "head": "/* 异型屏/刘海屏：把写死为0的安全区变量接到系统真实值，顶栏、页签、内容区自动避开挖孔与手势条 */ :ro",
+   "landing": "css/safe-area.css",
+   "state": "已一致"
+  },
+  {
+   "tag": "style",
+   "id": "tm-device-adapt",
+   "raw": 456,
+   "n": 384,
+   "h": "f241f59b96",
+   "head": "/* 触屏设备：输入类控件字号不低于 16px，避免 iOS Safari / 部分 WebView 聚焦时自动",
+   "landing": "css/device-adapt.css",
+   "state": "已一致"
+  },
+  {
+   "tag": "style",
+   "id": "tm-pc-layout",
+   "raw": 431,
+   "n": 391,
+   "h": "c3d5fc2f30",
+   "head": "/* PC 宽屏适配：手机版面居中收窄，两侧留暗色背景 */ @media (min-width:768px){",
+   "landing": "css/pc-layout.css",
+   "state": "内容不同 (仓库 396 / v53 391)"
+  },
+  {
+   "tag": "script",
+   "id": "tm-auto-collapse",
+   "raw": 2036,
+   "n": 1649,
+   "h": "e624364b8a",
+   "head": "/* 矮屏（如横屏手机）与小屏机型：自动收起顶栏两组，把空间让给内容区； 用户手动收起/展开过（本地有记录）则完",
+   "landing": "js/host/auto-collapse.js",
+   "state": "已一致"
+  },
+  {
+   "tag": "style",
+   "id": "tm-a11y-style",
+   "raw": 231,
+   "n": 223,
+   "h": "ac720b0861",
+   "head": "[role=\"button\"][data-a11y-btn]:focus-visible{outline:2px",
+   "landing": "css/a11y.css",
+   "state": "已一致"
+  },
+  {
+   "tag": "script",
+   "id": "tm-a11y",
+   "raw": 3794,
+   "n": 3132,
+   "h": "86efe4320a",
+   "head": "(function(){ var FALLBACK={'modal-close':'关闭','btn-start",
+   "landing": "js/host/a11y.js",
+   "state": "已一致"
+  },
+  {
+   "tag": "style",
+   "id": "tm-hide-scrollbar",
+   "raw": 350,
+   "n": 345,
+   "h": "ab1088c9d1",
+   "head": ".panel-area{scrollbar-width:none;-ms-overflow-style:none",
+   "landing": "css/hide-scrollbar.css",
+   "state": "已一致"
+  },
+  {
+   "tag": "script",
+   "id": "tm-panel-autofit",
+   "raw": 12598,
+   "n": 10111,
+   "h": "300a37fd13",
+   "head": "/* ===== 手写区·触摸滚动管线（v4→v21，完整修复史见事项目录《触摸系统修复史.md》） =====",
+   "landing": "js/host/panel-autofit.js",
+   "state": "已一致"
+  },
+  {
+   "tag": "style",
+   "id": "tm-open-tip-style",
+   "raw": 535,
+   "n": 518,
+   "h": "93bccb22ab",
+   "head": ".tm-open-tip{position:fixed;left:50%;transform:translate",
+   "landing": "css/open-tip.css",
+   "state": "已一致"
+  },
+  {
+   "tag": "script",
+   "id": "tm-open-tip-script",
+   "raw": 686,
+   "n": 591,
+   "h": "b9c1d564f5",
+   "head": "(function(){ try{ var proto=location.protocol||\"\"; if(pr",
+   "landing": "js/host/open-tip.js",
+   "state": "已一致"
+  },
+  {
+   "tag": "style",
+   "id": "tm-people-style",
+   "raw": 3585,
+   "n": 3424,
+   "h": "94f98b0392",
+   "head": "/* =====================================================",
+   "landing": "css/people.css",
+   "state": "仓库缺文件 → 第一批候选"
+  },
+  {
+   "tag": "script",
+   "id": "tm-people-script",
+   "raw": 15207,
+   "n": 13929,
+   "h": "7d48b0cdb8",
+   "head": "/* =====================================================",
+   "landing": "js/host/people.js",
+   "state": "仓库缺文件 → 第一批候选"
+  },
+  {
+   "tag": "style",
+   "id": "tm-wall-style",
+   "raw": 2408,
+   "n": 2285,
+   "h": "8b83f8928e",
+   "head": "/* =====================================================",
+   "landing": "css/wall.css",
+   "state": "仓库缺文件 → 第一批候选"
+  },
+  {
+   "tag": "script",
+   "id": "tm-wall-script",
+   "raw": 4432,
+   "n": 4138,
+   "h": "18112b585d",
+   "head": "/* =====================================================",
+   "landing": "js/host/wall.js",
+   "state": "仓库缺文件 → 第一批候选"
+  },
+  {
+   "tag": "style",
+   "id": "tm-pc-hover",
+   "raw": 265,
+   "n": 239,
+   "h": "438e16f6ce",
+   "head": "/* ===== 手写区 · PC 悬停反馈（v32） ===== 按钮手型光标 + 悬停微亮；触屏设备没有悬停",
+   "landing": "css/pc-hover.css",
+   "state": "仓库缺文件 → 第一批候选"
+  },
+  {
+   "tag": "script",
+   "id": "tm-pc-input",
+   "raw": 6225,
+   "n": 5109,
+   "h": "3f9a7ec1f1",
+   "head": "/* ===== 手写区 · PC 滚轮与键盘（v32） ===== 触摸管线（tm-panel-autofit",
+   "landing": "js/host/pc-input.js",
+   "state": "仓库缺文件 → 第一批候选"
+  },
+  {
+   "tag": "script",
+   "id": "tm-long-profiles",
+   "raw": 580,
+   "n": 485,
+   "h": "b535ee0e99",
+   "head": "/* ═══ 长角色档案区（v29 占位）═══ 用途：给每个角色留一段不限长度的完整档案（纯文本游戏，放得下）",
+   "landing": "js/host/long-profiles.js",
+   "state": "仓库缺文件 → 第一批候选"
+  }
+ ],
+ "repo": {
+  "css/a11y.css": {
+   "size": 231,
+   "n": 223,
+   "h": "ac720b0861"
+  },
+  "css/adapt.css": {
+   "size": 3609,
+   "n": 3171,
+   "h": "c70c6ddf8d"
+  },
+  "css/device-adapt.css": {
+   "size": 456,
+   "n": 384,
+   "h": "f241f59b96"
+  },
+  "css/frame-base.css": {
+   "size": 281354,
+   "n": 276949,
+   "h": "316c55d044"
+  },
+  "css/game.css": {
+   "size": 277256,
+   "n": 273187,
+   "h": "9b48f5aae9"
+  },
+  "css/hide-scrollbar.css": {
+   "size": 350,
+   "n": 345,
+   "h": "ab1088c9d1"
+  },
+  "css/modal.css": {
+   "size": 4343,
+   "n": 3840,
+   "h": "79150fe3ba"
+  },
+  "css/open-tip.css": {
+   "size": 535,
+   "n": 518,
+   "h": "93bccb22ab"
+  },
+  "css/pc-layout.css": {
+   "size": 436,
+   "n": 396,
+   "h": "27f0a4ef83"
+  },
+  "css/safe-area.css": {
+   "size": 316,
+   "n": 313,
+   "h": "fb8550e007"
+  },
+  "js/host/a11y.js": {
+   "size": 3794,
+   "n": 3132,
+   "h": "86efe4320a"
+  },
+  "js/host/auto-collapse.js": {
+   "size": 2036,
+   "n": 1649,
+   "h": "e624364b8a"
+  },
+  "js/host/open-tip.js": {
+   "size": 686,
+   "n": 591,
+   "h": "b9c1d564f5"
+  },
+  "js/host/panel-autofit.js": {
+   "size": 12598,
+   "n": 10111,
+   "h": "300a37fd13"
+  },
+  "js/host/panel-reader.js": {
+   "size": 1982,
+   "n": 1438,
+   "h": "2ea8204f8c"
+  },
+  "js/host/swipe.js": {
+   "size": 2357,
+   "n": 1693,
+   "h": "c76de404cc"
+  },
+  "js/boot/a11y-shim.js": {
+   "size": 4769,
+   "n": 3677,
+   "h": "21f46f9bca"
+  },
+  "js/boot/errors.js": {
+   "size": 279,
+   "n": 277,
+   "h": "317237cc55"
+  }
+ }
+}

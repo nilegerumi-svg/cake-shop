@@ -1,0 +1,128 @@
+/* css/razr.css — 翻盖式竖折（moto razr 系列）适配
+   由 js/host/layout-sync.js 父页唯一决策并同步属性到五个面板 iframe 文档：
+     data-tm-compact  合盖外屏：粗指针且高不超过 440（razr 外屏约 352x355 至 424x360）
+     data-tm-slim     细长竖屏：粗指针、高不小于 700、高宽比不小于 2.05（razr 22:9 内屏）
+   两档互斥，均与 wide / fold 互斥。规则只在对应档位生效，其余设备零影响。
+   注意：本文件注释不要出现路径通配符，避免其中的字符序列提前闭合 CSS 注释。 */
+
+/* ===== 1) compact：合盖外屏 ===== */
+
+/* 顶栏：收紧上下留白与字号。收起态两行摘要保留，但不再占 109px。 */
+html[data-tm-compact] .top-bar {
+  padding: 3px 8px 4px !important;
+  font-size: 12px !important;
+}
+html[data-tm-compact] .top-bar > div[class*="mt-2"] { margin-top: 3px !important; }
+html[data-tm-compact] .top-bar > button,
+html[data-tm-compact] .top-bar button[class*="rounded-lg"] {
+  padding-top: 2px !important;
+  padding-bottom: 2px !important;
+  min-height: 22px !important;
+  font-size: 11px !important;
+}
+/* 天气 / 资源胶囊：压小，减少换行行数 */
+html[data-tm-compact] .top-bar .rounded-full {
+  font-size: 10px !important;
+  padding: 1px 6px !important;
+  line-height: 1.35 !important;
+}
+html[data-tm-compact] .top-bar .flex-wrap { gap: 3px !important; }
+
+/* 页签：104px 压到约 70px，把空间还给内容区 */
+html[data-tm-compact] .tab-bar { padding-top: 2px !important; padding-bottom: 0 !important; }
+html[data-tm-compact] .tab-item { min-height: 44px !important; font-size: 12px !important; }
+html[data-tm-compact] .tab-bar::after { height: 12px !important; min-height: 12px !important; }
+
+/* 弹窗：Modal 内联 maxHeight:78vh，在外屏只剩约 277px 可视区；
+   提升到几乎占满视口并减小内边距 / 字号，一次能看到更多委托与通知。 */
+html[data-tm-compact] .modal-sheet:not(.modal-sheet-phone) {
+  max-height: calc(100dvh - 12px) !important;
+  padding: 10px 12px 14px !important;
+  border-radius: 14px !important;
+  width: min(96vw, 560px) !important;
+  max-width: min(96vw, 560px) !important;
+}
+html[data-tm-compact] .modal-sheet:not(.modal-sheet-phone) p {
+  font-size: 12px !important; line-height: 1.5 !important; margin-bottom: 6px !important;
+}
+html[data-tm-compact] .modal-sheet:not(.modal-sheet-phone) h1,
+html[data-tm-compact] .modal-sheet:not(.modal-sheet-phone) h2,
+html[data-tm-compact] .modal-sheet:not(.modal-sheet-phone) h3 {
+  font-size: 14px !important; margin-bottom: 6px !important;
+}
+html[data-tm-compact] .modal-sheet:not(.modal-sheet-phone) button { margin-top: 4px !important; }
+
+/* 常驻功能入口：顶栏强制收起后，手册 / 设置 / 引导 / 库存靠它访问。
+   DOM 由 js/host/compact-entry.js 在 compact 档注入，离开档位自动移除。
+   放在顶栏右上角、占原「展开箭头」的位置：compact 档本就不允许展开顶栏，
+   那个箭头是无效提示；隐藏它换成菜单入口，既不占内容区也不遮挡楼层卡片。 */
+html[data-tm-entry] .top-bar > button > span.material-icons { display: none !important; }
+#tm-compact-entry {
+  position: fixed;
+  top: 42px;   /* fallback，实际由 compact-entry.js 动态贴到顶栏右下角 */
+  right: 6px;
+  z-index: 70;
+}
+.tmce-btn {
+  display: block;
+  width: 30px; height: 30px;
+  border: 2px solid #6b4226; border-radius: 50%;
+  background: #fff8e1; color: #6b4226;
+  font-size: 15px; font-weight: 900; line-height: 1;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.tmce-menu {
+  display: none;
+  position: absolute;
+  top: 36px; right: 0; left: auto;
+  flex-direction: column; gap: 4px;
+  padding: 6px;
+  min-width: 108px;
+  border: 2px solid #6b4226; border-radius: 12px;
+  background: #fffdf8;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.35);
+}
+#tm-compact-entry.tmce-open .tmce-menu { display: flex; }
+.tmce-item {
+  white-space: nowrap;
+  font-size: 12px; font-weight: 800;
+  padding: 6px 10px;
+  border: 1px solid #e0c9a6; border-radius: 8px;
+  background: #fff8e1; color: #4a2c17;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ===== 2) slim：22:9 细长竖屏（razr 展开内屏等） =====
+   只压缩顶栏内部留白 / 徽章与按钮字号，不收起任何组、不隐藏任何按钮，
+   手册 / 设置等入口保持常驻可见（与第八章验收一致）。 */
+html[data-tm-slim] .top-bar { padding: 4px 10px 6px !important; }
+html[data-tm-slim] .top-bar > div[class*="mt-2"] { margin-top: 4px !important; }
+html[data-tm-slim] .top-bar .rounded-full {
+  font-size: 10px !important; padding: 1px 6px !important; line-height: 1.35 !important;
+}
+html[data-tm-slim] .top-bar .flex-wrap { gap: 3px !important; }
+html[data-tm-slim] .top-bar .btn-chunky {
+  font-size: 11px !important; padding: 2px 8px !important; min-height: 26px !important;
+}
+html[data-tm-slim] .top-bar .text-base { font-size: 14px !important; }
+html[data-tm-slim] .top-bar .text-\[11px\] { font-size: 10px !important; }
+html[data-tm-slim] .top-bar > button:last-child {
+  margin-top: 4px !important; padding-top: 1px !important; padding-bottom: 1px !important;
+}
+
+/* ===== UI 体检 v26：合盖外屏浮层收敛 =====
+   320x355 外屏内容可视区仅约 203px，右下四个浮层按 104/148/192px 排布会
+   整片压住内容。此处只隐藏入口，功能由 compact-entry.js 的 ☰ 菜单代理打开。 */
+html[data-tm-compact] #tm-regs-btn,
+html[data-tm-compact] #tm-people-btn,
+html[data-tm-compact] #tm-wall-btn,
+html[data-tm-compact] .voice-command-fixed { display: none !important; }
+/* 菜单由 4 项扩到 8 项，给外屏留出可滚动空间 */
+html[data-tm-compact] .tmce-menu {
+  max-height: calc(100dvh - 56px);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}

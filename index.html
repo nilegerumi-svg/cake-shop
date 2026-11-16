@@ -4,6 +4,7 @@
 <script src="js/boot/a11y-shim.js"></script>
     <meta name="asap-build-time" content="2026-11-05T06:40:12.757Z">
     <meta charset="utf-8" />
+    <link rel="icon" href="data:," />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>甜蜜物语蛋糕店模拟器 - 灵光闪应用</title>
     <script id="app-manifest" type="application/json">
@@ -12,7 +13,7 @@
     <script type="module" src="js/data/index.js"></script>
     <script type="module" src="js/app.bundle.js"></script>
     
-    <link rel="stylesheet" href="css/game.css?v=20261108b">
+    <link rel="stylesheet" href="css/game.css?v=20261116a">
 <link rel="stylesheet" href="css/safe-area.css">
       <!-- asap-vite-contract:a4167c51ba36d6fb9d742332 -->
     <meta name="asap-vite-contract" content="a4167c51ba36d6fb9d742332">
@@ -20,18 +21,22 @@
 <link rel="stylesheet" href="css/pc-layout.css?v=20261108b">
 <link rel="stylesheet" href="css/adapt.css?v=20261108b">
 <link rel="stylesheet" href="css/modal.css?v=20261108b">
-    <!-- PC 端：宽度 1080 + 字号放大（内联在 HTML 里，避免缓存问题） -->
+    <!-- 桌面鼠标放大档：宽度 1080 + 字号放大（内联在 HTML 里，避免缓存问题）
+         v24：不再用 @media 判断宽度 —— 触屏宽屏（折叠屏展开 / 平板）会同样命中 768px 断点，
+         被错误套上 2 倍字号。改由 js/host/layout-sync.js 统一决策后挂 <html data-tm-wide>，
+         父文档与所有 iframe 文档共用同一判定源。详见 docs/已知问题与修复.md 第九章。 -->
     <style id="pc-inline">
-      @media (min-width:768px){
-        html{font-size:32px !important;--player-font-scale:2 !important;}
-        #container{max-width:1080px !important;margin:16px auto !important;font-size:calc(18px * var(--fs)) !important;}
-        .tab-bar{width:min(1080px,100vw) !important;max-width:1080px !important;left:50% !important;right:auto !important;transform:translateX(-50%) !important;}
-        .top-bar{max-width:1080px !important;margin-left:auto !important;margin-right:auto !important;}
-        #global-modal-root > *{max-width:1080px !important;margin-left:auto !important;margin-right:auto !important;}
-        .modal-sheet:not(.modal-sheet-phone){max-width:min(92vw,1080px) !important;}
-        .voice-command-fixed,.bgm-toggle-title{right:max(12px,calc((100vw - 1080px)/2 + 12px)) !important;}
-      }
+      html[data-tm-wide]{font-size:32px !important;--player-font-scale:2 !important;}
+      html[data-tm-wide] #container{max-width:1080px !important;margin:16px auto !important;font-size:calc(18px * var(--fs)) !important;}
+      html[data-tm-wide] .tab-bar{width:min(1080px,100vw) !important;max-width:1080px !important;left:50% !important;right:auto !important;transform:translateX(-50%) !important;}
+      html[data-tm-wide] .top-bar{max-width:1080px !important;margin-left:auto !important;margin-right:auto !important;}
+      html[data-tm-wide] #global-modal-root > *{max-width:1080px !important;margin-left:auto !important;margin-right:auto !important;}
+      html[data-tm-wide] .modal-sheet:not(.modal-sheet-phone){max-width:min(92vw,1080px) !important;}
+      html[data-tm-wide] .voice-command-fixed,html[data-tm-wide] .bgm-toggle-title{right:max(12px,calc((100vw - 1080px)/2 + 12px)) !important;}
     </style>
+<link rel="stylesheet" href="css/fold.css?v=20261108b">
+<link rel="stylesheet" href="css/razr.css?v=20261108c">
+<link rel="stylesheet" href="css/icon-fallback.css?v=20261115a">
 </head>
   <body>
                                                         <div id="root"></div>
@@ -41,10 +46,21 @@
 
 <link rel="stylesheet" href="css/hide-scrollbar.css">
 <script id="tm-panel-autofit" src="js/host/panel-autofit.js"></script>
+<script id="tm-layout-sync" src="js/host/layout-sync.js"></script>
+<script id="tm-emoji-fallback" src="js/host/emoji-fallback.js"></script>
+<script id="tm-compact-entry-script" src="js/host/compact-entry.js"></script>
 <link rel="stylesheet" href="css/open-tip.css">
 <div class="tm-open-tip" id="tm-open-tip"><span>当前是「文件预览」打开，滑动可能无效。建议：长按本文件选「用浏览器打开」，或上传 GitHub 后访问网页版游玩。</span><button class="tm-open-tip-x" id="tm-open-tip-x" aria-label="关闭提示">✕</button></div>
 <script id="tm-open-tip-script" src="js/host/open-tip.js"></script>
 <script src="js/host/swipe.js"></script>
 <script src="js/host/panel-reader.js"></script>
+<script id="tm-bridges" src="js/host/tm-bridges.js"></script>
+<link rel="stylesheet" href="css/people.css">
+<script id="tm-people-script" src="js/host/people.js"></script>
+<link rel="stylesheet" href="css/wall.css?v=20261116a">
+<script id="tm-wall-script" src="js/host/wall.js"></script>
+<link rel="stylesheet" href="css/pc-hover.css">
+<script id="tm-pc-input" src="js/host/pc-input.js"></script>
+<script id="tm-long-profiles" src="js/host/long-profiles.js"></script>
 </body>
 </html>

@@ -1,0 +1,7 @@
+<link rel="stylesheet" href="css/people.css">
+<script id="tm-people-script" src="js/host/people.js"></script>
+<link rel="stylesheet" href="css/wall.css">
+<script id="tm-wall-script" src="js/host/wall.js"></script>
+<link rel="stylesheet" href="css/pc-hover.css">
+<script id="tm-pc-input" src="js/host/pc-input.js"></script>
+<script id="tm-long-profiles" src="js/host/long-profiles.js"></script>

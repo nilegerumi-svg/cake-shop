@@ -1,0 +1,81 @@
+{
+ "batch": 1,
+ "name": "第一批移植：v53 新增手写块 → 仓库 css/ + js/host/",
+ "base": "nilegerumi-svg/cake-shop main（385 文件，未改动既有成果）",
+ "source": "甜蜜物语-离线版-v53.html（原件未修改）",
+ "policy": "增量覆盖：upload/ 内文件按相对路径覆盖到仓库根目录；不删除任何既有文件",
+ "result_files": 393,
+ "added": [
+  {
+   "path": "css/people.css",
+   "sha256": "fbd0ffc9d6993be7e4f1de62dacbae02e56218f4108b1a456931bfb544b7fa38",
+   "bytes": 3720
+  },
+  {
+   "path": "css/wall.css",
+   "sha256": "4767a9b03c0346dd36c2963b92cae87039ff86ae0ead1890181a50e636878794",
+   "bytes": 2912
+  },
+  {
+   "path": "css/pc-hover.css",
+   "sha256": "091cfcdc2c3276af8b6ed99290524201d0732566b3a915d8aab26874b5a0de22",
+   "bytes": 372
+  },
+  {
+   "path": "js/host/people.js",
+   "sha256": "49303f7d58a364099e7b9c73c22c677247ecb105e3beb7e86d23aca0b52cb12d",
+   "bytes": 17775
+  },
+  {
+   "path": "js/host/wall.js",
+   "sha256": "b08382449314a7252c72f7241a7d3585e2312d9b1c0c0f23e2ba9464bd4b083a",
+   "bytes": 6129
+  },
+  {
+   "path": "js/host/pc-input.js",
+   "sha256": "e9dd85bb0eb452af742288dc7b68756b56bda4d2d758cde2ca6b42199c60d272",
+   "bytes": 7082
+  },
+  {
+   "path": "js/host/long-profiles.js",
+   "sha256": "1522192383ca880ad5f788d4738f0921a7fcb0c7be03dad0bfd58282b564266d",
+   "bytes": 994
+  },
+  {
+   "path": "docs/第一批移植清单.md",
+   "sha256": "c4d523293c4fe81c93cd3aca4a35f6d3b4a7ddc0442f8056515081f0ad61ecba",
+   "bytes": 3689
+  }
+ ],
+ "modified": [
+  {
+   "path": "index.html",
+   "sha256": "460fdeb52e349e030a97847150eeca6b1440a59dc50f2d4728516541a601e3c6",
+   "note": "仅新增 7 行接线，见 patch/index.html.接线7行.txt"
+  }
+ ],
+ "untouched": [
+  "js/app.bundle.js",
+  "js/app.bundle/app-01..12.js",
+  "js/data/**",
+  "css/pc-layout.css",
+  ".gitattributes",
+  "README.md",
+  "pages/**",
+  "tools/verify-content.js"
+ ],
+ "verification": {
+  "pageerror": 0,
+  "root_mounted": true,
+  "verbatim_match": "7/7",
+  "node_check": "4/4 pass",
+  "stylesheets_loaded": 3,
+  "panels_clickable": [
+   "人物志",
+   "文案墙",
+   "熟客簿"
+  ]
+ },
+ "pending": "3 个数据桥（__TM_NPC__ / __TM_ITEM_MAP__ / __TM_AFF_GET__）与 bundle 层手写注入留待后续批次",
+ "not_final": true
+}

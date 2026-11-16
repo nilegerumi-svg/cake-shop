@@ -1,0 +1,66 @@
+
+/* ============================================================
+   【手写区 · 文案墙（v50）】
+   第四轮猎虫平局愿望墙的兑现：人物志路要一面「文案墙」，
+   把冷门人物小传、彩蛋文案和幕后抓虫「日志」集中陈列。
+   选址经用户拍板：贴在「📖 人物志」悬浮按钮正上方——
+   玩家翻档案、领成就的必经之路。入口做成一块被奶油糊住
+   一半的告示牌，第一次点开会先「擦开奶油」（仅本局视觉
+   效果，不写入存档）。面板复用人物志的样式类与夜间主题，
+   不碰 .panel-scroll，不进触摸管线，不改任何游戏状态。
+   内容三栏：小传（随每轮猎虫顺手补挂）／彩蛋罐（收集
+   散落的幕后设定）／日志（四轮猎虫战史，主会话执笔）。
+   ============================================================ */
+#tm-wall-btn{position:fixed;right:12px;bottom:calc(192px + env(safe-area-inset-bottom,0px));
+  z-index:45;border:2px solid #6b4226;border-radius:999px;background:#fff8e1;color:#6b4226;
+  font-size:13px;padding:8px 14px;box-shadow:0 2px 8px rgba(74,44,23,.25);cursor:pointer}
+#tm-wall-btn.tm-wall-cream{background:linear-gradient(115deg,#ffd9e2 0 38%,#fff8e1 62%);border-color:#e4899b}
+#tm-wall-btn.tm-wall-wiping{animation:tm-wall-wipe .45s ease}
+@keyframes tm-wall-wipe{0%{transform:rotate(0)}25%{transform:rotate(-6deg)}60%{transform:rotate(5deg)}100%{transform:rotate(0)}}
+#tm-wall-panel{position:fixed;inset:0;z-index:80;background:rgba(74,44,23,.45);
+  display:flex;justify-content:center;align-items:stretch}
+#tm-wall-panel[hidden]{display:none}
+.tm-wall-tabs{display:flex;gap:6px;padding:10px 14px 0}
+.tm-wall-tab{flex:1;border:1.5px solid rgba(107,66,38,.3);background:#fff;border-radius:999px;
+  font-size:13.5px;padding:6px 0;cursor:pointer;color:#4a2c17}
+.tm-wall-tab.on{background:#ff6b81;border-color:#ff6b81;color:#fff;font-weight:700}
+.tm-wall-entry{background:#fff;border:1.5px solid rgba(107,66,38,.18);border-radius:12px;
+  padding:10px 12px;margin-bottom:8px;font-size:14px;line-height:1.7;color:#4a2c17}
+.tm-wall-entry b{color:#6b4226}
+.tm-wall-tag{font-size:12px;color:#ff6b81}
+/* 夜间主题（与人物志同款换色） */
+#tm-wall-panel.night .tm-people-sheet{background:#2e2620;color:#e8ddd0}
+#tm-wall-panel.night .tm-people-head{background:#3a3028;border-color:rgba(232,221,208,.2)}
+#tm-wall-panel.night .tm-people-head h3{color:#f0e6d8}
+#tm-wall-panel.night .tm-people-close{background:#3a3028;color:#e8ddd0;border-color:rgba(232,221,208,.3)}
+#tm-wall-panel.night .tm-wall-tab{background:#3a3028;color:#e8ddd0;border-color:rgba(232,221,208,.3)}
+#tm-wall-panel.night .tm-wall-tab.on{background:#c2185b;border-color:#c2185b;color:#fff}
+#tm-wall-panel.night .tm-wall-entry{background:#3a3028;border-color:rgba(232,221,208,.2)}
+#tm-wall-panel.night .tm-wall-entry b{color:#ffd54f}
+
+/* ============================================================
+   【v31 · 工具抽屉】三个悬浮入口默认收起，只留一颗「工具」圆钮。
+   收起时按钮仍占据 DOM（读屏与已有事件不受影响），只是 opacity:0
+   + pointer-events:none；展开后按 170/216/262px 三级阶梯向上排。
+   ============================================================ */
+#tm-tools-fab{position:fixed;right:12px;bottom:calc(108px + env(safe-area-inset-bottom,0px));
+  z-index:46;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  width:46px;height:46px;gap:0;border:2px solid #6b4226;border-radius:999px;
+  background:#fff8e1;color:#6b4226;box-shadow:0 3px 10px rgba(74,44,23,.28);
+  cursor:pointer;-webkit-tap-highlight-color:transparent}
+#tm-tools-fab .tm-tools-ico{font-size:19px;line-height:1}
+#tm-tools-fab .tm-tools-txt{font-size:9px;font-weight:900;line-height:1.1;margin-top:1px}
+#tm-tools-fab.on{background:#ffd9e2;border-color:#e4899b}
+#tm-wall-btn,#tm-regs-btn,#tm-people-btn{transition:opacity .18s ease,transform .18s ease,bottom .18s ease}
+html:not([data-tm-tools-open]) #tm-wall-btn,
+html:not([data-tm-tools-open]) #tm-regs-btn,
+html:not([data-tm-tools-open]) #tm-people-btn{
+  opacity:0;transform:translateY(10px) scale(.94);pointer-events:none!important}
+html[data-tm-tools-open] #tm-regs-btn{bottom:calc(170px + env(safe-area-inset-bottom,0px))!important}
+html[data-tm-tools-open] #tm-wall-btn{bottom:calc(216px + env(safe-area-inset-bottom,0px))!important}
+html[data-tm-tools-open] #tm-people-btn{bottom:calc(262px + env(safe-area-inset-bottom,0px))!important}
+html[data-tm-compact] #tm-tools-fab{display:none!important}
+#tm-tools-fab{transition:opacity .2s ease,transform .2s ease,background .2s ease}
+#tm-tools-fab.tm-fab-dim{opacity:.26;transform:scale(.9)}
+.voice-command-fixed{transition:opacity .2s ease}
+.voice-command-fixed.tm-fab-dim{opacity:.26}

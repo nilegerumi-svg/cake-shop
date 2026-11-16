@@ -1,0 +1,26 @@
+/* css/fold.css - wide touchscreen / foldable-unfolded layout tier (v24)
+   Activated by js/host/layout-sync.js setting <html data-tm-fold> on the parent
+   document and every panel-frame iframe document. Loaded by index.html and all
+   five panel index.html pages.
+
+   A folded-out phone is a bigger PHONE, not a desktop PC:
+   - keep 16px base font size (no 2x jump when unfolding across 768px);
+   - remove the 560px content column cap from @media(min-width:641px);
+   - do NOT force --player-font-scale, so the settings font control still works.
+
+   Desktop mouse wide screens use html[data-tm-wide] instead; the two tiers are
+   mutually exclusive, so dynamic switching leaves no stale styles.
+========================================================================== */
+
+html[data-tm-fold] #container{max-width:none !important;width:calc(100% - 24px) !important;margin:8px auto !important;border-radius:18px !important;}
+
+html[data-tm-fold] .tab-bar{width:calc(100% - 24px) !important;max-width:none !important;left:0 !important;right:0 !important;margin-left:auto !important;margin-right:auto !important;transform:none !important;}
+
+html[data-tm-fold] .top-bar{max-width:none !important;margin-left:0 !important;margin-right:0 !important;}
+html[data-tm-fold] .panel-area,html[data-tm-fold] .panel-frame,html[data-tm-fold] iframe{max-width:none !important;}
+html[data-tm-fold] #global-modal-root > *{max-width:none !important;margin-left:0 !important;margin-right:0 !important;}
+html[data-tm-fold] .modal-sheet:not(.modal-sheet-phone){max-width:min(92vw,960px) !important;}
+html[data-tm-fold] .voice-command-fixed{left:12px !important;right:auto !important;}
+html[data-tm-fold] .bgm-toggle-title{right:12px !important;}
+
+html[data-tm-fold] #container .max-w-sm,html[data-tm-fold] #container .max-w-md,html[data-tm-fold] #container .max-w-lg,html[data-tm-fold] #container .max-w-xl,html[data-tm-fold] #container .max-w-2xl,html[data-tm-fold] #container .max-w-3xl,html[data-tm-fold] #container .max-w-4xl,html[data-tm-fold] #container .max-w-5xl,html[data-tm-fold] #container .max-w-6xl,html[data-tm-fold] #container .max-w-7xl{max-width:100% !important;margin-left:auto !important;margin-right:auto !important;}

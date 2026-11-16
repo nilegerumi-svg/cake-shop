@@ -1,0 +1,51 @@
+
+/* ============================================================
+   【手写区 · 小镇人物志（v31）】
+   与致死量注释区同源的暖色调：奶油底、棕字、粉点缀；
+   夜间跟随游戏容器 .night 主题换深色。自带滚动层，
+   不碰 .panel-scroll，不进触摸管线。
+   ============================================================ */
+#tm-people-btn{position:fixed;right:12px;bottom:calc(104px + env(safe-area-inset-bottom,0px));
+  z-index:45;border:2px solid #6b4226;border-radius:999px;background:#fff8e1;color:#6b4226;
+  font-size:13px;padding:8px 14px;box-shadow:0 2px 8px rgba(74,44,23,.25);cursor:pointer}
+#tm-people-panel{position:fixed;inset:0;z-index:80;background:rgba(74,44,23,.45);
+  display:flex;justify-content:center;align-items:stretch}
+#tm-people-panel[hidden]{display:none}
+.tm-people-sheet{width:100%;max-width:560px;background:#fff8e1;color:#4a2c17;
+  display:flex;flex-direction:column;border-radius:14px 14px 0 0;margin-top:24px;overflow:hidden}
+@media(min-width:768px){.tm-people-sheet{margin-top:32px;margin-bottom:32px;border-radius:14px;
+  max-height:calc(100% - 64px)}}
+.tm-people-head{display:flex;align-items:center;gap:8px;padding:12px 14px;
+  border-bottom:2px solid rgba(107,66,38,.15);background:#fff}
+.tm-people-head h3{margin:0;font-size:16px;flex:1;color:#6b4226}
+.tm-people-close{border:1px solid rgba(107,66,38,.3);background:#fff;border-radius:8px;
+  font-size:16px;padding:2px 10px;cursor:pointer;color:#4a2c17}
+.tm-people-search{margin:10px 14px 4px;padding:8px 12px;border-radius:999px;
+  border:1.5px solid rgba(107,66,38,.3);background:#fff;font-size:15px;color:#4a2c17;outline:none}
+.tm-people-search:focus{border-color:#ff6b81}
+.tm-people-list{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:8px 14px 28px}
+.tm-people-item{background:#fff;border:1.5px solid rgba(107,66,38,.18);border-radius:12px;
+  margin-bottom:8px;overflow:hidden}
+.tm-people-row{display:flex;align-items:center;gap:8px;width:100%;padding:10px 12px;
+  background:none;border:0;text-align:left;font-size:15px;color:#4a2c17;cursor:pointer}
+.tm-people-row .nm{font-weight:700;color:#6b4226}
+.tm-people-row .tt{flex:1;font-size:12px;color:#8a6a4b;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.tm-people-row .dot{color:#ff6b81;font-size:11px}
+.tm-people-detail{border-top:1.5px dashed rgba(107,66,38,.2);padding:10px 14px 14px;font-size:14px;line-height:1.7}
+.tm-people-detail dl{margin:0 0 8px;display:grid;grid-template-columns:auto 1fr;gap:2px 10px}
+.tm-people-detail dt{color:#8a6a4b;font-size:12.5px;white-space:nowrap}
+.tm-people-detail dd{margin:0;font-size:13.5px}
+.tm-people-detail .intro{background:rgba(255,248,225,.9);border-radius:8px;padding:8px 10px;
+  font-size:13.5px;margin-bottom:8px}
+.tm-people-detail h4{margin:10px 0 2px;font-size:13px;color:#c62828}
+.tm-people-detail p{margin:2px 0 8px;font-size:13.5px;white-space:pre-wrap}
+.tm-people-empty{color:#8a6a4b;font-size:12.5px;padding:4px 0 0}
+#tm-people-panel.night .tm-people-sheet{background:#2e2620;color:#e8ddd0}
+#tm-people-panel.night .tm-people-head{background:#3a3028;border-color:rgba(232,221,208,.2)}
+#tm-people-panel.night .tm-people-head h3{color:#f0e6d8}
+#tm-people-panel.night .tm-people-close{background:#3a3028;color:#e8ddd0;border-color:rgba(232,221,208,.3)}
+#tm-people-panel.night .tm-people-search{background:#3a3028;color:#e8ddd0;border-color:rgba(232,221,208,.3)}
+#tm-people-panel.night .tm-people-item{background:#3a3028;border-color:rgba(232,221,208,.2)}
+#tm-people-panel.night .tm-people-row{color:#e8ddd0}
+#tm-people-panel.night .tm-people-row .nm{color:#ffd54f}
+#tm-people-panel.night .tm-people-detail .intro{background:rgba(46,38,32,.7)}

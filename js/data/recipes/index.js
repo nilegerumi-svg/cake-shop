@@ -4,7 +4,7 @@ console.log('📖 [Recipes] 开始逐个加载菜谱子模块...');
 
 const RECIPE_MODULES = [
     './bakery/index.js',
-    './China_reciped/index.js'
+    './China_recipes/index.js'
 ];
 
 // 烘焙与中餐菜系互相独立，并行加载提速，并上报文件进度

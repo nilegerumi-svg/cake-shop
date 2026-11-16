@@ -1,0 +1,65 @@
+{
+ "batch": 4,
+ "name": "第四批移植：v53 定价跟进（126 项 baseCost）",
+ "base": "第三批移植后的克隆仓库（398 文件）",
+ "source": "甜蜜物语-离线版-v53.html 框架区物品表 ge 的 baseCost（原件未修改）",
+ "user_decision": "用户指令「跟进」＝确认 v53 为有意调价，应同步到仓库",
+ "policy": "增量价格补丁：upload/ 按相对路径覆盖；不删除任何既有文件。index.js 若已有他人改动，用 patch/接线片段.txt 手工追加 2 处",
+ "result_files": 400,
+ "added": [
+  {
+   "path": "js/data/recipes/v53_pricing.js",
+   "sha256": "7b81f589382cf65f1afecc35ac2829818d397c732adc78068cf0b509d38ff443",
+   "bytes": 4075
+  },
+  {
+   "path": "docs/第四批移植清单.md",
+   "sha256": "74675ef9836b3efad7cc283e2a29c93b3659b50cadc040859e2faaa0b65f4689",
+   "bytes": 5792
+  }
+ ],
+ "modified": [
+  {
+   "path": "js/data/index.js",
+   "sha256": "f7837a1e398e980621bd495b8831f9ccc5e4cd3551d3d3c480f2a6f4bf89f0c8",
+   "note": "DATA_MODULES 加 1 行 + 定价覆盖 IIFE"
+  }
+ ],
+ "patch_count": 126,
+ "patch_range": "全部为 v53 涨价 ×1.008~2.536，零降价、零异常值，全部落在 RECIPES_GAME",
+ "effect_chain": "ge = window.Cake.RECIPES_GAME（bundle 顶层引用）；3 处 .baseCost 读取全走 ge；app-01.js 首行 await window.__cakeDataReady 保证数据层先执行",
+ "verification": {
+  "pageerror": 0,
+  "console_error": 0,
+  "root_mounted": true,
+  "patch_applied": "126/126",
+  "bad": 0,
+  "miss": 0,
+  "sample_new_price": {
+   "vanilla_cake": 75,
+   "banana_bread": 74,
+   "honey_bread": 98
+  },
+  "other_fields_untouched": true,
+  "batch3_no_regression": "8 道新配方 / npc桥58 / 物品桥445 均在",
+  "node_check": "2/2 pass",
+  "merged_for_game_sha256_prefix": "9256d6022210（与第三批一致，未改动）"
+ },
+ "known_limits": [
+  "scone / tiramisu 两道配方整体重构（ings/category/taste/shelfDays 等）未纳入，待用户定夺",
+  "熟客簿写入需 bundle 层活 state，未处理",
+  "__TM_LONG_PROFILES__ 仍为空占位",
+  "docs/内容接线清单.md 的 397 个待下沉对象未触碰"
+ ],
+ "untouched": [
+  "js/data/recipes/merged_for_game.js",
+  "js/app.bundle.js",
+  "js/app.bundle/app-01..12.js",
+  "css/pc-layout.css",
+  "第一批 7 个手写块",
+  "第二批文件",
+  "第三批 3 个文件"
+ ],
+ "rollback": "删除 v53_pricing.js + index.js 的 1 行 import + 定价覆盖 IIFE，即恢复原价",
+ "not_final": true
+}

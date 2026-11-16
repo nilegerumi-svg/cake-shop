@@ -1,0 +1,5 @@
+【js/data/characters/npcs/index.js】末尾 import 列表追加：
+import './profiles_v53.js';
+
+【index.html】在 <script src="js/host/panel-reader.js"></script> 之后追加：
+<script id="tm-bridges" src="js/host/tm-bridges.js"></script>

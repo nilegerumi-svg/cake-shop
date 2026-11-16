@@ -85,7 +85,11 @@
     if (!t || (t.tagName !== "INPUT" && t.tagName !== "TEXTAREA" && t.tagName !== "SELECT")) return;
     try {
       var rect = t.getBoundingClientRect();
-      var vh = window.innerHeight || document.documentElement.clientHeight;
+      /* iOS/部分 WebView 软键盘弹起时 window.innerHeight 不变，只有 visualViewport.height 缩小；
+         用「可视视口高度 + 顶部偏移」当可见底边，才能把被键盘挡住的输入框滚回视野。 */
+      var vv = window.visualViewport;
+      var vh = vv ? (vv.height + (vv.offsetTop || 0))
+                  : (window.innerHeight || document.documentElement.clientHeight);
       if (rect.top < 0 || rect.bottom > vh) {
         t.scrollIntoView({ block: "center" });
       }

@@ -9,7 +9,7 @@
             name: '巧克力辅料包', 
             emoji: '🍫',
             desc: '黑巧克力×2 · 酵母×2',
-            cost: 100,
+            cost: 50,
             contents: { chocolate: 2, yeast: 2 },
         }
     ];

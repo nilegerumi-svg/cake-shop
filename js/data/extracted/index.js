@@ -1,7 +1,6 @@
 ﻿// js/data/extracted/index.js
 // 从离线包批量提取的其余数据表（每张表一个文件，已从离线包删除）
 import '../achievements/explore_achievements.js';
-import '../world/explore_events.js';
 import '../festivals/calendar.js';
 import '../festivals/details.js';
 import '../characters/relationships.js';
@@ -16,9 +15,7 @@ import '../characters/greetings_any.js';
 import '../baking/fills.js';
 import '../baking/kinds.js';
 import '../phone/apps.js';
-import '../world/districts.js';
 import '../world/map_districts.js';
-import '../world/transport.js';
 import '../quests/index.js';
 import '../products/index.js';
 import '../town/ads.js';
@@ -27,9 +24,7 @@ import '../weather/index.js';
 import '../time/buckets.js';
 import '../food/street_food.js';
 import '../food/restaurant.js';
-import '../activities/activities.js';
 import '../activities/beach.js';
-import '../activities/rides.js';
 import '../fishing/bait.js';
 import '../fishing/weights.js';
 import '../fishing/catches.js';
@@ -43,14 +38,10 @@ import '../misc/kc.js';
 import '../misc/wg.js';
 import '../festivals/blessings.js';
 import '../festivals/map.js';
-import '../world/locations_ba.js';
 import '../characters/npc_ids.js';
 import '../characters/allergies.js';
 import '../characters/festival_greetings.js';
 import '../items/index.js';
-import '../topics/templates_lc.js';
-import '../topics/templates_tq.js';
-import '../topics/categories.js';
 
 // 第三轮提取（UI 配置 / 钓鱼类型 / 蛋糕样式）
 import '../ui/game_menu.js';

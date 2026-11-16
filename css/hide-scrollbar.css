@@ -3,3 +3,10 @@
 .panel-area::-webkit-scrollbar{width:0;height:0;display:none;}
 html::-webkit-scrollbar{width:0;height:0;display:none;}
 body::-webkit-scrollbar{width:0;height:0;display:none;}
+/* 编辑控件例外：滚动层整体禁选中/touch-action 是为软件惯性滚动服务的，
+   但输入框必须能选字、长按弹粘贴菜单、定位光标。与 panel-autofit.js 注入、
+   frame-base/02.css 三处保持一致。 */
+.panel-area input,.panel-area textarea,.panel-area select,.panel-area [contenteditable],
+#root input,#root textarea,#root select,#root [contenteditable]{
+  -webkit-user-select:text;user-select:text;-webkit-touch-callout:default;touch-action:manipulation;
+}

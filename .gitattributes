@@ -1,3 +1,6 @@
 # 打包产物及其分片：禁止换行转换，保证「分片拼接 == 原始 bundle」逐字节成立
 js/app.bundle.js          text eol=lf
 js/app.bundle/*.js        text eol=lf
+js/app.bundle/*/*.js      text eol=lf
+# 逆向源码模块（js/src/）：同样禁止换行转换，保证「模块拼接 == 原压缩包语义一致」
+js/src/*/*.js             text eol=lf

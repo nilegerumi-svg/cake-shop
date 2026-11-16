@@ -1,0 +1,352 @@
+/* ===== 线性图标降级（v28）=====
+   适用：浏览器缺少彩色 emoji 字体时，把 .emoji 图标换成项目自带的
+   Material Icons 线性图标。字体 css/fonts/material-icons.woff2 随包分发，
+   所有 content 码位由该字体的 GSUB/cmap 反查得到，保证字形真实存在。
+   生效条件：<html data-tm-icon-line>，由 js/host/emoji-fallback.js 检测后同步。
+   本文件被 index.html 与 pages 各帧的 index.html 同时引入，父页与 iframe 一致。 */
+
+/* 原 emoji 字符已由 emoji-fallback.js 从文本节点摘掉（原值保存以便恢复），
+   这里只需用 ::before 画出线性图标，不再依赖 font-size:0 隐藏 —— iframe 的
+   字体放大体系优先级更高，靠 CSS 隐藏会被压过，实测残留豆腐块。 */
+html[data-tm-icon-line] .emoji[data-tm-e]::before {
+  font-family: "Material Icons" !important;
+  font-style: normal;
+  font-weight: 400;
+  font-size: 1em;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  direction: ltr;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: "liga";
+  color: inherit;
+  vertical-align: -0.12em;
+  margin-right: 0.12em;
+  content: "\e892";
+}
+
+/* 设置中心：高亮当前图标风格档位 */
+html[data-tm-icon-style="auto"] [data-testid="btn-icon-style-auto"],
+html[data-tm-icon-style="emoji"] [data-testid="btn-icon-style-emoji"],
+html[data-tm-icon-style="line"] [data-testid="btn-icon-style-line"] {
+  outline: 2px solid #2e7d32;
+  outline-offset: 1px;
+}
+
+/* 分类兜底：未精准覆盖的 emoji 按 Unicode 区段给同类图标 */
+html[data-tm-icon-line] .emoji[data-tm-ecat="food"]::before { content: "\e56c"; }
+html[data-tm-icon-line] .emoji[data-tm-ecat="plant"]::before { content: "\ea35"; }
+html[data-tm-icon-line] .emoji[data-tm-ecat="animal"]::before { content: "\e91d"; }
+html[data-tm-icon-line] .emoji[data-tm-ecat="cloth"]::before { content: "\f19e"; }
+html[data-tm-icon-line] .emoji[data-tm-ecat="home"]::before { content: "\efed"; }
+html[data-tm-icon-line] .emoji[data-tm-ecat="mood"]::before { content: "\e813"; }
+html[data-tm-icon-line] .emoji[data-tm-ecat="travel"]::before { content: "\e531"; }
+html[data-tm-icon-line] .emoji[data-tm-ecat="weather"]::before { content: "\e430"; }
+html[data-tm-icon-line] .emoji[data-tm-ecat="doc"]::before { content: "\e873"; }
+html[data-tm-icon-line] .emoji[data-tm-ecat="tool"]::before { content: "\e869"; }
+html[data-tm-icon-line] .emoji[data-tm-ecat="award"]::before { content: "\ea23"; }
+html[data-tm-icon-line] .emoji[data-tm-ecat="heart"]::before { content: "\e87d"; }
+html[data-tm-icon-line] .emoji[data-tm-ecat="misc"]::before { content: "\e892"; }
+
+/* 精准映射（后写覆盖分类兜底） */
+html[data-tm-icon-line] .emoji[data-tm-e="·"]::before { content: "\e892"; }
+html[data-tm-icon-line] .emoji[data-tm-e="⏳"]::before { content: "\e88b"; }
+html[data-tm-icon-line] .emoji[data-tm-e="☀"]::before { content: "\e430"; }
+html[data-tm-icon-line] .emoji[data-tm-e="☂"]::before { content: "\f1ad"; }
+html[data-tm-icon-line] .emoji[data-tm-e="☎"]::before { content: "\e0b0"; }
+html[data-tm-icon-line] .emoji[data-tm-e="☕"]::before { content: "\efef"; }
+html[data-tm-icon-line] .emoji[data-tm-e="♀"]::before { content: "\e590"; }
+html[data-tm-icon-line] .emoji[data-tm-e="⚗"]::before { content: "\ea4b"; }
+html[data-tm-icon-line] .emoji[data-tm-e="⚙"]::before { content: "\e8b8"; }
+html[data-tm-icon-line] .emoji[data-tm-e="⚠"]::before { content: "\e002"; }
+html[data-tm-icon-line] .emoji[data-tm-e="⚡"]::before { content: "\ea0b"; }
+html[data-tm-icon-line] .emoji[data-tm-e="⚪"]::before { content: "\e836"; }
+html[data-tm-icon-line] .emoji[data-tm-e="⛈"]::before { content: "\e3e7"; }
+html[data-tm-icon-line] .emoji[data-tm-e="⛓"]::before { content: "\e157"; }
+html[data-tm-icon-line] .emoji[data-tm-e="✂"]::before { content: "\e14e"; }
+html[data-tm-icon-line] .emoji[data-tm-e="✅"]::before { content: "\e86c"; }
+html[data-tm-icon-line] .emoji[data-tm-e="✖"]::before { content: "\e5c9"; }
+html[data-tm-icon-line] .emoji[data-tm-e="✨"]::before { content: "\e65f"; }
+html[data-tm-icon-line] .emoji[data-tm-e="❄"]::before { content: "\eb3b"; }
+html[data-tm-icon-line] .emoji[data-tm-e="⬜"]::before { content: "\e835"; }
+html[data-tm-icon-line] .emoji[data-tm-e="⭐"]::before { content: "\e838"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🌃"]::before { content: "\f03d"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🌈"]::before { content: "\e65f"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🌊"]::before { content: "\e798"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🌏"]::before { content: "\e80b"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🌙"]::before { content: "\e3a7"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🌤"]::before { content: "\e42d"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🌧"]::before { content: "\f1ad"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🌭"]::before { content: "\e57a"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🌰"]::before { content: "\ea35"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🌱"]::before { content: "\ea35"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🌲"]::before { content: "\ea99"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🌳"]::before { content: "\ea99"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🌶"]::before { content: "\ea80"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🌷"]::before { content: "\e545"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🌸"]::before { content: "\e545"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🌹"]::before { content: "\e545"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🌺"]::before { content: "\e545"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🌻"]::before { content: "\e545"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🌼"]::before { content: "\e545"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🌽"]::before { content: "\ea79"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🌾"]::before { content: "\ea79"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🌿"]::before { content: "\eb4c"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🍂"]::before { content: "\ea35"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🍃"]::before { content: "\ea35"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🍄"]::before { content: "\ea35"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🍅"]::before { content: "\ea80"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🍆"]::before { content: "\ea80"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🍈"]::before { content: "\ea80"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🍉"]::before { content: "\ea80"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🍋"]::before { content: "\ea80"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🍌"]::before { content: "\ea80"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🍍"]::before { content: "\ea80"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🍑"]::before { content: "\ea80"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🍒"]::before { content: "\ea80"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🍓"]::before { content: "\ea80"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🍔"]::before { content: "\e57a"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🍖"]::before { content: "\e842"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🍗"]::before { content: "\e842"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🍙"]::before { content: "\f1f5"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🍚"]::before { content: "\f1f5"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🍛"]::before { content: "\f1f5"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🍜"]::before { content: "\ea64"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🍝"]::before { content: "\ea64"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🍞"]::before { content: "\ea53"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🍟"]::before { content: "\e57a"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🍠"]::before { content: "\ea53"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🍢"]::before { content: "\e842"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🍥"]::before { content: "\ea64"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🍦"]::before { content: "\ea69"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🍨"]::before { content: "\ea69"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🍪"]::before { content: "\eaac"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🍫"]::before { content: "\eaac"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🍬"]::before { content: "\eaac"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🍮"]::before { content: "\e7e9"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🍯"]::before { content: "\eb47"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🍰"]::before { content: "\e7e9"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🍲"]::before { content: "\e7d3"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🍳"]::before { content: "\eacc"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🍵"]::before { content: "\ea1b"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🍶"]::before { content: "\e540"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🍹"]::before { content: "\e540"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🍽"]::before { content: "\e56c"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🍾"]::before { content: "\ea60"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🎀"]::before { content: "\e8f6"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🎁"]::before { content: "\e8f6"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🎂"]::before { content: "\e7e9"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🎆"]::before { content: "\ea65"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🎇"]::before { content: "\ea65"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🎈"]::before { content: "\ea65"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🎉"]::before { content: "\ea65"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🎊"]::before { content: "\ea65"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🎒"]::before { content: "\f19c"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🎓"]::before { content: "\e80c"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🎗"]::before { content: "\ea70"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🎛"]::before { content: "\e429"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🎡"]::before { content: "\ea52"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🎣"]::before { content: "\ead7"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🎤"]::before { content: "\e029"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🎨"]::before { content: "\e40a"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🎪"]::before { content: "\ea65"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🎯"]::before { content: "\e1b3"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🎲"]::before { content: "\eb40"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🏅"]::before { content: "\ea23"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🏆"]::before { content: "\ea23"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🏖"]::before { content: "\eb3e"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🏗"]::before { content: "\ea3c"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🏘"]::before { content: "\e88a"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🏛"]::before { content: "\e84f"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🏞"]::before { content: "\e3f7"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🏟"]::before { content: "\e3f7"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🏠"]::before { content: "\e88a"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🏥"]::before { content: "\e548"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🏦"]::before { content: "\e84f"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🏪"]::before { content: "\ea12"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🏫"]::before { content: "\e80c"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🏬"]::before { content: "\ea12"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🏮"]::before { content: "\ea65"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🏰"]::before { content: "\e84f"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🐂"]::before { content: "\e91d"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🐈"]::before { content: "\e91d"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🐑"]::before { content: "\e91d"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🐖"]::before { content: "\e91d"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🐚"]::before { content: "\ea35"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🐟"]::before { content: "\f1ea"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🐠"]::before { content: "\f1ea"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🐡"]::before { content: "\f1ea"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🐶"]::before { content: "\e91d"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🐾"]::before { content: "\e91d"; }
+html[data-tm-icon-line] .emoji[data-tm-e="👋"]::before { content: "\e769"; }
+html[data-tm-icon-line] .emoji[data-tm-e="👍"]::before { content: "\e8dc"; }
+html[data-tm-icon-line] .emoji[data-tm-e="👕"]::before { content: "\f19e"; }
+html[data-tm-icon-line] .emoji[data-tm-e="👖"]::before { content: "\f19e"; }
+html[data-tm-icon-line] .emoji[data-tm-e="👗"]::before { content: "\f19e"; }
+html[data-tm-icon-line] .emoji[data-tm-e="👙"]::before { content: "\f19e"; }
+html[data-tm-icon-line] .emoji[data-tm-e="👚"]::before { content: "\f19e"; }
+html[data-tm-icon-line] .emoji[data-tm-e="👟"]::before { content: "\f19e"; }
+html[data-tm-icon-line] .emoji[data-tm-e="👥"]::before { content: "\e7ef"; }
+html[data-tm-icon-line] .emoji[data-tm-e="👧"]::before { content: "\e7fd"; }
+html[data-tm-icon-line] .emoji[data-tm-e="👨"]::before { content: "\e7fd"; }
+html[data-tm-icon-line] .emoji[data-tm-e="👨‍🍳"]::before { content: "\e56c"; }
+html[data-tm-icon-line] .emoji[data-tm-e="👩"]::before { content: "\e7fd"; }
+html[data-tm-icon-line] .emoji[data-tm-e="👩‍🌾"]::before { content: "\ea79"; }
+html[data-tm-icon-line] .emoji[data-tm-e="👩‍🍳"]::before { content: "\e56c"; }
+html[data-tm-icon-line] .emoji[data-tm-e="👫"]::before { content: "\e7ef"; }
+html[data-tm-icon-line] .emoji[data-tm-e="👴"]::before { content: "\f21a"; }
+html[data-tm-icon-line] .emoji[data-tm-e="💇"]::before { content: "\e14e"; }
+html[data-tm-icon-line] .emoji[data-tm-e="💍"]::before { content: "\e87d"; }
+html[data-tm-icon-line] .emoji[data-tm-e="💎"]::before { content: "\ead5"; }
+html[data-tm-icon-line] .emoji[data-tm-e="💐"]::before { content: "\e545"; }
+html[data-tm-icon-line] .emoji[data-tm-e="💕"]::before { content: "\e87d"; }
+html[data-tm-icon-line] .emoji[data-tm-e="💖"]::before { content: "\e87d"; }
+html[data-tm-icon-line] .emoji[data-tm-e="💗"]::before { content: "\e87d"; }
+html[data-tm-icon-line] .emoji[data-tm-e="💞"]::before { content: "\e87d"; }
+html[data-tm-icon-line] .emoji[data-tm-e="💡"]::before { content: "\e0f0"; }
+html[data-tm-icon-line] .emoji[data-tm-e="💤"]::before { content: "\ef44"; }
+html[data-tm-icon-line] .emoji[data-tm-e="💪"]::before { content: "\eb43"; }
+html[data-tm-icon-line] .emoji[data-tm-e="💬"]::before { content: "\e0b7"; }
+html[data-tm-icon-line] .emoji[data-tm-e="💰"]::before { content: "\e227"; }
+html[data-tm-icon-line] .emoji[data-tm-e="💳"]::before { content: "\e870"; }
+html[data-tm-icon-line] .emoji[data-tm-e="💴"]::before { content: "\ef63"; }
+html[data-tm-icon-line] .emoji[data-tm-e="💺"]::before { content: "\e903"; }
+html[data-tm-icon-line] .emoji[data-tm-e="💾"]::before { content: "\e161"; }
+html[data-tm-icon-line] .emoji[data-tm-e="📁"]::before { content: "\e2c7"; }
+html[data-tm-icon-line] .emoji[data-tm-e="📄"]::before { content: "\e873"; }
+html[data-tm-icon-line] .emoji[data-tm-e="📅"]::before { content: "\ebcc"; }
+html[data-tm-icon-line] .emoji[data-tm-e="📋"]::before { content: "\e14f"; }
+html[data-tm-icon-line] .emoji[data-tm-e="📌"]::before { content: "\f10d"; }
+html[data-tm-icon-line] .emoji[data-tm-e="📍"]::before { content: "\e55f"; }
+html[data-tm-icon-line] .emoji[data-tm-e="📏"]::before { content: "\e41c"; }
+html[data-tm-icon-line] .emoji[data-tm-e="📐"]::before { content: "\e41c"; }
+html[data-tm-icon-line] .emoji[data-tm-e="📒"]::before { content: "\ea19"; }
+html[data-tm-icon-line] .emoji[data-tm-e="📖"]::before { content: "\ea19"; }
+html[data-tm-icon-line] .emoji[data-tm-e="📘"]::before { content: "\ea19"; }
+html[data-tm-icon-line] .emoji[data-tm-e="📛"]::before { content: "\e892"; }
+html[data-tm-icon-line] .emoji[data-tm-e="📜"]::before { content: "\e873"; }
+html[data-tm-icon-line] .emoji[data-tm-e="📝"]::before { content: "\e745"; }
+html[data-tm-icon-line] .emoji[data-tm-e="📞"]::before { content: "\e0b0"; }
+html[data-tm-icon-line] .emoji[data-tm-e="📤"]::before { content: "\f09b"; }
+html[data-tm-icon-line] .emoji[data-tm-e="📥"]::before { content: "\f090"; }
+html[data-tm-icon-line] .emoji[data-tm-e="📦"]::before { content: "\e1a1"; }
+html[data-tm-icon-line] .emoji[data-tm-e="📱"]::before { content: "\e32c"; }
+html[data-tm-icon-line] .emoji[data-tm-e="📵"]::before { content: "\e1d0"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🔄"]::before { content: "\e627"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🔍"]::before { content: "\e8b6"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🔒"]::before { content: "\e897"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🔓"]::before { content: "\e898"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🔔"]::before { content: "\e7f4"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🔗"]::before { content: "\e157"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🔥"]::before { content: "\ef55"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🔨"]::before { content: "\e869"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🔩"]::before { content: "\e869"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🔬"]::before { content: "\ea4b"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🔭"]::before { content: "\ea4b"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🔮"]::before { content: "\e65f"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🔴"]::before { content: "\ef4a"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🔵"]::before { content: "\ef4a"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🕊"]::before { content: "\e00b"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🕐"]::before { content: "\e8b5"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🗂"]::before { content: "\e2c7"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🗃"]::before { content: "\e149"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🗄"]::before { content: "\e149"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🗣"]::before { content: "\ef49"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🗺"]::before { content: "\e55b"; }
+html[data-tm-icon-line] .emoji[data-tm-e="😄"]::before { content: "\e813"; }
+html[data-tm-icon-line] .emoji[data-tm-e="😊"]::before { content: "\e813"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🙋"]::before { content: "\e769"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🚀"]::before { content: "\eb9b"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🚌"]::before { content: "\e530"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🚚"]::before { content: "\e558"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🚦"]::before { content: "\e565"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🚪"]::before { content: "\eb4f"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🚫"]::before { content: "\e14b"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🚶"]::before { content: "\e536"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🚿"]::before { content: "\f061"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🛋"]::before { content: "\e16b"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🛍"]::before { content: "\f1cc"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🛎"]::before { content: "\e7f7"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🛏"]::before { content: "\efdf"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🛒"]::before { content: "\e8cc"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🛞"]::before { content: "\ebc8"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🛠"]::before { content: "\f10b"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🛢"]::before { content: "\ec15"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🛵"]::before { content: "\e9f9"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🟠"]::before { content: "\ef4a"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🟢"]::before { content: "\ef4a"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🟤"]::before { content: "\ef4a"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🤎"]::before { content: "\ef4a"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🤝"]::before { content: "\ebcb"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🤧"]::before { content: "\ebed"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🥄"]::before { content: "\e7d3"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🥓"]::before { content: "\e842"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🥔"]::before { content: "\ea80"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🥕"]::before { content: "\ea80"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🥖"]::before { content: "\ea53"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🥘"]::before { content: "\f1ea"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🥚"]::before { content: "\eacc"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🥛"]::before { content: "\ea1b"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🥜"]::before { content: "\ea35"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🥠"]::before { content: "\f1ea"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🥡"]::before { content: "\f1ea"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🥢"]::before { content: "\ea64"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🥣"]::before { content: "\e7d3"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🥤"]::before { content: "\e540"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🥩"]::before { content: "\e842"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🥫"]::before { content: "\eb47"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🥬"]::before { content: "\ea80"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🥮"]::before { content: "\e7e9"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🦀"]::before { content: "\f1ea"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🦆"]::before { content: "\e91d"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🦐"]::before { content: "\f1ea"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🦞"]::before { content: "\f1ea"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🦠"]::before { content: "\ea3a"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🦪"]::before { content: "\f1ea"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🧀"]::before { content: "\eb47"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🧁"]::before { content: "\e7e9"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🧂"]::before { content: "\eb47"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🧆"]::before { content: "\e57a"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🧈"]::before { content: "\eb47"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🧊"]::before { content: "\eb3b"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🧑"]::before { content: "\e7fd"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🧑‍🍳"]::before { content: "\e56c"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🧒"]::before { content: "\eb41"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🧣"]::before { content: "\f19e"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🧥"]::before { content: "\f19e"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🧦"]::before { content: "\f19e"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🧧"]::before { content: "\f19e"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🧪"]::before { content: "\ea4b"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🧰"]::before { content: "\f10b"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🧴"]::before { content: "\f1b2"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🧵"]::before { content: "\f19e"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🧶"]::before { content: "\f19e"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🧺"]::before { content: "\e54a"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🧼"]::before { content: "\f1b2"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🧾"]::before { content: "\ef6e"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🩲"]::before { content: "\f19e"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🩳"]::before { content: "\f19e"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🩺"]::before { content: "\f109"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🪑"]::before { content: "\efed"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🪞"]::before { content: "\e16b"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🪟"]::before { content: "\e16b"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🪡"]::before { content: "\e14e"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🪱"]::before { content: "\e868"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🪴"]::before { content: "\e545"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🪵"]::before { content: "\ea99"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🫐"]::before { content: "\ea80"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🫑"]::before { content: "\ea80"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🫒"]::before { content: "\ea35"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🫘"]::before { content: "\ea35"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🫙"]::before { content: "\eb47"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🫚"]::before { content: "\ea35"; }
+html[data-tm-icon-line] .emoji[data-tm-e="🫧"]::before { content: "\f1b2"; }
+
+/* 裸文本 emoji 前缀在降级时由脚本换成 ◆，这里只保证符号本身可见 */
+html[data-tm-icon-line] .tm-emoji-bullet { color: inherit; font-weight: 700; }
+
+/* 宽屏放大档：图标字号跟随原 emoji 的 1em，不额外撑高胶囊；仅微调对齐 */
+html[data-tm-icon-line][data-tm-wide] .emoji[data-tm-e]::before { vertical-align: -0.1em; }

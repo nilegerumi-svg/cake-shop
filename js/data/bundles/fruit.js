@@ -9,7 +9,7 @@
             name: '鲜果奶油包', 
             emoji: '🍓',
             desc: '草莓×3 · 淡奶油×1',
-            cost: 110,
+            cost: 59,
             contents: { strawberry: 3, cream: 1 },
         }
     ];

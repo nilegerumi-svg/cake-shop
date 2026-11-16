@@ -1,0 +1,8 @@
+
+/* ===== 手写区 · PC 悬停反馈（v32） =====
+   按钮手型光标 + 悬停微亮；触屏设备没有悬停，规则无害。
+   与 tm-a11y 的焦点描边配合：键盘走 outline，鼠标走亮度。 */
+button{cursor:pointer}
+[role="button"]{cursor:pointer}
+button:not(:disabled):hover{filter:brightness(1.07)}
+[data-a11y-btn]:hover{filter:brightness(1.07)}

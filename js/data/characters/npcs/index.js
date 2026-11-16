@@ -38,5 +38,6 @@ import './广场中学.js';
 import './苏记甜品面包店.js';
 import './镇医院.js';
 import './高中.js';
+import './profiles_v53.js';   // 第二批移植：v53 档案增量补丁（只补缺失字段，不覆盖）
 
 console.log('👥 [NPC] 已装载', Object.keys(window.Cake.NPCS || {}).length, '位镇民');

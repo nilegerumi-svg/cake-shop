@@ -1,0 +1,71 @@
+{
+ "batch": 3,
+ "name": "第三批移植：8 道 v53 新增配方下沉 + 数据桥退为纯投影",
+ "base": "第二批移植后的克隆仓库（396 文件）",
+ "source": "甜蜜物语-离线版-v53.html 框架区物品表 ge（原件未修改）",
+ "policy": "增量覆盖：upload/ 按相对路径覆盖；不删除任何既有文件。两个改动文件若已有他人修改，用 patch/接线片段.txt 手工追加",
+ "result_files": 398,
+ "added": [
+  {
+   "path": "js/data/recipes/v53_additions.js",
+   "sha256": "fbdc9935dce2bab85f0bf032c7fd762347cd7f6d8291b0a8d1060fc6a18098ff",
+   "bytes": 5298
+  },
+  {
+   "path": "docs/第三批移植清单.md",
+   "sha256": "4018d38031fa9287a1d6579e90186623b4a5fbb09e1c9dc154bc04a5e38fcbbe",
+   "bytes": 6927
+  }
+ ],
+ "modified": [
+  {
+   "path": "js/data/index.js",
+   "sha256": "7fc93d25aa39ff63bd14de62b013df6d45f360e1cd7473f77cd214ea631b769c",
+   "note": "DATA_MODULES 加 1 行 + await 后加并入 IIFE"
+  },
+  {
+   "path": "js/host/tm-bridges.js",
+   "sha256": "a4a21f9e7f842a0f55c2f2b90441f7ba465743ed5482cedf14680837a0e5c80f",
+   "note": "删 EXTRA_NAMES 硬编码与兜底、wait() 增等待条件"
+  }
+ ],
+ "recipes_added": [
+  "cashew_cake",
+  "peanut_cookie",
+  "almond_cookie",
+  "macaron",
+  "walnut_bread",
+  "pistachio_icecream",
+  "scone_cuisine",
+  "tiramisu_cuisine"
+ ],
+ "verification": {
+  "pageerror": 0,
+  "console_error": 0,
+  "root_mounted": true,
+  "RECIPES_GAME": "247 → 255",
+  "new_recipes_in_table": "8/8",
+  "existing_untouched": {
+   "banana_bread.baseCost": 70,
+   "honey_bread.baseCost": 65
+  },
+  "item_map": "445 项，8 道名称来自数据层",
+  "people_rows": 58,
+  "node_check": "3/3 pass"
+ },
+ "known_limits": [
+  "熟客簿「登记」写入仍未生效（实测 coins/regulars 不变）；需 bundle 层活 state，本批不做",
+  "v53 有 126 项 baseCost 逐项调价，本批不覆盖仓库跑通定价，待用户定夺",
+  "__TM_LONG_PROFILES__ 仍为空占位",
+  "docs/内容接线清单.md 的 397 个待下沉对象未触碰"
+ ],
+ "untouched": [
+  "js/app.bundle.js",
+  "js/app.bundle/app-01..12.js",
+  "js/data/recipes/merged_for_game.js",
+  "css/pc-layout.css",
+  "第一批 7 个手写块",
+  "第二批 3 个文件（除 tm-bridges.js）"
+ ],
+ "not_final": true
+}

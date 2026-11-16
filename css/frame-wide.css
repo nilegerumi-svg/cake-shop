@@ -1,18 +1,25 @@
-/* css/frame-wide.css — iframe 面板的「宽屏放大档」
-   与原 css/frame-base/02.css 里 @media(min-width:768px) 的规则等价，但不再按 iframe
-   自身宽度判断：由 js/host/layout-sync.js 在父页统一决策后给 <html> 挂 data-tm-wide。
-   这样父文档（顶栏/页签）与 iframe 文档（内容面板）的 html font-size 与
-   --player-font-scale 永远一致，避免 768~836px 平板上「上层放大、下层不放大」。
-   矮屏横屏手机（高 <560）父页不进放大档，本文件也不会被激活。
+/* css/frame-wide.css — iframe 面板的「桌面宽屏档」
+   由 js/host/layout-sync.js 在父页统一决策后给 <html> 挂 data-tm-wide，父文档（顶栏/页签）
+   与 iframe 文档（内容面板）共用同一判定，避免上下层判定分叉（v23 的教训：iframe 媒体查询
+   视口比父容器窄 32~68px，768px 平板上出现「父页 32px / 帧 16px」混搭）。
+
+   矮屏横屏手机（高 <560）父页不进宽屏档，本文件也不会被激活。
 
    注意：.tab-bar / .top-bar / .panel-frame / iframe 等元素属于父文档，不在 iframe 内，
    故这里不再重复声明；父页对应规则见 index.html#pc-inline 与 css/adapt.css。
+
+   v26 改动（按宽度从窄到宽的适配重做）：
+   1) 字号 32px → 18px。原 32px = 手机 16px × 2，等于让人远看一块 540px 宽的手机界面；
+      实测 1440×900 顶栏 396px（44% 视口高）、内容区仅剩 409px。
+   2) 内容列 1080 → 1400，1920 屏两侧不再浪费 43.8%。
+   3) 不再强制 --player-font-scale:2 —— 那会让设置里的字号调节在桌面档失效，
+      现交由 js/frame-bootstrap.js 按用户设置写入行内变量。
+   4) 首页在 ≥1024 时两栏重排（见文件末尾）。
 ========================================================================== */
 html[data-tm-wide] {
-  font-size: 32px !important;
-  --player-font-scale: 2 !important;
-  --pc-width: 1080px;
-  --pc-scale: 1.8;
+  font-size: 18px !important;
+  --pc-width: 1400px;
+  --pc-scale: 1;
   overflow-x: hidden !important;
 }
 html[data-tm-wide] body {
@@ -23,11 +30,10 @@ html[data-tm-wide] body {
 html[data-tm-wide] ::-webkit-scrollbar { width:0 !important; height:0 !important; display:none !important; }
 html[data-tm-wide] * { scrollbar-width: none !important; }
 
-/* 内容列 1080 居中；覆盖 frame-base/02.css 在 min-width:641px 下的 max-width:560px */
+/* 内容列 1400 居中；覆盖 frame-base/02.css 在 min-width:641px 下的 max-width:560px */
 html[data-tm-wide] #container {
-  max-width: 1080px !important;
+  max-width: 1400px !important;
   margin: 16px auto !important;
-  font-size: calc(18px * var(--fs)) !important;
 }
 html[data-tm-wide] #container .text-\[11px\] { font-size: calc(11px * var(--fs)) !important; }
 html[data-tm-wide] #container .text-\[10px\] { font-size: calc(10px * var(--fs)) !important; }
@@ -40,13 +46,101 @@ html[data-tm-wide] #container .max-w-4xl,
 html[data-tm-wide] #container .max-w-5xl,
 html[data-tm-wide] #container .max-w-6xl,
 html[data-tm-wide] #container .max-w-7xl {
-  max-width: 1080px !important;
+  max-width: 1400px !important;
   margin-left: auto !important;
   margin-right: auto !important;
 }
 html[data-tm-wide] #global-modal-root > * {
-  max-width: 1080px !important;
+  max-width: 1400px !important;
   margin-left: auto !important;
   margin-right: auto !important;
 }
-html[data-tm-wide] .modal-sheet:not(.modal-sheet-phone) { max-width: min(92vw,1080px) !important; }
+html[data-tm-wide] .modal-sheet:not(.modal-sheet-phone) { max-width: min(92vw,1100px) !important; }
+
+/* ===== 首页两栏重排（iframe 宽 ≥900 才切，更窄时单栏更好用）=====
+
+   断点按 iframe 自身宽度算，不是父窗口宽度：iframe 比父容器窄 40px（左右各 16px 内边距 +
+   8px 边界），父窗口 1024 时 iframe 只有 984。这正是 v23 踩过的坑，故留 900 而非 1020。
+   对应父窗口约 940px 起两栏。
+
+   为什么用 float 而不是 grid：
+     grid 的自动行会被右栏那个 1000+px 高的跨行项拉平，左栏四个小块被均分撑开 ——
+     实测 grid 方案的左栏 y 坐标是 34 / 327 / 507 / 840，中间大片空洞。
+     float 让左栏四项自然堆叠（实测 y = 34 / 206 / 247 / 441），右栏用 margin-left 让位。
+
+   为什么不用 nth-child：
+     首页顶层子节点数量随楼层变化 —— 1F 是 5 个（楼层导航 / 副标题 / 我的小家 / 灯 /
+     1F 模块区），2F·3F·天台是 4 个（没有「我的小家」），B1 只有 3 个（连灯也没有）。
+     按序号写必然错位。改用结构稳定、且在五个楼层都唯一命中的选择器：
+       .grid.grid-cols-5 → 楼层导航
+       p                 → 副标题
+       section           → 「我的小家」与「灯」
+       div.space-y-4     → 当前楼层的模块区
+========================================================================== */
+@media (min-width: 900px) {
+  html[data-tm-wide][data-frame-id="home"] #root > .space-y-4 {
+    display: block !important;
+    --home-side: clamp(320px, 27%, 400px);
+    --home-gap: 16px;
+  }
+  html[data-tm-wide][data-frame-id="home"] #root > .space-y-4::after {
+    content: ''; display: block; clear: both;
+  }
+
+  /* 左栏（概览区）：楼层导航 / 副标题 / 我的小家 / 灯 */
+  html[data-tm-wide][data-frame-id="home"] #root > .space-y-4 > .grid.grid-cols-5,
+  html[data-tm-wide][data-frame-id="home"] #root > .space-y-4 > p,
+  html[data-tm-wide][data-frame-id="home"] #root > .space-y-4 > section {
+    float: left !important;
+    clear: left !important;
+    width: var(--home-side) !important;
+    max-width: var(--home-side) !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+
+  /* 右栏（当前楼层操作区） */
+  html[data-tm-wide][data-frame-id="home"] #root > .space-y-4 > div.space-y-4 {
+    margin-left: calc(var(--home-side) + var(--home-gap)) !important;
+    width: auto !important;
+  }
+
+  /* 左栏 5 个楼层按钮改 3 列：原 grid-cols-5 在 320~400px 的左栏里每格只剩 60~76px，
+     「店面·厨房·工坊」这类 7 字标签会被挤到两行断字 */
+  html[data-tm-wide][data-frame-id="home"] #root > .space-y-4 > .grid.grid-cols-5 {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+  html[data-tm-wide][data-frame-id="home"] #root > .space-y-4 > .grid.grid-cols-5 > button {
+    padding: 10px 4px !important;
+  }
+
+  /* 左栏副标题原本 mx-auto 到整页宽，收窄后要重新居中 */
+  html[data-tm-wide][data-frame-id="home"] #root > .space-y-4 > p {
+    text-align: center !important;
+  }
+}
+
+/* ===== 订购页多列化（iframe 宽 ≥900）=====
+   这一页原本是给 375px 手机写的纵向列表，铺到 1360px 后：
+   - 4 个材料补给包变成整行卡片，「购入」按钮被拉成 1305px；
+   - 商品网格写死 grid-cols-2，每列 674px，一行只放得下 2 个商品。
+   补丁方式：补给包区改自适应网格（标题行跨满），商品网格按 300px 起自适应列数。
+   不用 :has() 选父级 —— 项目现有 CSS 从未用过它，不引入新的浏览器门槛。 */
+@media (min-width: 900px) {
+  /* #root > .space-y-4 下唯一带 rounded-2xl.border-2 的 div 就是补给包区 */
+  html[data-tm-wide][data-frame-id="market"] #root > .space-y-4 > div.rounded-2xl.border-2 {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)) !important;
+    gap: 10px !important;
+    align-items: start !important;
+  }
+  /* 补给包区标题行（🎁 材料补给包 + 副说明）跨满一整行 */
+  html[data-tm-wide][data-frame-id="market"] #root > .space-y-4 > div.rounded-2xl.border-2 > .flex.flex-wrap {
+    grid-column: 1 / -1 !important;
+  }
+
+  /* 商品网格：写死的 2 列 -> 按 300px 起自适应，1360px 下约 4 列 */
+  html[data-tm-wide][data-frame-id="market"] #root > .space-y-4 > div.grid.grid-cols-2 {
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)) !important;
+  }
+}

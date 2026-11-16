@@ -18,21 +18,25 @@
       <!-- asap-vite-contract:a4167c51ba36d6fb9d742332 -->
     <meta name="asap-vite-contract" content="a4167c51ba36d6fb9d742332">
       <link rel="stylesheet" href="css/device-adapt.css?v=5fcb3fb6">
-<link rel="stylesheet" href="css/pc-layout.css?v=5f2fee14">
-<link rel="stylesheet" href="css/adapt.css?v=645d50ea">
+<link rel="stylesheet" href="css/pc-layout.css?v=6a390210">
+<link rel="stylesheet" href="css/adapt.css?v=7ce0b5f8">
 <link rel="stylesheet" href="css/modal.css?v=fd5539c9">
-    <!-- 桌面鼠标放大档：宽度 1080 + 字号放大（内联在 HTML 里，避免缓存问题）
-         v24：不再用 @media 判断宽度 —— 触屏宽屏（折叠屏展开 / 平板）会同样命中 768px 断点，
-         被错误套上 2 倍字号。改由 js/host/layout-sync.js 统一决策后挂 <html data-tm-wide>，
-         父文档与所有 iframe 文档共用同一判定源。详见 docs/已知问题与修复.md 第九章。 -->
+    <!-- 桌面宽屏档：铺满重排（不再把手机版放大 2 倍）
+         v26：原做法是「1080 列 + 字号 32px（= 手机 16px × 2）」，实测 1440×900 下顶栏吃掉
+         396px（44% 视口高），内容区只剩 409px；1920 屏两侧浪费 43.8%。本质是把手机版面
+         整体放大，等于远看一块 540px 宽的手机界面。
+         改为：字号 18px（仅比手机基准 16px 高 12.5%，照顾桌面观看距离）+ 内容列 1400 居中 +
+         首页在 ≥1024 时两栏重排。顶栏降到 ~135px，内容区可见高度翻倍。
+         判定仍由 js/host/layout-sync.js 统一决策后挂 <html data-tm-wide>，父文档与所有
+         iframe 文档共用同一判定源。详见 docs/已知问题与修复.md 第九章。 -->
     <style id="pc-inline">
-      html[data-tm-wide]{font-size:32px !important;--player-font-scale:2 !important;}
-      html[data-tm-wide] #container{max-width:1080px !important;margin:16px auto !important;font-size:calc(18px * var(--fs)) !important;}
-      html[data-tm-wide] .tab-bar{width:min(1080px,100vw) !important;max-width:1080px !important;left:50% !important;right:auto !important;transform:translateX(-50%) !important;}
-      html[data-tm-wide] .top-bar{max-width:1080px !important;margin-left:auto !important;margin-right:auto !important;}
-      html[data-tm-wide] #global-modal-root > *{max-width:1080px !important;margin-left:auto !important;margin-right:auto !important;}
-      html[data-tm-wide] .modal-sheet:not(.modal-sheet-phone){max-width:min(92vw,1080px) !important;}
-      html[data-tm-wide] .voice-command-fixed,html[data-tm-wide] .bgm-toggle-title{right:max(12px,calc((100vw - 1080px)/2 + 12px)) !important;}
+      html[data-tm-wide]{font-size:18px !important;}
+      html[data-tm-wide] #container{max-width:1400px !important;margin:16px auto !important;}
+      html[data-tm-wide] .tab-bar{width:min(1400px,100vw) !important;max-width:1400px !important;left:50% !important;right:auto !important;transform:translateX(-50%) !important;}
+      html[data-tm-wide] .top-bar{max-width:1400px !important;margin-left:auto !important;margin-right:auto !important;}
+      html[data-tm-wide] #global-modal-root > *{max-width:1400px !important;margin-left:auto !important;margin-right:auto !important;}
+      html[data-tm-wide] .modal-sheet:not(.modal-sheet-phone){max-width:min(92vw,1100px) !important;}
+      html[data-tm-wide] .voice-command-fixed,html[data-tm-wide] .bgm-toggle-title{right:max(12px,calc((100vw - 1400px)/2 + 12px)) !important;}
     </style>
 <link rel="stylesheet" href="css/fold.css?v=e95738ae">
 <link rel="stylesheet" href="css/razr.css?v=a201013b">

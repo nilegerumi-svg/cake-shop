@@ -1,11 +1,12 @@
 
-/* 桌面鼠标放大档：手机版面居中收窄，两侧留暗色背景
+/* 桌面宽屏档：内容列 1400 居中，两侧留暗色背景
    v24：改为 html[data-tm-wide] 属性驱动，与 index.html#pc-inline / css/adapt.css /
    css/frame-wide.css 共用 js/host/layout-sync.js 的同一判定，避免触屏宽屏（折叠屏展开）
-   被 768px 媒体查询误判进桌面档。触屏宽屏走 css/fold.css。 */
+   被 768px 媒体查询误判进桌面档。触屏宽屏走 css/fold.css。
+   v26：列宽 1080 → 1400，与 adapt.css 保持一致（原 1080 在 1920 屏两侧浪费 43.8%）。 */
 html[data-tm-wide]{background:#241012;}
-html[data-tm-wide] #container{max-width:1080px;margin:0 auto;box-shadow:0 0 48px rgba(0,0,0,.4);}
-html[data-tm-wide] .tab-bar{max-width:1080px;margin-left:auto;margin-right:auto;}
-html[data-tm-wide] .voice-command-fixed{left:calc((100vw - 1080px)/2 + 12px);right:auto;}
-html[data-tm-wide] .bgm-toggle-title{right:calc((100vw - 1080px)/2 + 12px);}
-html[data-tm-wide] #global-modal-root > *{max-width:1080px;margin-left:auto;margin-right:auto;}
+html[data-tm-wide] #container{max-width:1400px;margin:0 auto;box-shadow:0 0 48px rgba(0,0,0,.4);}
+html[data-tm-wide] .tab-bar{max-width:1400px;margin-left:auto;margin-right:auto;}
+html[data-tm-wide] .voice-command-fixed{left:calc((100vw - 1400px)/2 + 12px);right:auto;}
+html[data-tm-wide] .bgm-toggle-title{right:calc((100vw - 1400px)/2 + 12px);}
+html[data-tm-wide] #global-modal-root > *{max-width:1400px;margin-left:auto;margin-right:auto;}

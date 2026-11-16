@@ -16,7 +16,7 @@
                 doubanjiang: 1,
                 garlic: 2,
                 ginger: 2,
-                cooking_wine: 2,
+                rice_wine: 2,
                 soy_sauce_dark: 1,
                 oil: 2
             },

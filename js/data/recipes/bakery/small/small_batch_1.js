@@ -77,7 +77,7 @@
         "energy": 6,
         "ing": {
             "flour_low": 2,
-            "chicken_egg": 1,
+            "eggs": 1,
             "sugar": 1
         },
         "tools": [],
@@ -137,7 +137,7 @@
             "flour_low": 2,
             "blueberry": 2,
             "sugar": 1,
-            "chicken_egg": 1
+            "eggs": 1
         },
         "tools": [],
         "qualityReq": {
@@ -344,7 +344,7 @@
             "flour_low": 2,
             "chocolate": 2,
             "sugar": 1,
-            "chicken_egg": 1
+            "eggs": 1
         },
         "tools": [],
         "qualityReq": {
@@ -374,7 +374,7 @@
         "energy": 6,
         "ing": {
             "milk": 2,
-            "chicken_egg": 2,
+            "eggs": 2,
             "chocolate": 2,
             "sugar": 1
         },
@@ -412,7 +412,7 @@
         "ing": {
             "flour_low": 2,
             "sugar": 1,
-            "chicken_egg": 1
+            "eggs": 1
         },
         "tools": [],
         "qualityReq": {
@@ -443,7 +443,7 @@
         "ing": {
             "coconut": 1,
             "flour_low": 1,
-            "chicken_egg": 1,
+            "eggs": 1,
             "sugar": 1
         },
         "tools": [],
@@ -512,7 +512,7 @@
         "ing": {
             "flour_low": 1,
             "sugar": 1,
-            "chicken_egg": 1,
+            "eggs": 1,
             "milk": 1
         },
         "tools": [],

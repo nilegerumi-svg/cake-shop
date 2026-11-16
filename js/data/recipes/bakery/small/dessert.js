@@ -8,7 +8,7 @@
             skill: 'bakery',
             size: 'small',
             energy: 8,
-            ing: { flour_low: 1, chicken_egg: 2, milk: 1, cream: 1, sugar: 1, butter: 1 },
+            ing: { flour_low: 1, eggs: 2, milk: 1, cream: 1, sugar: 1, butter: 1 },
             tools: [{ tech: 'bake', role: 'required' }],
             qualityReq: {
                 minIngredientQuality: 55,
@@ -27,7 +27,7 @@
             skill: 'bakery',
             size: 'small',
             energy: 5,
-            ing: { milk: 2, chicken_egg: 1, sugar: 1, gelatin: 1 },
+            ing: { milk: 2, eggs: 1, sugar: 1, gelatin: 1 },
             tools: [{ tech: 'bake', role: 'required' }],
             qualityReq: {
                 minIngredientQuality: 50,

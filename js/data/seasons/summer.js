@@ -7,7 +7,7 @@
         id: 'summer',
         name: '夏', emoji: '🌊', desc: '炎炎夏日，适合清凉的冰品和水果。',
         whitelist: [
-            'flour_low', 'sugar', 'chicken_egg', 'milk', 'butter', 'cream',
+            'flour_low', 'sugar', 'eggs', 'milk', 'butter', 'cream',
             'apple', 'pineapple', 'lemon',
             'basic', 'pro', 'fruit',
             'ice' // 假如你有冰块

@@ -14,7 +14,7 @@
             energy: 10,
             ing: { 
                 tomato: 2, 
-                chicken_egg: 3, 
+                eggs: 3, 
                 salt: 1, 
                 oil: 1 
             },
@@ -45,7 +45,7 @@
             energy: 15,
             ing: { 
                 japonica_rice: 1, // 东北粳米
-                chicken_egg: 2, 
+                eggs: 2, 
                 scallion: 1,      // 大葱
                 salt: 1, 
                 oil: 1 

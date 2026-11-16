@@ -17,7 +17,7 @@
                 garlic: 2,
                 doubanjiang: 1,
                 soy_sauce_light: 1,
-                cooking_wine: 1,
+                rice_wine: 1,
                 oil: 2
             },
             tools: [{ tech: 'stirfry', role: 'required' }],
@@ -49,7 +49,7 @@
                 garlic: 1,
                 ginger: 1,
                 soy_sauce_dark: 1,
-                cooking_wine: 1,
+                rice_wine: 1,
                 oil: 1
             },
             tools: [{ tech: 'smoke', role: 'required' }],

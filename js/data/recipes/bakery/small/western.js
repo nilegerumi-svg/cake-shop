@@ -10,7 +10,7 @@
             skill: 'bakery',
             size: 'small',
             energy: 12,
-            ing: { apple: 3, flour_low: 2, sugar: 1, butter: 1, chicken_egg: 1 },
+            ing: { apple: 3, flour_low: 2, sugar: 1, butter: 1, eggs: 1 },
             tools: [{ tech: 'bake', role: 'required' }],
             qualityReq: { minIngredientQuality: 50, minSkillLevel: 1, minRecipeProf: 3, perfectTools: [] },
             output: { type: 'food', key: 'cake:apple_pie', attrs: { flavor: { sweet: 60, sour: 20 }, texture: { crispy: 50, tender: 40 } } }
@@ -20,7 +20,7 @@
             skill: 'bakery',
             size: 'small',
             energy: 10,
-            ing: { lemon: 2, sugar: 2, butter: 1, flour_low: 1, chicken_egg: 2 },
+            ing: { lemon: 2, sugar: 2, butter: 1, flour_low: 1, eggs: 2 },
             tools: [{ tech: 'bake', role: 'required' }],
             qualityReq: { minIngredientQuality: 55, minSkillLevel: 2, minRecipeProf: 4, perfectTools: [] },
             output: { type: 'food', key: 'cake:lemon_tart', attrs: { flavor: { sour: 70, sweet: 40 }, texture: { crispy: 40, smooth: 50 } } }
@@ -40,7 +40,7 @@
             skill: 'bakery',
             size: 'small',
             energy: 14,
-            ing: { cheese: 2, cream: 1, chicken_egg: 2, sugar: 1, flour_low: 1 },
+            ing: { cheese: 2, cream: 1, eggs: 2, sugar: 1, flour_low: 1 },
             tools: [{ tech: 'bake', role: 'required' }],
             qualityReq: { minIngredientQuality: 60, minSkillLevel: 2, minRecipeProf: 5, perfectTools: ['freezer'] },
             output: { type: 'food', key: 'cake:cheesecake', attrs: { flavor: { sweet: 50, umami: 20 }, texture: { smooth: 70, tender: 40 } } }
@@ -50,7 +50,7 @@
             skill: 'bakery',
             size: 'small',
             energy: 8,
-            ing: { corn: 2, flour_low: 1, milk: 1, sugar: 1, chicken_egg: 1 },
+            ing: { corn: 2, flour_low: 1, milk: 1, sugar: 1, eggs: 1 },
             tools: [{ tech: 'bake', role: 'required' }],
             qualityReq: { minIngredientQuality: 45, minSkillLevel: 1, minRecipeProf: 2, perfectTools: [] },
             output: { type: 'food', key: 'cake:corn_muffin', attrs: { flavor: { sweet: 50, umami: 10 }, texture: { mushy: 40, tender: 50 } } }

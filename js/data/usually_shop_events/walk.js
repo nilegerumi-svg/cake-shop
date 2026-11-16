@@ -18,6 +18,6 @@
         { text: '你在书店遇到夏栀，她给你讲了新故事。', aff: { xiazhi: 3 }, rep: 3 },
         { text: '你观察路边的花朵，获得了新的蛋糕装饰灵感！', rep: 8 },
         { text: '你走得太远，有点累了。', energy: -15 },
-        { text: '你发现了一家便宜又新鲜的食材小店！', ing: { flour_low: 2, chicken_egg: 2 } },
+        { text: '你发现了一家便宜又新鲜的食材小店！', ing: { flour_low: 2, eggs: 2 } },
     ]);
 })();

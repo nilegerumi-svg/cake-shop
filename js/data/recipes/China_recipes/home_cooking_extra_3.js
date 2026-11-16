@@ -314,7 +314,7 @@
         "size": "small",
         "energy": 6,
         "ing": {
-            "chicken_egg": 2,
+            "eggs": 2,
             "shrimp": 1,
             "scallion": 1,
             "soy_sauce_light": 1

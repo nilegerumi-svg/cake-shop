@@ -11,7 +11,7 @@
         "size": "large",
         "energy": 18,
         "ing": {
-            "common_carp": 2,
+            "carp": 2,
             "chili": 3,
             "garlic": 2,
             "ginger": 1

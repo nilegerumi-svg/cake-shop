@@ -162,7 +162,7 @@
         "energy": 12,
         "ing": {
             "potato": 3,
-            "chicken_egg": 2,
+            "eggs": 2,
             "onion": 1,
             "oil": 1
         },

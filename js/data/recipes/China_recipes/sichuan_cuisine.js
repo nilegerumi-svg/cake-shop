@@ -13,7 +13,7 @@
         "ing": {
             "carp": 2,
             "chili": 3,
-            "sichuan_pepper": 1,
+            "pepper": 1,
             "garlic": 2,
             "oil": 1
         },

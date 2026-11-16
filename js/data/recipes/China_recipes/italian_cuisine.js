@@ -13,7 +13,7 @@
         "ing": {
             "meat": 2,
             "flour_low": 1,
-            "chicken_egg": 1,
+            "eggs": 1,
             "tomato": 2
         },
         "tools": [
@@ -251,7 +251,7 @@
         "size": "medium",
         "energy": 12,
         "ing": {
-            "chicken_egg": 2,
+            "eggs": 2,
             "cream": 2,
             "coffee_bean": 1,
             "sugar": 2

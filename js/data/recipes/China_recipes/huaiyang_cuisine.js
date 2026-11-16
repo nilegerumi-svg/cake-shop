@@ -52,7 +52,7 @@
         "ing": {
             "meat": 3,
             "tofu": 1,
-            "chicken_egg": 1,
+            "eggs": 1,
             "soy_sauce_light": 1,
             "ginger": 1
         },

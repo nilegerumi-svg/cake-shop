@@ -12,7 +12,7 @@
             energy: 20,
             ing: {
                 pork_belly: 3,
-                chicken_egg: 1,
+                eggs: 1,
                 cabbage: 2,
                 shiitake: 1,
                 starch: 1,
@@ -49,7 +49,7 @@
                 chicken: 1,
                 starch: 2,
                 ginger: 1,
-                chicken_egg: 1,
+                eggs: 1,
                 salt: 1
             },
             tools: [{ tech: 'braise', role: 'required' }],

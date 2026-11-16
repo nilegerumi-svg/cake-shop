@@ -104,7 +104,7 @@
             "flour_low": 2,
             "butter": 2,
             "peach": 3,
-            "chicken_egg": 1
+            "eggs": 1
         },
         "tools": [],
         "qualityReq": {
@@ -200,7 +200,7 @@
         "ing": {
             "shrimp_paste": 1,
             "flour_low": 2,
-            "chicken_egg": 1
+            "eggs": 1
         },
         "tools": [],
         "qualityReq": {
@@ -352,7 +352,7 @@
         "energy": 6,
         "ing": {
             "milk": 2,
-            "chicken_egg": 2,
+            "eggs": 2,
             "strawberry": 3,
             "sugar": 1
         },
@@ -393,7 +393,7 @@
             "milk": 2,
             "cream": 2,
             "sugar": 2,
-            "chicken_egg": 1
+            "eggs": 1
         },
         "tools": [],
         "qualityReq": {
@@ -425,7 +425,7 @@
         "energy": 6,
         "ing": {
             "milk": 2,
-            "chicken_egg": 2,
+            "eggs": 2,
             "sugar": 2,
             "cream": 1
         },

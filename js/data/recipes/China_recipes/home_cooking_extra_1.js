@@ -129,7 +129,7 @@
         "size": "large",
         "energy": 18,
         "ing": {
-            "common_carp": 1,
+            "carp": 1,
             "chili": 2,
             "garlic": 1
         },
@@ -168,7 +168,7 @@
         "energy": 6,
         "ing": {
             "clam": 2,
-            "chicken_egg": 2,
+            "eggs": 2,
             "scallion": 1
         },
         "tools": [

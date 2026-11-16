@@ -51,7 +51,7 @@
         "ing": {
             "ginger": 2,
             "sugar": 1,
-            "cooking_wine": 1
+            "rice_wine": 1
         },
         "tools": [
             {
@@ -88,7 +88,7 @@
         "energy": 6,
         "ing": {
             "goby": 1,
-            "chicken_egg": 2,
+            "eggs": 2,
             "scallion": 1
         },
         "tools": [
@@ -316,7 +316,7 @@
         "size": "medium",
         "energy": 12,
         "ing": {
-            "common_carp": 2,
+            "carp": 2,
             "honey": 2,
             "lemon": 1
         },

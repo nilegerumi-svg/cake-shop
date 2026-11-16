@@ -206,7 +206,7 @@
         "ing": {
             "meat": 3,
             "butter": 1,
-            "sichuan_pepper": 1,
+            "pepper": 1,
             "garlic": 1
         },
         "tools": [

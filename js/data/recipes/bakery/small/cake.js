@@ -7,7 +7,7 @@
             skill: 'bakery',
             size: 'small', // 👈 必须加上这个！
             energy: 5,
-            ing: { flour_low: 1, sugar: 1, chicken_egg: 1, milk: 1 },
+            ing: { flour_low: 1, sugar: 1, eggs: 1, milk: 1 },
             tools: [{ tech: 'bake', role: 'required' }],
             qualityReq: {
                 minIngredientQuality: 50, 
@@ -25,7 +25,7 @@
             skill: 'bakery',
             size: 'small', // 👈 这里也要加上！
             energy: 8,
-            ing: { flour_low: 1, sugar: 1, chicken_egg: 1, butter: 1, cream: 1 },
+            ing: { flour_low: 1, sugar: 1, eggs: 1, butter: 1, cream: 1 },
             tools: [{ tech: 'bake', role: 'required' }],
             qualityReq: {
                 minIngredientQuality: 60,

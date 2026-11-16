@@ -46,7 +46,7 @@
             ing: {
                 shrimp: 3,
                 starch: 1,
-                chicken_egg: 1,
+                eggs: 1,
                 lettuce: 1,
                 ginger: 1,
                 salt: 1

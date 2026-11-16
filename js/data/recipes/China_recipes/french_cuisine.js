@@ -12,7 +12,7 @@
         "energy": 18,
         "ing": {
             "meat": 3,
-            "cooking_wine": 1,
+            "rice_wine": 1,
             "onion": 2,
             "carrot": 2,
             "potato": 2
@@ -55,7 +55,7 @@
         "ing": {
             "flour_low": 2,
             "milk": 2,
-            "chicken_egg": 1,
+            "eggs": 1,
             "honey": 1
         },
         "tools": [

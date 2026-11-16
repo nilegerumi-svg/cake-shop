@@ -10,7 +10,7 @@
             'flour_low':    { stock: 99, priceModifier: 1.0 },
             'flour_high':   { stock: 99, priceModifier: 1.0 },
             // 蛋奶
-            'chicken_egg':  { stock: 50, priceModifier: 1.0 },
+            'eggs':  { stock: 50, priceModifier: 1.0 },
             'milk':         { stock: 50, priceModifier: 1.0 },
             'butter':       { stock: 20, priceModifier: 1.0 },
             // 辅料

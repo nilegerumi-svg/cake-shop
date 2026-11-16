@@ -7,7 +7,7 @@
             skill: 'bakery',
             size: 'medium', // 👈 必须加上这个！引擎和 UI 才能识别它
             energy: 20,
-            ing: { flour_low: 2, sugar: 2, chicken_egg: 2, milk: 1, cherry: 3, chocolate: 2, cream: 1 },
+            ing: { flour_low: 2, sugar: 2, eggs: 2, milk: 1, cherry: 3, chocolate: 2, cream: 1 },
             tools: [
                 { tech: 'bake', role: 'required' },
                 { id: 'mixer', role: 'bonus' }

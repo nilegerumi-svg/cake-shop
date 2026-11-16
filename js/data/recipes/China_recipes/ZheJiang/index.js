@@ -48,7 +48,7 @@
                 ginger: 2,
                 soy_sauce_light: 1,
                 starch: 1,
-                cooking_wine: 1
+                rice_wine: 1
             },
             tools: [{ tech: 'braise', role: 'required' }],
             qualityReq: {

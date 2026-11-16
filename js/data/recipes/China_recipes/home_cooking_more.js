@@ -9,7 +9,7 @@
         'dish:braised_beef': {
             name: '红烧牛肉',
             skill: 'cook', cuisine: 'home', size: 'medium', energy: 18,
-            ing: { beef: 3, ginger: 1, garlic: 1, scallion: 1, star_anise: 1, soy_sauce_light: 1, soy_sauce_dark: 1, sugar: 1, cooking_wine: 1, oil: 1, msg: 1 },
+            ing: { beef: 3, ginger: 1, garlic: 1, scallion: 1, star_anise: 1, soy_sauce_light: 1, soy_sauce_dark: 1, sugar: 1, rice_wine: 1, oil: 1, msg: 1 },
             tools: [{ tech: 'braise', role: 'required' }],
             qualityReq: { minIngredientQuality: 55, minSkillLevel: 2, minRecipeProf: 5, perfectTools: ['claypot'] },
             output: { type: 'food', key: 'dish:braised_beef', attrs: { flavor: { umami: 60, salty: 40, sweet: 20 }, texture: { tender: 60, fatty: 20 } } }
@@ -65,7 +65,7 @@
         'dish:bok_choy_egg': {
             name: '上汤上海青',
             skill: 'cook', cuisine: 'home', size: 'medium', energy: 11,
-            ing: { bok_choy: 3, chicken_egg: 2, garlic: 1, salt: 1, oil: 1 },
+            ing: { bok_choy: 3, eggs: 2, garlic: 1, salt: 1, oil: 1 },
             tools: [{ tech: 'stirfry', role: 'required' }],
             qualityReq: { minIngredientQuality: 45, minSkillLevel: 1, minRecipeProf: 3, perfectTools: [] },
             output: { type: 'food', key: 'dish:bok_choy_egg', attrs: { flavor: { umami: 40, salty: 20 }, texture: { tender: 60 } } }
@@ -73,7 +73,7 @@
         'dish:onion_egg': {
             name: '洋葱炒蛋',
             skill: 'cook', cuisine: 'home', size: 'medium', energy: 12,
-            ing: { onion: 2, chicken_egg: 3, oil: 1, salt: 1 },
+            ing: { onion: 2, eggs: 3, oil: 1, salt: 1 },
             tools: [{ tech: 'stirfry', role: 'required' }],
             qualityReq: { minIngredientQuality: 45, minSkillLevel: 1, minRecipeProf: 2, perfectTools: [] },
             output: { type: 'food', key: 'dish:onion_egg', attrs: { flavor: { sweet: 20, umami: 40 }, texture: { tender: 60 } } }
@@ -102,13 +102,13 @@
             qualityReq: { minIngredientQuality: 50, minSkillLevel: 1, minRecipeProf: 3, perfectTools: [] },
             output: { type: 'food', key: 'dish:wood_ear_pork', attrs: { flavor: { umami: 50, salty: 20 }, texture: { crispy: 50, fatty: 30 } } }
         },
-        'dish:century_egg_congee': {
+        'dish:preserved_egg_congee': {
             name: '皮蛋瘦肉粥',
             skill: 'cook', cuisine: 'home', size: 'medium', energy: 13,
-            ing: { century_egg: 1, japonica_rice: 1, pork_belly: 1, scallion: 1, salt: 1 },
+            ing: { preserved_egg: 1, japonica_rice: 1, pork_belly: 1, scallion: 1, salt: 1 },
             tools: [{ tech: 'braise', role: 'required' }],
             qualityReq: { minIngredientQuality: 50, minSkillLevel: 1, minRecipeProf: 3, perfectTools: ['claypot'] },
-            output: { type: 'food', key: 'dish:century_egg_congee', attrs: { flavor: { umami: 50, salty: 20 }, texture: { mushy: 60, smooth: 40 } } }
+            output: { type: 'food', key: 'dish:preserved_egg_congee', attrs: { flavor: { umami: 50, salty: 20 }, texture: { mushy: 60, smooth: 40 } } }
         },
         'dish:duck_egg_stirfry': {
             name: '鸭蛋炒青椒',

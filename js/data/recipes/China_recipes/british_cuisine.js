@@ -91,7 +91,7 @@
         "ing": {
             "flour_low": 2,
             "milk": 1,
-            "chicken_egg": 1,
+            "eggs": 1,
             "butter": 1
         },
         "tools": [
@@ -171,7 +171,7 @@
         "ing": {
             "flour_low": 2,
             "milk": 2,
-            "chicken_egg": 2
+            "eggs": 2
         },
         "tools": [
             {

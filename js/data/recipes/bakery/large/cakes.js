@@ -7,7 +7,7 @@
             skill: 'bakery',
             size: 'large', // 👈 核心修复：必须加上这个大尺寸标签！
             energy: 50,
-            ing: { flour_low: 10, sugar: 10, chicken_egg: 10, milk: 5, butter: 5, cream: 10, strawberry: 10 },
+            ing: { flour_low: 10, sugar: 10, eggs: 10, milk: 5, butter: 5, cream: 10, strawberry: 10 },
             tools: [
                 { tech: 'bake', role: 'required' },
                 { tech: 'freeze', role: 'required' },

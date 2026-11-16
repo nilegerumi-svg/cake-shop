@@ -53,7 +53,7 @@
             "meat": 2,
             "apple": 2,
             "onion": 1,
-            "cooking_wine": 1
+            "rice_wine": 1
         },
         "tools": [
             {
@@ -93,7 +93,7 @@
             "meat": 3,
             "garlic": 2,
             "honey": 1,
-            "cooking_wine": 1
+            "rice_wine": 1
         },
         "tools": [
             {
@@ -131,7 +131,7 @@
         "ing": {
             "potato": 3,
             "flour_low": 1,
-            "chicken_egg": 1
+            "eggs": 1
         },
         "tools": [
             {

@@ -15,7 +15,7 @@
                 pork_belly: 1,
                 doubanjiang: 1,
                 chili: 2,
-                sichuan_pepper: 1,
+                pepper: 1,
                 garlic: 1,
                 scallion: 1,
                 starch: 1,

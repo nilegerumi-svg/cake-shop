@@ -1509,16 +1509,6 @@
     "category": "meat",
     "desc": "银鳕鱼肉白细嫩，油脂丰富，煎烤清蒸都佳。"
   },
-  "common_carp": {
-    "id": "common_carp",
-    "name": "鲤鱼",
-    "emoji": "🐠",
-    "price": 20,
-    "shelfLife": 2,
-    "season": "all",
-    "category": "meat",
-    "desc": "鲤鱼肉厚刺少，红烧、糖醋最家常。"
-  },
   "japonica_rice": {
     "id": "japonica_rice",
     "name": "东北粳米",
@@ -1669,16 +1659,6 @@
     "category": "seasoning",
     "desc": "郫县豆瓣酱红亮咸香，是川菜的灵魂。"
   },
-  "sichuan_pepper": {
-    "id": "sichuan_pepper",
-    "name": "花椒",
-    "emoji": "🌿",
-    "price": 15,
-    "shelfLife": 7,
-    "season": "all",
-    "category": "seasoning",
-    "desc": "麻香扑鼻，川味关键"
-  },
   "star_anise": {
     "id": "star_anise",
     "name": "八角",
@@ -1688,16 +1668,6 @@
     "season": "all",
     "category": "seasoning",
     "desc": "八角香气浓，炖肉卤味少不了。"
-  },
-  "cooking_wine": {
-    "id": "cooking_wine",
-    "name": "料酒",
-    "emoji": "🍶",
-    "price": 5,
-    "shelfLife": 7,
-    "season": "all",
-    "category": "seasoning",
-    "desc": "去腥增香，腌肉必备"
   },
   "huangjiu": {
     "id": "huangjiu",
@@ -1829,16 +1799,6 @@
     "category": "veg",
     "desc": "松茸菌香清雅，煎烤最能吃出本味。"
   },
-  "chicken_egg": {
-    "id": "chicken_egg",
-    "name": "鸡蛋",
-    "emoji": "🥚",
-    "price": 2,
-    "shelfLife": 7,
-    "season": "all",
-    "category": "dairy",
-    "desc": "鸡蛋家常百搭，蒸炒煎烤都离不了。"
-  },
   "duck_egg": {
     "id": "duck_egg",
     "name": "鸭蛋",
@@ -1858,16 +1818,6 @@
     "season": "all",
     "category": "dairy",
     "desc": "鹌鹑蛋小巧，卤煮后一口一个。"
-  },
-  "century_egg": {
-    "id": "century_egg",
-    "name": "皮蛋",
-    "emoji": "🥚",
-    "price": 6,
-    "shelfLife": 7,
-    "season": "all",
-    "category": "dairy",
-    "desc": "Q 弹咸香，凉拌入粥"
   },
   "cherry": {
     "id": "cherry",

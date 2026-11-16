@@ -91,7 +91,7 @@
         "ing": {
             "rice_noodle": 2,
             "shrimp": 2,
-            "chicken_egg": 1,
+            "eggs": 1,
             "lime": 1,
             "scallion": 1
         },

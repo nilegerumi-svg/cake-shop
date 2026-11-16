@@ -10,7 +10,7 @@
             emoji: '🧈',
             desc: '低筋面粉×2 · 鸡蛋×2 · 黄油×2 · 淡奶油×2',
             cost: 77,
-            contents: { flour_low: 2, chicken_egg: 2, butter: 2, cream: 2 },
+            contents: { flour_low: 2, eggs: 2, butter: 2, cream: 2 },
         }
     ];
 })();

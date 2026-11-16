@@ -53,7 +53,7 @@
         "ing": {
             "japonica_rice": 2,
             "meat": 1,
-            "chicken_egg": 1,
+            "eggs": 1,
             "carrot": 1,
             "kimchi": 1
         },
@@ -169,7 +169,7 @@
         "energy": 12,
         "ing": {
             "pasta": 2,
-            "chicken_egg": 1,
+            "eggs": 1,
             "kimchi": 1,
             "vinegar": 1,
             "cucumber": 1

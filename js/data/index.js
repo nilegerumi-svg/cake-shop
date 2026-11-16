@@ -46,7 +46,7 @@ const DATA_MODULES = [
 // 数据层版本号：由 tools/version-assets.js 自动写入，请勿手改。
 // 取值 = js/data 下全部数据文件内容的联合哈希，任一数据文件变更即改变，
 // 使下面的动态 import 全部换 URL 重新拉取，避免缓存导致「代码新、数据旧」。
-const DATA_VERSION = '89b5279b';
+const DATA_VERSION = '1f564b20';
 const withV = (p) =>
     DATA_VERSION && DATA_VERSION !== '00000000' ? p + (p.indexOf('?') > -1 ? '&' : '?') + 'v=' + DATA_VERSION : p;
 

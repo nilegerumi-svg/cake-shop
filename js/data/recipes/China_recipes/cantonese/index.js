@@ -46,7 +46,7 @@
                 ginger: 2,
                 scallion: 2,
                 soy_sauce_light: 1,
-                cooking_wine: 1,
+                rice_wine: 1,
                 sesame_oil: 1,
                 salt: 1
             },

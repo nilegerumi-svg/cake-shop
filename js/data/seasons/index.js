@@ -36,14 +36,14 @@ import './winter.js';
         'japonica_rice', 'glutinous_rice', 'black_rice', 'millet',
         'mung_bean', 'red_bean', 'soybean',
         // 蛋奶
-        'chicken_egg', 'duck_egg', 'quail_egg', 'century_egg',
+        'eggs', 'duck_egg', 'quail_egg', 'preserved_egg',
         'milk', 'butter', 'cream', 'cheese',
         // 调味与辅料
         'sugar', 'salt', 'oil', 'vinegar', 'soy_sauce_light', 'soy_sauce_dark',
-        'oyster_sauce', 'doubanjiang', 'cooking_wine', 'huangjiu', 'sesame_oil',
+        'oyster_sauce', 'doubanjiang', 'rice_wine', 'huangjiu', 'sesame_oil',
         'msg', 'yeast', 'baking_soda', 'gelatin', 'agar',
         'garlic', 'ginger', 'scallion', 'onion',
-        'chili', 'sichuan_pepper', 'star_anise',
+        'chili', 'pepper', 'star_anise',
         // 基建材料（造工具用）
         'wood', 'iron', 'parts'
     ]);

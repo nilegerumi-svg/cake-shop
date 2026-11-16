@@ -8,7 +8,6 @@
         'bass': { name: '鲈鱼', emoji: '🐟', price: 28, tags: ['fish'], shelfCategory: 'meat', shelfLife: 2 },
         'bitterling': { name: '鳑鲏', emoji: '🐟', price: 40, tags: ['fish'], shelfCategory: 'meat', shelfLife: 2 },
         'bream': { name: '芦花鳊', emoji: '🌾', price: 85, tags: ['fish'], shelfCategory: 'meat', shelfLife: 2 },
-        'common_carp': { name: '鲤鱼', emoji: '🐠', price: 20, tags: ['fish'], shelfCategory: 'meat', shelfLife: 2 },
         'crayfish': { name: '小龙虾', emoji: '🦞', price: 38, tags: ['fish'], shelfCategory: 'meat', shelfLife: 2 },
         'croaker': { name: '黄花鱼', emoji: '🐠', price: 30, tags: ['fish'], shelfCategory: 'meat', shelfLife: 2 },
         'crucian': { name: '鲫鱼', emoji: '🐟', price: 15, tags: ['fish'], shelfCategory: 'meat', shelfLife: 2 },

@@ -50,11 +50,11 @@
         "size": "medium",
         "energy": 12,
         "ing": {
-            "common_carp": 2,
+            "carp": 2,
             "chili": 1,
             "ginger": 1,
             "soy_sauce_light": 1,
-            "cooking_wine": 1
+            "rice_wine": 1
         },
         "tools": [
             {

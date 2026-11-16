@@ -52,7 +52,7 @@
         "ing": {
             "meat": 2,
             "flour_low": 2,
-            "chicken_egg": 1,
+            "eggs": 1,
             "oil": 1
         },
         "tools": [
@@ -203,7 +203,7 @@
         "ing": {
             "shrimp": 2,
             "flour_low": 2,
-            "chicken_egg": 1,
+            "eggs": 1,
             "oil": 1
         },
         "tools": [

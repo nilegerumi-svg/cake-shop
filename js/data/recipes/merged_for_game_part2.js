@@ -1366,7 +1366,7 @@
     "ings": {
       "flour_low": 1,
       "sugar": 1,
-      "chicken_egg": 1,
+      "eggs": 1,
       "milk": 1
     },
     "baseCost": 30,
@@ -1392,7 +1392,7 @@
     "ings": {
       "flour_low": 1,
       "sugar": 1,
-      "chicken_egg": 1,
+      "eggs": 1,
       "butter": 1,
       "cream": 1
     },
@@ -1419,7 +1419,7 @@
     "ings": {
       "flour_high": 2,
       "sugar": 1,
-      "chicken_egg": 1,
+      "eggs": 1,
       "milk": 1,
       "butter": 1,
       "yeast": 1
@@ -1447,7 +1447,7 @@
     "ings": {
       "flour_high": 1,
       "sugar": 1,
-      "chicken_egg": 1,
+      "eggs": 1,
       "milk": 1,
       "butter": 2,
       "yeast": 1
@@ -1474,7 +1474,7 @@
     "emoji": "🍰",
     "ings": {
       "flour_low": 1,
-      "chicken_egg": 2,
+      "eggs": 2,
       "milk": 1,
       "cream": 1,
       "sugar": 1,
@@ -1502,7 +1502,7 @@
     "emoji": "🍰",
     "ings": {
       "milk": 2,
-      "chicken_egg": 1,
+      "eggs": 1,
       "sugar": 1,
       "gelatin": 1
     },
@@ -1559,7 +1559,7 @@
       "flour_low": 2,
       "sugar": 1,
       "butter": 1,
-      "chicken_egg": 1
+      "eggs": 1
     },
     "baseCost": 30,
     "unlockCost": 50,
@@ -1586,7 +1586,7 @@
       "sugar": 2,
       "butter": 1,
       "flour_low": 1,
-      "chicken_egg": 2
+      "eggs": 2
     },
     "baseCost": 30,
     "unlockCost": 50,
@@ -1637,7 +1637,7 @@
     "ings": {
       "cheese": 2,
       "cream": 1,
-      "chicken_egg": 2,
+      "eggs": 2,
       "sugar": 1,
       "flour_low": 1
     },
@@ -1668,7 +1668,7 @@
       "flour_low": 1,
       "milk": 1,
       "sugar": 1,
-      "chicken_egg": 1
+      "eggs": 1
     },
     "baseCost": 30,
     "unlockCost": 50,
@@ -1773,7 +1773,7 @@
     "ings": {
       "flour_low": 2,
       "sugar": 2,
-      "chicken_egg": 2,
+      "eggs": 2,
       "milk": 1,
       "cherry": 3,
       "chocolate": 2,
@@ -1804,7 +1804,7 @@
     "ings": {
       "flour_low": 10,
       "sugar": 10,
-      "chicken_egg": 10,
+      "eggs": 10,
       "milk": 5,
       "butter": 5,
       "cream": 10,
@@ -1835,7 +1835,7 @@
     "emoji": "🍰",
     "ings": {
       "tomato": 2,
-      "chicken_egg": 3,
+      "eggs": 3,
       "salt": 1,
       "oil": 1
     },
@@ -1862,7 +1862,7 @@
     "emoji": "🍰",
     "ings": {
       "japonica_rice": 1,
-      "chicken_egg": 2,
+      "eggs": 2,
       "scallion": 1,
       "salt": 1,
       "oil": 1
@@ -1899,7 +1899,7 @@
       "soy_sauce_light": 1,
       "soy_sauce_dark": 1,
       "sugar": 1,
-      "cooking_wine": 1,
+      "rice_wine": 1,
       "oil": 1,
       "msg": 1
     },
@@ -2101,7 +2101,7 @@
     "emoji": "🍰",
     "ings": {
       "bok_choy": 3,
-      "chicken_egg": 2,
+      "eggs": 2,
       "garlic": 1,
       "salt": 1,
       "oil": 1
@@ -2129,7 +2129,7 @@
     "emoji": "🍰",
     "ings": {
       "onion": 2,
-      "chicken_egg": 3,
+      "eggs": 3,
       "oil": 1,
       "salt": 1
     },
@@ -2236,12 +2236,12 @@
       "perfectTools": []
     }
   },
-  "dish:century_egg_congee": {
-    "id": "dish:century_egg_congee",
+  "dish:preserved_egg_congee": {
+    "id": "dish:preserved_egg_congee",
     "name": "皮蛋瘦肉粥",
     "emoji": "🍰",
     "ings": {
-      "century_egg": 1,
+      "preserved_egg": 1,
       "japonica_rice": 1,
       "pork_belly": 1,
       "scallion": 1,
@@ -2489,7 +2489,7 @@
       "pork_belly": 1,
       "doubanjiang": 1,
       "chili": 2,
-      "sichuan_pepper": 1,
+      "pepper": 1,
       "garlic": 1,
       "scallion": 1,
       "starch": 1,
@@ -2590,7 +2590,7 @@
       "ginger": 2,
       "scallion": 2,
       "soy_sauce_light": 1,
-      "cooking_wine": 1,
+      "rice_wine": 1,
       "sesame_oil": 1,
       "salt": 1
     },
@@ -2684,7 +2684,7 @@
     "emoji": "🍰",
     "ings": {
       "pork_belly": 3,
-      "chicken_egg": 1,
+      "eggs": 1,
       "cabbage": 2,
       "shiitake": 1,
       "starch": 1,
@@ -2722,7 +2722,7 @@
       "chicken": 1,
       "starch": 2,
       "ginger": 1,
-      "chicken_egg": 1,
+      "eggs": 1,
       "salt": 1
     },
     "baseCost": 30,
@@ -2755,7 +2755,7 @@
       "garlic": 2,
       "doubanjiang": 1,
       "soy_sauce_light": 1,
-      "cooking_wine": 1,
+      "rice_wine": 1,
       "oil": 2
     },
     "baseCost": 30,
@@ -2788,7 +2788,7 @@
       "garlic": 1,
       "ginger": 1,
       "soy_sauce_dark": 1,
-      "cooking_wine": 1,
+      "rice_wine": 1,
       "oil": 1
     },
     "baseCost": 30,
@@ -2820,7 +2820,7 @@
       "doubanjiang": 1,
       "garlic": 2,
       "ginger": 2,
-      "cooking_wine": 2,
+      "rice_wine": 2,
       "soy_sauce_dark": 1,
       "oil": 2
     },
@@ -2917,7 +2917,7 @@
     "ings": {
       "shrimp": 3,
       "starch": 1,
-      "chicken_egg": 1,
+      "eggs": 1,
       "lettuce": 1,
       "ginger": 1,
       "salt": 1
@@ -2984,7 +2984,7 @@
       "ginger": 2,
       "soy_sauce_light": 1,
       "starch": 1,
-      "cooking_wine": 1
+      "rice_wine": 1
     },
     "baseCost": 30,
     "unlockCost": 50,

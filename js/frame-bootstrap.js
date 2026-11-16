@@ -19,6 +19,10 @@
     reportError(m);
   });
 
+  // 只接受形如 sys-xxx 的系统类名与纯数值缩放比，外部字符串不直接进 DOM / CSS 变量
+  var SYS_CLASS_RE = /^sys-[A-Za-z0-9_-]+$/;
+  var SCALE_RE = /^\d+(?:\.\d+)?$/;
+
   function applyTheme(msg) {
     var p = (msg && msg.payload) || {};
     var root = document.documentElement;
@@ -26,10 +30,10 @@
     var night = !!p.night;
     var blind = !!p.blind;
     root.classList.toggle("night", night);
-    if (typeof p.fontScale === "string" && p.fontScale !== "") {
+    if (typeof p.fontScale === "string" && SCALE_RE.test(p.fontScale)) {
       root.style.setProperty("--player-font-scale", p.fontScale);
     }
-    if (typeof p.sysFontScale === "string" && p.sysFontScale !== "") {
+    if (typeof p.sysFontScale === "string" && SCALE_RE.test(p.sysFontScale)) {
       root.style.setProperty("--sys-font-scale", p.sysFontScale);
     }
     if (Array.isArray(p.a11yClasses)) {
@@ -39,7 +43,10 @@
         if (c.indexOf("sys-") === 0) sys.push(c);
       }
       for (var j = 0; j < sys.length; j += 1) root.classList.remove(sys[j]);
-      for (var k = 0; k < p.a11yClasses.length; k += 1) root.classList.add(p.a11yClasses[k]);
+      for (var k = 0; k < p.a11yClasses.length; k += 1) {
+        var cls = p.a11yClasses[k];
+        if (typeof cls === "string" && SYS_CLASS_RE.test(cls)) root.classList.add(cls);
+      }
     }
     if (container) {
       container.classList.toggle("night", night);
@@ -54,6 +61,8 @@
   }
 
   window.addEventListener("message", function (ev) {
+    // 只接受同源父窗口的指令：防止被外部页面嵌入、或同页第三方脚本伪造 frame:theme 注入类名与 CSS 变量
+    if (ev.source !== window.parent || ev.origin !== location.origin) return;
     var data = ev.data;
     if (!data || !data.type) return;
     if (data.type === "frame:theme") applyTheme(data);

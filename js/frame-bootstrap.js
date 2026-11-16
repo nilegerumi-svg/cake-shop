@@ -61,7 +61,7 @@
   }
 
   window.addEventListener("message", function (ev) {
-    // 只接受同源父窗口的指令：跦断跨源页面嵌入后伪造 frame:theme 注入类名与 CSS 变量
+    // 只接受同源父窗口的指令：阻断跨源页面嵌入后伪造 frame:theme 注入类名与 CSS 变量
     // （同源脚本本就可直接读取本窗口 DOM，不构成提权，不在本校验防护范围）
     if (ev.source !== window.parent || ev.origin !== location.origin) return;
     var data = ev.data;

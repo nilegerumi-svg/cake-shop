@@ -272,15 +272,26 @@ window.addEventListener("message", (e) => {
   const n = e.data;
   if (isBridgeMessage(n))
     switch (n.kind) {
-      case "shell:ready":
-        ((bridgeReady = !0),
-          n.snapshot && typeof n.snapshot == "object"
-            ? ((memoryStore = sanitizeMemorySnapshot(n.snapshot)),
-              (memoryStoreMap = null),
-              (isMemoryStoreMode = !0))
-            : void 0,
-          flushReadyCallbacks());
+      case "shell:ready": {
+        bridgeReady = !0;
+        if (n.snapshot && typeof n.snapshot == "object") {
+          const snap = sanitizeMemorySnapshot(n.snapshot),
+            keysOut = Object.keys(snap).length,
+            keysIn = Array.isArray(n.snapshot) ? n.snapshot.length : Object.keys(n.snapshot).length;
+          (memoryStore = snap), (memoryStoreMap = null), (isMemoryStoreMode = !0);
+          // 清洗后一条不剩但宿主确实给了内容：多半是结构不合规（如数组或非原始值），静默降级难以排查，故留痕
+          keysOut === 0 &&
+            keysIn > 0 &&
+            typeof console != "undefined" &&
+            console.warn("[Bridge] 宿主快照全部字段未通过清洗，存档将为空；请检查快照是否为扁平 KV（字符串键 + 原始值）");
+        } else {
+          n.snapshot !== void 0 &&
+            typeof console != "undefined" &&
+            console.warn("[Bridge] 宿主快照结构非法，已丢弃；本次将进入内存存储模式且存档为空");
+        }
+        flushReadyCallbacks();
         break;
+      }
       case "db:reply": {
         const s = sanitizeBridgeReply(n);
         resolveBridgeRequest(n.requestId, { success: s.success, data: s.data ?? [], message: s.message });

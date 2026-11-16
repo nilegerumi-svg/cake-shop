@@ -188,7 +188,9 @@ function isBridgeMessage(e) {
 const BRIDGE_KEY_RE = /^[A-Za-z0-9_.:-]{1,128}$/,
   BRIDGE_MAX_DEPTH = 5,
   BRIDGE_MAX_ITEMS = 5e3,
-  BRIDGE_MAX_STRING = 16e6;
+  BRIDGE_MAX_STRING = 16e6,
+  // 单次清洗的节点预算：结构克隆保留引用共享，若不限总量，5 层 × 5000 宽的共享引用可放大到 10^14 级遍历
+  BRIDGE_MAX_NODES = 5e5;
 
 function isPlainBridgeObject(e) {
   return !!e && typeof e == "object" && !Array.isArray(e);
@@ -198,37 +200,48 @@ function isBlockedBridgeKey(e) {
   return e === "__proto__" || e === "constructor" || e === "prototype";
 }
 
-function sanitizeBridgeValue(e, n) {
-  const s = typeof e;
-  if (s == "string") return e.length <= BRIDGE_MAX_STRING ? e : void 0;
-  if (s == "number") return Number.isFinite(e) ? e : void 0;
-  if (s == "boolean" || e === null) return e;
-  if (s != "object" || n >= BRIDGE_MAX_DEPTH) return void 0;
+function newBridgeBudget() {
+  return { left: BRIDGE_MAX_NODES };
+}
+
+function sanitizeBridgeValue(e, n, s) {
+  const a = s || newBridgeBudget();
+  if (a.left <= 0) return void 0;
+  a.left -= 1;
+  const o = typeof e;
+  if (o == "string") return e.length <= BRIDGE_MAX_STRING ? e : void 0;
+  if (o == "number") return Number.isFinite(e) ? e : void 0;
+  if (o == "boolean" || e === null) return e;
+  if (o != "object" || n >= BRIDGE_MAX_DEPTH) return void 0;
   if (Array.isArray(e)) {
-    const a = [];
-    for (const o of e.slice(0, BRIDGE_MAX_ITEMS)) {
-      const l = sanitizeBridgeValue(o, n + 1);
-      l !== void 0 && a.push(l);
+    const l = [];
+    for (const c of e.slice(0, BRIDGE_MAX_ITEMS)) {
+      const u = sanitizeBridgeValue(c, n + 1, a);
+      u !== void 0 && l.push(u);
     }
-    return a;
+    return l;
   }
-  const a = {};
-  for (const o of Object.keys(e).slice(0, BRIDGE_MAX_ITEMS)) {
-    if (isBlockedBridgeKey(o)) continue;
-    const l = sanitizeBridgeValue(e[o], n + 1);
-    l !== void 0 && (a[o] = l);
+  const l = {};
+  for (const c of Object.keys(e).slice(0, BRIDGE_MAX_ITEMS)) {
+    if (isBlockedBridgeKey(c)) continue;
+    const u = sanitizeBridgeValue(e[c], n + 1, a);
+    u !== void 0 && (l[c] = u);
   }
-  return a;
+  return l;
 }
 
 // 宿主快照只接受「受限键名 + 原始值」的扁平 KV，外部对象不直接成为存储内容
 function sanitizeMemorySnapshot(e) {
   const n = Object.create(null);
   if (!isPlainBridgeObject(e)) return n;
-  for (const s of Object.keys(e)) {
-    if (isBlockedBridgeKey(s) || !BRIDGE_KEY_RE.test(s)) continue;
-    const a = sanitizeBridgeValue(e[s], 0);
-    (typeof a == "string" || typeof a == "number" || typeof a == "boolean") && (n[s] = String(a));
+  const s = newBridgeBudget();
+  let a = 0;
+  for (const o of Object.keys(e)) {
+    if (a >= BRIDGE_MAX_ITEMS || s.left <= 0) break;
+    if (isBlockedBridgeKey(o) || !BRIDGE_KEY_RE.test(o)) continue;
+    const l = sanitizeBridgeValue(e[o], 0, s);
+    (typeof l == "string" || typeof l == "number" || typeof l == "boolean") &&
+      ((n[o] = String(l)), (a += 1));
   }
   return n;
 }
@@ -237,7 +250,7 @@ function sanitizeBridgeReply(e) {
   return {
     success: e.success === !0,
     message: typeof e.message == "string" ? e.message.slice(0, 500) : void 0,
-    data: sanitizeBridgeValue(e.data, 0),
+    data: sanitizeBridgeValue(e.data, 0, newBridgeBudget()),
   };
 }
 
